@@ -1,0 +1,8 @@
+stm32f429i_discovery_i2c_ee.c:137:6:sEE_DeInit	8	static
+stm32f429i_discovery_i2c_ee.c:147:6:sEE_Init	24	static
+stm32f429i_discovery_i2c_ee.c:196:10:sEE_ReadBuffer	24	static
+stm32f429i_discovery_i2c_ee.c:357:10:sEE_WritePage	24	static
+stm32f429i_discovery_i2c_ee.c:431:6:sEE_WriteBuffer	24	static
+stm32f429i_discovery_i2c_ee.c:610:10:sEE_WaitEepromStandbyState	16	static
+stm32f429i_discovery_i2c_ee.c:687:6:DMA1_Stream4_IRQHandler	8	static
+stm32f429i_discovery_i2c_ee.c:716:6:DMA1_Stream2_IRQHandler	8	static

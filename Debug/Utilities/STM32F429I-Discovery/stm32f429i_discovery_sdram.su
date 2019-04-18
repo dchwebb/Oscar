@@ -1,0 +1,6 @@
+stm32f429i_discovery_sdram.c:61:6:SDRAM_Init	80	static
+stm32f429i_discovery_sdram.c:118:6:SDRAM_GPIOConfig	16	static
+stm32f429i_discovery_sdram.c:246:6:SDRAM_InitSequence	32	static
+stm32f429i_discovery_sdram.c:342:6:SDRAM_WriteBuffer	32	static
+stm32f429i_discovery_sdram.c:374:6:SDRAM_ReadBuffer	32	static
+stm32f429i_discovery_sdram.c:400:13:delay	24	static

@@ -1,0 +1,9 @@
+stm32f429i_discovery.c:122:6:STM_EVAL_LEDInit	24	static
+stm32f429i_discovery.c:146:6:STM_EVAL_LEDOn	16	static
+stm32f429i_discovery.c:159:6:STM_EVAL_LEDOff	16	static
+stm32f429i_discovery.c:172:6:STM_EVAL_LEDToggle	16	static
+stm32f429i_discovery.c:188:6:STM_EVAL_PBInit	40	static
+stm32f429i_discovery.c:232:10:STM_EVAL_PBGetState	16	static
+stm32f429i_discovery.c:242:6:sEE_LowLevel_DeInit	16	static
+stm32f429i_discovery.c:291:6:sEE_LowLevel_Init	16	static
+stm32f429i_discovery.c:389:6:sEE_LowLevel_DMAConfig	24	static

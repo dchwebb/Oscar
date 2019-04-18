@@ -1,0 +1,12 @@
+stm32f429i_discovery_l3gd20.c:98:6:L3GD20_Init	24	static
+stm32f429i_discovery_l3gd20.c:124:6:L3GD20_RebootCmd	16	static
+stm32f429i_discovery_l3gd20.c:144:6:L3GD20_INT1InterruptConfig	24	static
+stm32f429i_discovery_l3gd20.c:179:6:L3GD20_INT1InterruptCmd	24	static
+stm32f429i_discovery_l3gd20.c:201:6:L3GD20_INT2InterruptCmd	24	static
+stm32f429i_discovery_l3gd20.c:221:6:L3GD20_FilterConfig	24	static
+stm32f429i_discovery_l3gd20.c:246:6:L3GD20_FilterCmd	24	static
+stm32f429i_discovery_l3gd20.c:266:9:L3GD20_GetDataStatus	16	static
+stm32f429i_discovery_l3gd20.c:283:6:L3GD20_Write	16	static
+stm32f429i_discovery_l3gd20.c:317:6:L3GD20_Read	16	static
+stm32f429i_discovery_l3gd20.c:350:13:L3GD20_LowLevel_Init	40	static
+stm32f429i_discovery_l3gd20.c:435:16:L3GD20_SendByte	16	static

@@ -1,0 +1,26 @@
+tm_stm32f4_ili9341.cpp:97:22:void DW_SPI_Send(uint8_t)	16	static
+tm_stm32f4_ili9341.cpp:113:6:void TM_ILI9341_Init()	8	static
+tm_stm32f4_ili9341.cpp:131:6:void TM_ILI9341_InitLCD()	8	static
+tm_stm32f4_ili9341.cpp:242:6:void TM_ILI9341_DisplayOn()	8	static
+tm_stm32f4_ili9341.cpp:246:6:void TM_ILI9341_DisplayOff()	8	static
+tm_stm32f4_ili9341.cpp:250:6:void TM_ILI9341_SendCommand(uint8_t)	16	static
+tm_stm32f4_ili9341.cpp:257:6:void TM_ILI9341_SendData(uint8_t)	16	static
+tm_stm32f4_ili9341.cpp:266:9:uint8_t DW_SPI_DMA_SendHalfWord(uint16_t, uint16_t)	16	static
+tm_stm32f4_ili9341.cpp:293:6:void DW_SPI_SetDataSize(DW_SPI_DataSize_t)	16	static
+tm_stm32f4_ili9341.cpp:307:9:uint8_t DW_SPI_DMA_Working()	4	static
+tm_stm32f4_ili9341.cpp:311:6:void TM_ILI9341_DrawPixel(uint16_t, uint16_t, uint32_t)	16	static
+tm_stm32f4_ili9341.cpp:320:6:void TM_ILI9341_SetCursorPosition(uint16_t, uint16_t, uint16_t, uint16_t)	24	static
+tm_stm32f4_ili9341.cpp:334:6:void TM_ILI9341_Fill(uint32_t)	24	static
+tm_stm32f4_ili9341.cpp:339:6:void TM_ILI9341_INT_Fill(uint16_t, uint16_t, uint16_t, uint16_t, uint16_t)	32	static
+cmath:498:5:constexpr typename __gnu_cxx::__enable_if<std::__is_integer<_Tp>::__value, double>::__type std::sqrt(_Tp) [with _Tp = int]	24	static
+tm_stm32f4_ili9341.cpp:376:6:void DW_Pattern_Fill(uint16_t, uint16_t)	40	static
+tm_stm32f4_ili9341.cpp:441:6:void TM_ILI9341_Delay(unsigned int)	16	static
+tm_stm32f4_ili9341.cpp:445:6:void TM_ILI9341_Rotate(TM_ILI9341_Orientation_t)	16	static
+tm_stm32f4_ili9341.cpp:468:6:void TM_ILI9341_Puts(uint16_t, uint16_t, char*, TM_FontDef_t*, uint32_t, uint32_t)	40	static
+tm_stm32f4_ili9341.cpp:498:6:void TM_ILI9341_GetStringSize(char*, TM_FontDef_t*, uint16_t*, uint16_t*)	32	static
+tm_stm32f4_ili9341.cpp:507:6:void TM_ILI9341_Putc(uint16_t, uint16_t, char, TM_FontDef_t*, uint32_t, uint32_t)	56	static
+tm_stm32f4_ili9341.cpp:537:6:void TM_ILI9341_DrawLine(uint16_t, uint16_t, uint16_t, uint16_t, uint32_t)	48	static
+tm_stm32f4_ili9341.cpp:599:6:void TM_ILI9341_DrawRectangle(uint16_t, uint16_t, uint16_t, uint16_t, uint32_t)	32	static
+tm_stm32f4_ili9341.cpp:606:6:void TM_ILI9341_DrawFilledRectangle(uint16_t, uint16_t, uint16_t, uint16_t, uint32_t)	40	static
+tm_stm32f4_ili9341.cpp:628:6:void TM_ILI9341_DrawCircle(int16_t, int16_t, int16_t, uint32_t)	40	static
+tm_stm32f4_ili9341.cpp:662:6:void TM_ILI9341_DrawFilledCircle(int16_t, int16_t, int16_t, uint32_t)	56	static
