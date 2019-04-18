@@ -1,11 +1,8 @@
 #include "stm32f4xx.h"
-//#include "stm32f4xx_spi.h"
-#include "defines.h"
 #include "tm_stm32f4_ili9341.h"
 #include "tm_stm32f4_fonts.h"
 #include <stdio.h>
 #include "initialisation.h"
-#include <vector>
 
 #define OSCWIDTH 320
 
@@ -21,9 +18,7 @@ volatile uint16_t* captureABuffer;
 volatile uint16_t* captureBBuffer;
 volatile uint16_t* drawABuffer;
 volatile uint16_t* drawBBuffer;
-volatile uint16_t drawingStart = 0;
 volatile uint16_t capturePos = 0;
-volatile uint16_t capturePos2 = 0;
 volatile uint16_t drawPos = 0;
 volatile uint16_t prevAPixel = 0;
 volatile uint16_t prevBPixel = 0;
@@ -32,7 +27,6 @@ volatile int16_t captureSamples = 0;
 volatile bool drawing = false;
 volatile uint8_t captureBufferNumber = 0;
 volatile uint8_t drawBufferNumber = 0;
-volatile int16_t captureRelPos = 0;
 int16_t drawOffset[2] {0, 0};
 
 struct  {
@@ -120,7 +114,6 @@ int main(void) {
 
 	while (1) {
 
-
 		// check if we should start drawing
 		if (!drawing && capturing) {
 			drawing = true;
@@ -130,7 +123,6 @@ int main(void) {
 			// Get a pointer to the current draw buffer
 			drawABuffer = drawBufferNumber == 0 ? ChannelA0 : ChannelA1;
 			drawBBuffer = drawBufferNumber == 0 ? ChannelB0 : ChannelB1;
-
 		}
 
 

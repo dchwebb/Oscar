@@ -79,7 +79,7 @@ void SystemClock_Config(void)
 	if (idNumber == 0x1001 || idNumber == 0x100F)
 		FLASH->ACR |= FLASH_ACR_PRFTEN;			// Enable the Flash prefetch
 
-	// See page 83 of manual for other possibly performance boost options: instruction cache enable (ICEN) and data cache enable (DCEN)
+	// See page 83 of manual for other possible performance boost options: instruction cache enable (ICEN) and data cache enable (DCEN)
 }
 
 void InitLCD(void)
@@ -154,114 +154,32 @@ void InitADC(void)
 	TIM2->ARR = 100 - 1;							// Auto-reload register (ie reset counter) divided by 100
 	TIM2->CCR1 = 50 - 1;							// Capture and compare - ie when counter hits this number PWM high
 	TIM2->CCER |= TIM_CCER_CC1E;					// Capture/Compare 1 output enable
-	TIM2->CCMR1 |= TIM_CCMR1_OC1M_1 |TIM_CCMR1_OC1M_2;	// 110 PWM Mode 1
+	TIM2->CCMR1 |= TIM_CCMR1_OC1M_1 |TIM_CCMR1_OC1M_2;		// 110 PWM Mode 1
 	TIM2->CR1 |= TIM_CR1_CEN;
 
-	// Enable ADC2 and GPIO clock sources
+	// Enable ADC1 and GPIO clock sources
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
-	RCC->APB2ENR |= RCC_APB2ENR_ADC2EN;
+	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
 
 	// Enable ADC - PC3: ADC123_IN13; PA5: ADC12_IN5;
 	GPIOC->MODER |= GPIO_MODER_MODER3;				// Set PC3 to Analog mode (0b11)
 	GPIOA->MODER |= GPIO_MODER_MODER5;				// Set PA5 to Analog mode (0b11)
 
-	ADC2->CR1 |= ADC_CR1_SCAN;						// Activate scan mode
-	//ADC2->SQR1 = (ADC_BUFFER_LENGTH - 1) << 20;	// Number of conversions in sequence
-	ADC2->SQR1 = 1 << 20;							// Number of conversions in sequence (limit to two for now as we are getting multiple samples to average
-	ADC2->SQR3 |= 13 << 0;							// Set IN13  1st conversion in sequence
-	ADC2->SQR3 |= 5 << 5;							// Set IN5  2nd conversion in sequence
+	ADC1->CR1 |= ADC_CR1_SCAN;						// Activate scan mode
+	//ADC1->SQR1 = (ADC_BUFFER_LENGTH - 1) << 20;	// Number of conversions in sequence
+	ADC1->SQR1 = (2 - 1) << 20;						// Number of conversions in sequence (limit to two for now as we are getting multiple samples to average)
+	ADC1->SQR3 |= 13 << 0;							// Set IN13  1st conversion in sequence
+	ADC1->SQR3 |= 5 << 5;							// Set IN5  2nd conversion in sequence
 
-	//	Set to 56 cycles (0b11) sampling speed (SMPR2 Left shift speed 3 x ADC_INx up to input 9; use SMPR1 from 0 for ADC_IN10+)
+	// Set to 56 cycles (0b11) sampling speed (SMPR2 Left shift speed 3 x ADC_INx up to input 9; use SMPR1 from 0 for ADC_IN10+)
 	// 000: 3 cycles; 001: 15 cycles; 010: 28 cycles; 011: 56 cycles; 100: 84 cycles; 101: 112 cycles; 110: 144 cycles; 111: 480 cycles
-	ADC2->SMPR1 |= 0b110 << 9;						// Set speed of IN13
-	ADC2->SMPR2 |= 0b110 << 15;						// Set speed of IN5
+	ADC1->SMPR1 |= 0b110 << 9;						// Set speed of IN13
+	ADC1->SMPR2 |= 0b110 << 15;						// Set speed of IN5
 
-	ADC2->CR2 |= ADC_CR2_EOCS;						// Trigger interrupt on end of each individual conversion
-	ADC2->CR2 |= ADC_CR2_EXTEN_0;					// ADC hardware trigger 00: Trigger detection disabled; 01: Trigger detection on the rising edge; 10: Trigger detection on the falling edge; 11: Trigger detection on both the rising and falling edges
-	ADC2->CR2 |= ADC_CR2_EXTSEL_1 | ADC_CR2_EXTSEL_2;	// ADC External trigger: 0110 = TIM2_TRGO event
-
-	// Enable DMA - DMA2, Channel 1, Stream 2  = ADC2 (Manual p207)
-	ADC2->CR2 |= ADC_CR2_DMA;						// Enable DMA Mode on ADC2
-	ADC2->CR2 |= ADC_CR2_DDS;						// DMA requests are issued as long as data are converted and DMA=1
-	RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
-
-	DMA2_Stream2->CR &= ~DMA_SxCR_DIR;				// 00 = Peripheral-to-memory
-	DMA2_Stream2->CR |= DMA_SxCR_PL_1;				// Priority: 00 = low; 01 = Medium; 10 = High; 11 = Very High
-	DMA2_Stream2->CR |= DMA_SxCR_PSIZE_0;			// Peripheral size: 8 bit; 01 = 16 bit; 10 = 32 bit
-	DMA2_Stream2->CR |= DMA_SxCR_MSIZE_0;			// Memory size: 8 bit; 01 = 16 bit; 10 = 32 bit
-	DMA2_Stream2->CR &= ~DMA_SxCR_PINC;				// Peripheral not in increment mode
-	DMA2_Stream2->CR |= DMA_SxCR_MINC;				// Memory in increment mode
-	DMA2_Stream2->CR |= DMA_SxCR_CIRC;				// circular mode to keep refilling buffer
-	DMA2_Stream2->CR &= ~DMA_SxCR_DIR;				// data transfer direction: 00: peripheral-to-memory; 01: memory-to-peripheral; 10: memory-to-memory
-
-	DMA2_Stream2->NDTR |= ADC_BUFFER_LENGTH;		// Number of data items to transfer (ie size of ADC buffer)
-	DMA2_Stream2->PAR = (uint32_t)(&(ADC2->DR));	// Configure the peripheral data register address
-	DMA2_Stream2->M0AR = (uint32_t)(ADC_array);		// Configure the memory address (note that M1AR is used for double-buffer mode)
-	DMA2_Stream2->CR |= DMA_SxCR_CHSEL_0;			// channel select to 1 for ADC2
-
-	DMA2_Stream2->CR |= DMA_SxCR_EN;				// Enable DMA2
-	ADC2->CR2 |= ADC_CR2_ADON;						// Activate ADC
-
-
-	/*
-	 * Using ADC1
-	 *
-	 *
-	//	Setup Timer 2 to trigger ADC
-	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;		// Enable Timer 2 clock
-	TIM2->CR2 |= TIM_CR2_MMS_2;				// 100: Compare - OC1REF signal is used as trigger output (TRGO)
-	TIM2->PSC = 20 - 1;					// Prescaler
-	TIM2->ARR = 100 - 1;					// Auto-reload register (ie reset counter) divided by 100
-	TIM2->CCR1 = 50 - 1;					// Capture and compare - ie when counter hits this number PWM high
-	TIM2->CCER |= TIM_CCER_CC1E;			// Capture/Compare 1 output enable
-	TIM2->CCMR1 |= TIM_CCMR1_OC1M_1 |TIM_CCMR1_OC1M_2;		// 110 PWM Mode 1
-	TIM2->CR1 |= TIM_CR1_CEN;
-
-	// Enable ADC1 clock source
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
-	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
-
-	// Enable ADC on PA7 (Pin 23) Alternate mode: ADC12_IN7
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
-	GPIOA->MODER |= GPIO_MODER_MODER1;			// Set PA1 to Analog mode (0b11)
-	GPIOA->MODER |= GPIO_MODER_MODER7;			// Set PA7 to Analog mode (0b11)
-	ADC1->CR1 |= ADC_CR1_SCAN;					// Activate scan mode
-	ADC1->SQR1 = ADC_SQR1_L_0;					// Two conversions in sequence
-	ADC1->SQR3 |= 7 << 0;						// Set Pin7 to first conversion in sequence
-	ADC1->SQR3 |= 1 << 5;						// Set Pin1 to second conversion in sequence
-
-	//	Set to slow sampling mode
-	ADC1->SMPR2 |= 0b11 << 3;
-	ADC1->SMPR2 |= 0b11 << 21;
-
-	ADC1->CR2 |= ADC_CR2_EOCS;							// Trigger interrupt on end of each individual conversion
-	ADC1->CR2 |= ADC_CR2_EXTEN_0;						// ADC hardware trigger 00: Trigger detection disabled; 01: Trigger detection on the rising edge; 10: Trigger detection on the falling edge; 11: Trigger detection on both the rising and falling edges
+	ADC1->CR2 |= ADC_CR2_EOCS;						// Trigger interrupt on end of each individual conversion
+	ADC1->CR2 |= ADC_CR2_EXTEN_0;					// ADC hardware trigger 00: Trigger detection disabled; 01: Trigger detection on the rising edge; 10: Trigger detection on the falling edge; 11: Trigger detection on both the rising and falling edges
 	ADC1->CR2 |= ADC_CR2_EXTSEL_1 | ADC_CR2_EXTSEL_2;	// ADC External trigger: 0110 = TIM2_TRGO event
-
-	 CR2 EXTSEL settings
-	0000: Timer 1 CC1 event
-	0001: Timer 1 CC2 event
-	0010: Timer 1 CC3 event
-	0011: Timer 2 CC2 event
-	0100: Timer 2 CC3 event
-	0101: Timer 2 CC4 event
-	0110: Timer 2 TRGO event
-	0111: Timer 3 CC1 event
-	1000: Timer 3 TRGO event
-	1001: Timer 4 CC4 event
-	1010: Timer 5 CC1 event
-	1011: Timer 5 CC2 event
-	1100: Timer 5 CC3 event
-	1101: Timer 8 CC1 event
-	1110: Timer 8 TRGO event
-	1111: EXTI line 11
-
-
-	 Interrupt settings
-	ADC1->CR1 |= ADC_CR1_EOCIE;
-	NVIC_EnableIRQ(ADC_IRQn);
-
 
 	// Enable DMA - DMA2, Channel 0, Stream 0  = ADC1 (Manual p207)
 	ADC1->CR2 |= ADC_CR2_DMA;						// Enable DMA Mode on ADC1
@@ -283,8 +201,7 @@ void InitADC(void)
 	DMA2_Stream0->CR &= ~DMA_SxCR_CHSEL;			// channel select to 0 for ADC1
 
 	DMA2_Stream0->CR |= DMA_SxCR_EN;				// Enable DMA2
-	ADC1->CR2 |= ADC_CR2_ADON;						// Activate ADC*/
-
+	ADC1->CR2 |= ADC_CR2_ADON;						// Activate ADC
 
 }
 
@@ -292,13 +209,13 @@ void InitTimer()
 {
 	//	Setup Timer 3 on an interrupt to trigger sample acquisition
 	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;				// Enable Timer 3
-	TIM3->PSC = 1000;	// Set prescaler to fire at sample rate - this is divided by 4 to match the APB2 prescaler
-	TIM3->ARR = 30; //SystemCoreClock / 48000 - 1;	// Set maximum count value (auto reload register) - set to system clock / sampling rate
+	TIM3->PSC = 1000;								// Set prescaler to fire at sample rate - this is divided by 4 to match the APB2 prescaler
+	TIM3->ARR = 30; 								// Set maximum count value (auto reload register) - set to system clock / sampling rate
 
-	SET_BIT(TIM3->DIER, TIM_DIER_UIE);				//  DMA/interrupt enable register
+	TIM3->DIER |= TIM_DIER_UIE;						//  DMA/interrupt enable register
 	NVIC_EnableIRQ(TIM3_IRQn);
 	NVIC_SetPriority(TIM3_IRQn, 0);
 
-	SET_BIT(TIM3->CR1, TIM_CR1_CEN);
-	SET_BIT(TIM3->EGR, TIM_EGR_UG);
+	TIM3->CR1 |= TIM_CR1_CEN;
+	TIM3->EGR |= TIM_EGR_UG;
 }

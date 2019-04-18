@@ -23,23 +23,23 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   ALLOC
   9 .ARM.attributes 00000030  00000000  00000000  00020018  2**0
                   CONTENTS, READONLY
- 10 .debug_info   0000547a  00000000  00000000  00020048  2**0
+ 10 .debug_info   000050ca  00000000  00000000  00020048  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_abbrev 00000e7d  00000000  00000000  000254c2  2**0
+ 11 .debug_abbrev 00000d21  00000000  00000000  00025112  2**0
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_aranges 00000378  00000000  00000000  00026340  2**3
+ 12 .debug_aranges 00000378  00000000  00000000  00025e38  2**3
                   CONTENTS, READONLY, DEBUGGING
- 13 .debug_ranges 00000310  00000000  00000000  000266b8  2**3
+ 13 .debug_ranges 00000310  00000000  00000000  000261b0  2**3
                   CONTENTS, READONLY, DEBUGGING
- 14 .debug_line   00001da6  00000000  00000000  000269c8  2**0
+ 14 .debug_line   00001be5  00000000  00000000  000264c0  2**0
                   CONTENTS, READONLY, DEBUGGING
- 15 .debug_str    0000272f  00000000  00000000  0002876e  2**0
+ 15 .debug_str    00002261  00000000  00000000  000280a5  2**0
                   CONTENTS, READONLY, DEBUGGING
- 16 .comment      0000007c  00000000  00000000  0002ae9d  2**0
+ 16 .comment      0000007c  00000000  00000000  0002a306  2**0
                   CONTENTS, READONLY
- 17 .debug_frame  00000c90  00000000  00000000  0002af1c  2**2
+ 17 .debug_frame  00000c90  00000000  00000000  0002a384  2**2
                   CONTENTS, READONLY, DEBUGGING
- 18 .stabstr      0000003f  00000000  00000000  0002bbac  2**0
+ 18 .stabstr      0000003f  00000000  00000000  0002b014  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -860,7 +860,7 @@ __STATIC_INLINE void NVIC_SetPriority(IRQn_Type IRQn, uint32_t priority)
 
 08000634 <_Z7InitLCDv>:
 
-	// See page 83 of manual for other possibly performance boost options: instruction cache enable (ICEN) and data cache enable (DCEN)
+	// See page 83 of manual for other possible performance boost options: instruction cache enable (ICEN) and data cache enable (DCEN)
 }
 
 void InitLCD(void)
@@ -1104,7 +1104,7 @@ void InitADC(void)
  80007e0:	f043 0301 	orr.w	r3, r3, #1
  80007e4:	b29b      	uxth	r3, r3
  80007e6:	8413      	strh	r3, [r2, #32]
-	TIM2->CCMR1 |= TIM_CCMR1_OC1M_1 |TIM_CCMR1_OC1M_2;	// 110 PWM Mode 1
+	TIM2->CCMR1 |= TIM_CCMR1_OC1M_1 |TIM_CCMR1_OC1M_2;		// 110 PWM Mode 1
  80007e8:	f04f 4280 	mov.w	r2, #1073741824	; 0x40000000
  80007ec:	f04f 4380 	mov.w	r3, #1073741824	; 0x40000000
  80007f0:	8b1b      	ldrh	r3, [r3, #24]
@@ -1121,7 +1121,7 @@ void InitADC(void)
  800080c:	b29b      	uxth	r3, r3
  800080e:	8013      	strh	r3, [r2, #0]
 
-	// Enable ADC2 and GPIO clock sources
+	// Enable ADC1 and GPIO clock sources
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
  8000810:	4a5b      	ldr	r2, [pc, #364]	; (8000980 <_Z7InitADCv+0x1e8>)
  8000812:	4b5b      	ldr	r3, [pc, #364]	; (8000980 <_Z7InitADCv+0x1e8>)
@@ -1134,11 +1134,11 @@ void InitADC(void)
  8000820:	6b1b      	ldr	r3, [r3, #48]	; 0x30
  8000822:	f043 0304 	orr.w	r3, r3, #4
  8000826:	6313      	str	r3, [r2, #48]	; 0x30
-	RCC->APB2ENR |= RCC_APB2ENR_ADC2EN;
+	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
  8000828:	4a55      	ldr	r2, [pc, #340]	; (8000980 <_Z7InitADCv+0x1e8>)
  800082a:	4b55      	ldr	r3, [pc, #340]	; (8000980 <_Z7InitADCv+0x1e8>)
  800082c:	6c5b      	ldr	r3, [r3, #68]	; 0x44
- 800082e:	f443 7300 	orr.w	r3, r3, #512	; 0x200
+ 800082e:	f443 7380 	orr.w	r3, r3, #256	; 0x100
  8000832:	6453      	str	r3, [r2, #68]	; 0x44
 
 	// Enable ADC - PC3: ADC123_IN13; PA5: ADC12_IN5;
@@ -1155,170 +1155,166 @@ void InitADC(void)
  8000846:	f443 6340 	orr.w	r3, r3, #3072	; 0xc00
  800084a:	6013      	str	r3, [r2, #0]
 
-	ADC2->CR1 |= ADC_CR1_SCAN;						// Activate scan mode
+	ADC1->CR1 |= ADC_CR1_SCAN;						// Activate scan mode
  800084c:	4a4f      	ldr	r2, [pc, #316]	; (800098c <_Z7InitADCv+0x1f4>)
  800084e:	4b4f      	ldr	r3, [pc, #316]	; (800098c <_Z7InitADCv+0x1f4>)
  8000850:	685b      	ldr	r3, [r3, #4]
  8000852:	f443 7380 	orr.w	r3, r3, #256	; 0x100
  8000856:	6053      	str	r3, [r2, #4]
-	//ADC2->SQR1 = (ADC_BUFFER_LENGTH - 1) << 20;	// Number of conversions in sequence
-	ADC2->SQR1 = 1 << 20;							// Number of conversions in sequence (limit to two for now as we are getting multiple samples to average
+	//ADC1->SQR1 = (ADC_BUFFER_LENGTH - 1) << 20;	// Number of conversions in sequence
+	ADC1->SQR1 = (2 - 1) << 20;						// Number of conversions in sequence (limit to two for now as we are getting multiple samples to average)
  8000858:	4b4c      	ldr	r3, [pc, #304]	; (800098c <_Z7InitADCv+0x1f4>)
  800085a:	f44f 1280 	mov.w	r2, #1048576	; 0x100000
  800085e:	62da      	str	r2, [r3, #44]	; 0x2c
-	ADC2->SQR3 |= 13 << 0;							// Set IN13  1st conversion in sequence
+	ADC1->SQR3 |= 13 << 0;							// Set IN13  1st conversion in sequence
  8000860:	4a4a      	ldr	r2, [pc, #296]	; (800098c <_Z7InitADCv+0x1f4>)
  8000862:	4b4a      	ldr	r3, [pc, #296]	; (800098c <_Z7InitADCv+0x1f4>)
  8000864:	6b5b      	ldr	r3, [r3, #52]	; 0x34
  8000866:	f043 030d 	orr.w	r3, r3, #13
  800086a:	6353      	str	r3, [r2, #52]	; 0x34
-	ADC2->SQR3 |= 5 << 5;							// Set IN5  2nd conversion in sequence
+	ADC1->SQR3 |= 5 << 5;							// Set IN5  2nd conversion in sequence
  800086c:	4a47      	ldr	r2, [pc, #284]	; (800098c <_Z7InitADCv+0x1f4>)
  800086e:	4b47      	ldr	r3, [pc, #284]	; (800098c <_Z7InitADCv+0x1f4>)
  8000870:	6b5b      	ldr	r3, [r3, #52]	; 0x34
  8000872:	f043 03a0 	orr.w	r3, r3, #160	; 0xa0
  8000876:	6353      	str	r3, [r2, #52]	; 0x34
 
-	//	Set to 56 cycles (0b11) sampling speed (SMPR2 Left shift speed 3 x ADC_INx up to input 9; use SMPR1 from 0 for ADC_IN10+)
+	// Set to 56 cycles (0b11) sampling speed (SMPR2 Left shift speed 3 x ADC_INx up to input 9; use SMPR1 from 0 for ADC_IN10+)
 	// 000: 3 cycles; 001: 15 cycles; 010: 28 cycles; 011: 56 cycles; 100: 84 cycles; 101: 112 cycles; 110: 144 cycles; 111: 480 cycles
-	ADC2->SMPR1 |= 0b110 << 9;						// Set speed of IN13
+	ADC1->SMPR1 |= 0b110 << 9;						// Set speed of IN13
  8000878:	4a44      	ldr	r2, [pc, #272]	; (800098c <_Z7InitADCv+0x1f4>)
  800087a:	4b44      	ldr	r3, [pc, #272]	; (800098c <_Z7InitADCv+0x1f4>)
  800087c:	68db      	ldr	r3, [r3, #12]
  800087e:	f443 6340 	orr.w	r3, r3, #3072	; 0xc00
  8000882:	60d3      	str	r3, [r2, #12]
-	ADC2->SMPR2 |= 0b110 << 15;						// Set speed of IN5
+	ADC1->SMPR2 |= 0b110 << 15;						// Set speed of IN5
  8000884:	4a41      	ldr	r2, [pc, #260]	; (800098c <_Z7InitADCv+0x1f4>)
  8000886:	4b41      	ldr	r3, [pc, #260]	; (800098c <_Z7InitADCv+0x1f4>)
  8000888:	691b      	ldr	r3, [r3, #16]
  800088a:	f443 3340 	orr.w	r3, r3, #196608	; 0x30000
  800088e:	6113      	str	r3, [r2, #16]
 
-	ADC2->CR2 |= ADC_CR2_EOCS;						// Trigger interrupt on end of each individual conversion
+	ADC1->CR2 |= ADC_CR2_EOCS;						// Trigger interrupt on end of each individual conversion
  8000890:	4a3e      	ldr	r2, [pc, #248]	; (800098c <_Z7InitADCv+0x1f4>)
  8000892:	4b3e      	ldr	r3, [pc, #248]	; (800098c <_Z7InitADCv+0x1f4>)
  8000894:	689b      	ldr	r3, [r3, #8]
  8000896:	f443 6380 	orr.w	r3, r3, #1024	; 0x400
  800089a:	6093      	str	r3, [r2, #8]
-	ADC2->CR2 |= ADC_CR2_EXTEN_0;					// ADC hardware trigger 00: Trigger detection disabled; 01: Trigger detection on the rising edge; 10: Trigger detection on the falling edge; 11: Trigger detection on both the rising and falling edges
+	ADC1->CR2 |= ADC_CR2_EXTEN_0;					// ADC hardware trigger 00: Trigger detection disabled; 01: Trigger detection on the rising edge; 10: Trigger detection on the falling edge; 11: Trigger detection on both the rising and falling edges
  800089c:	4a3b      	ldr	r2, [pc, #236]	; (800098c <_Z7InitADCv+0x1f4>)
  800089e:	4b3b      	ldr	r3, [pc, #236]	; (800098c <_Z7InitADCv+0x1f4>)
  80008a0:	689b      	ldr	r3, [r3, #8]
  80008a2:	f043 5380 	orr.w	r3, r3, #268435456	; 0x10000000
  80008a6:	6093      	str	r3, [r2, #8]
-	ADC2->CR2 |= ADC_CR2_EXTSEL_1 | ADC_CR2_EXTSEL_2;	// ADC External trigger: 0110 = TIM2_TRGO event
+	ADC1->CR2 |= ADC_CR2_EXTSEL_1 | ADC_CR2_EXTSEL_2;	// ADC External trigger: 0110 = TIM2_TRGO event
  80008a8:	4a38      	ldr	r2, [pc, #224]	; (800098c <_Z7InitADCv+0x1f4>)
  80008aa:	4b38      	ldr	r3, [pc, #224]	; (800098c <_Z7InitADCv+0x1f4>)
  80008ac:	689b      	ldr	r3, [r3, #8]
  80008ae:	f043 63c0 	orr.w	r3, r3, #100663296	; 0x6000000
  80008b2:	6093      	str	r3, [r2, #8]
 
-	// Enable DMA - DMA2, Channel 1, Stream 2  = ADC2 (Manual p207)
-	ADC2->CR2 |= ADC_CR2_DMA;						// Enable DMA Mode on ADC2
+	// Enable DMA - DMA2, Channel 0, Stream 0  = ADC1 (Manual p207)
+	ADC1->CR2 |= ADC_CR2_DMA;						// Enable DMA Mode on ADC1
  80008b4:	4a35      	ldr	r2, [pc, #212]	; (800098c <_Z7InitADCv+0x1f4>)
  80008b6:	4b35      	ldr	r3, [pc, #212]	; (800098c <_Z7InitADCv+0x1f4>)
  80008b8:	689b      	ldr	r3, [r3, #8]
  80008ba:	f443 7380 	orr.w	r3, r3, #256	; 0x100
  80008be:	6093      	str	r3, [r2, #8]
-	ADC2->CR2 |= ADC_CR2_DDS;						// DMA requests are issued as long as data are converted and DMA=1
+	ADC1->CR2 |= ADC_CR2_DDS;						// DMA requests are issued as long as data are converted and DMA=1
  80008c0:	4a32      	ldr	r2, [pc, #200]	; (800098c <_Z7InitADCv+0x1f4>)
  80008c2:	4b32      	ldr	r3, [pc, #200]	; (800098c <_Z7InitADCv+0x1f4>)
  80008c4:	689b      	ldr	r3, [r3, #8]
  80008c6:	f443 7300 	orr.w	r3, r3, #512	; 0x200
  80008ca:	6093      	str	r3, [r2, #8]
-	RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
+	RCC->AHB1ENR|= RCC_AHB1ENR_DMA2EN;
  80008cc:	4a2c      	ldr	r2, [pc, #176]	; (8000980 <_Z7InitADCv+0x1e8>)
  80008ce:	4b2c      	ldr	r3, [pc, #176]	; (8000980 <_Z7InitADCv+0x1e8>)
  80008d0:	6b1b      	ldr	r3, [r3, #48]	; 0x30
  80008d2:	f443 0380 	orr.w	r3, r3, #4194304	; 0x400000
  80008d6:	6313      	str	r3, [r2, #48]	; 0x30
 
-	DMA2_Stream2->CR &= ~DMA_SxCR_DIR;				// 00 = Peripheral-to-memory
+	DMA2_Stream0->CR &= ~DMA_SxCR_DIR;				// 00 = Peripheral-to-memory
  80008d8:	4a2d      	ldr	r2, [pc, #180]	; (8000990 <_Z7InitADCv+0x1f8>)
  80008da:	4b2d      	ldr	r3, [pc, #180]	; (8000990 <_Z7InitADCv+0x1f8>)
  80008dc:	681b      	ldr	r3, [r3, #0]
  80008de:	f023 03c0 	bic.w	r3, r3, #192	; 0xc0
  80008e2:	6013      	str	r3, [r2, #0]
-	DMA2_Stream2->CR |= DMA_SxCR_PL_1;				// Priority: 00 = low; 01 = Medium; 10 = High; 11 = Very High
+	DMA2_Stream0->CR |= DMA_SxCR_PL_1;				// Priority: 00 = low; 01 = Medium; 10 = High; 11 = Very High
  80008e4:	4a2a      	ldr	r2, [pc, #168]	; (8000990 <_Z7InitADCv+0x1f8>)
  80008e6:	4b2a      	ldr	r3, [pc, #168]	; (8000990 <_Z7InitADCv+0x1f8>)
  80008e8:	681b      	ldr	r3, [r3, #0]
  80008ea:	f443 3300 	orr.w	r3, r3, #131072	; 0x20000
  80008ee:	6013      	str	r3, [r2, #0]
-	DMA2_Stream2->CR |= DMA_SxCR_PSIZE_0;			// Peripheral size: 8 bit; 01 = 16 bit; 10 = 32 bit
+	DMA2_Stream0->CR |= DMA_SxCR_PSIZE_0;			// Peripheral size: 8 bit; 01 = 16 bit; 10 = 32 bit
  80008f0:	4a27      	ldr	r2, [pc, #156]	; (8000990 <_Z7InitADCv+0x1f8>)
  80008f2:	4b27      	ldr	r3, [pc, #156]	; (8000990 <_Z7InitADCv+0x1f8>)
  80008f4:	681b      	ldr	r3, [r3, #0]
  80008f6:	f443 6300 	orr.w	r3, r3, #2048	; 0x800
  80008fa:	6013      	str	r3, [r2, #0]
-	DMA2_Stream2->CR |= DMA_SxCR_MSIZE_0;			// Memory size: 8 bit; 01 = 16 bit; 10 = 32 bit
+	DMA2_Stream0->CR |= DMA_SxCR_MSIZE_0;			// Memory size: 8 bit; 01 = 16 bit; 10 = 32 bit
  80008fc:	4a24      	ldr	r2, [pc, #144]	; (8000990 <_Z7InitADCv+0x1f8>)
  80008fe:	4b24      	ldr	r3, [pc, #144]	; (8000990 <_Z7InitADCv+0x1f8>)
  8000900:	681b      	ldr	r3, [r3, #0]
  8000902:	f443 5300 	orr.w	r3, r3, #8192	; 0x2000
  8000906:	6013      	str	r3, [r2, #0]
-	DMA2_Stream2->CR &= ~DMA_SxCR_PINC;				// Peripheral not in increment mode
+	DMA2_Stream0->CR &= ~DMA_SxCR_PINC;				// Peripheral not in increment mode
  8000908:	4a21      	ldr	r2, [pc, #132]	; (8000990 <_Z7InitADCv+0x1f8>)
  800090a:	4b21      	ldr	r3, [pc, #132]	; (8000990 <_Z7InitADCv+0x1f8>)
  800090c:	681b      	ldr	r3, [r3, #0]
  800090e:	f423 7300 	bic.w	r3, r3, #512	; 0x200
  8000912:	6013      	str	r3, [r2, #0]
-	DMA2_Stream2->CR |= DMA_SxCR_MINC;				// Memory in increment mode
+	DMA2_Stream0->CR |= DMA_SxCR_MINC;				// Memory in increment mode
  8000914:	4a1e      	ldr	r2, [pc, #120]	; (8000990 <_Z7InitADCv+0x1f8>)
  8000916:	4b1e      	ldr	r3, [pc, #120]	; (8000990 <_Z7InitADCv+0x1f8>)
  8000918:	681b      	ldr	r3, [r3, #0]
  800091a:	f443 6380 	orr.w	r3, r3, #1024	; 0x400
  800091e:	6013      	str	r3, [r2, #0]
-	DMA2_Stream2->CR |= DMA_SxCR_CIRC;				// circular mode to keep refilling buffer
+	DMA2_Stream0->CR |= DMA_SxCR_CIRC;				// circular mode to keep refilling buffer
  8000920:	4a1b      	ldr	r2, [pc, #108]	; (8000990 <_Z7InitADCv+0x1f8>)
  8000922:	4b1b      	ldr	r3, [pc, #108]	; (8000990 <_Z7InitADCv+0x1f8>)
  8000924:	681b      	ldr	r3, [r3, #0]
  8000926:	f443 7380 	orr.w	r3, r3, #256	; 0x100
  800092a:	6013      	str	r3, [r2, #0]
-	DMA2_Stream2->CR &= ~DMA_SxCR_DIR;				// data transfer direction: 00: peripheral-to-memory; 01: memory-to-peripheral; 10: memory-to-memory
+	DMA2_Stream0->CR &= ~DMA_SxCR_DIR;				// data transfer direction: 00: peripheral-to-memory; 01: memory-to-peripheral; 10: memory-to-memory
  800092c:	4a18      	ldr	r2, [pc, #96]	; (8000990 <_Z7InitADCv+0x1f8>)
  800092e:	4b18      	ldr	r3, [pc, #96]	; (8000990 <_Z7InitADCv+0x1f8>)
  8000930:	681b      	ldr	r3, [r3, #0]
  8000932:	f023 03c0 	bic.w	r3, r3, #192	; 0xc0
  8000936:	6013      	str	r3, [r2, #0]
 
-	DMA2_Stream2->NDTR |= ADC_BUFFER_LENGTH;		// Number of data items to transfer (ie size of ADC buffer)
+	DMA2_Stream0->NDTR |= ADC_BUFFER_LENGTH;		// Number of data items to transfer (ie size of ADC buffer)
  8000938:	4a15      	ldr	r2, [pc, #84]	; (8000990 <_Z7InitADCv+0x1f8>)
  800093a:	4b15      	ldr	r3, [pc, #84]	; (8000990 <_Z7InitADCv+0x1f8>)
  800093c:	685b      	ldr	r3, [r3, #4]
  800093e:	f043 0308 	orr.w	r3, r3, #8
  8000942:	6053      	str	r3, [r2, #4]
-	DMA2_Stream2->PAR = (uint32_t)(&(ADC2->DR));	// Configure the peripheral data register address
+	DMA2_Stream0->PAR = (uint32_t)(&(ADC1->DR));	// Configure the peripheral data register address
  8000944:	4b12      	ldr	r3, [pc, #72]	; (8000990 <_Z7InitADCv+0x1f8>)
  8000946:	4a13      	ldr	r2, [pc, #76]	; (8000994 <_Z7InitADCv+0x1fc>)
  8000948:	609a      	str	r2, [r3, #8]
-	DMA2_Stream2->M0AR = (uint32_t)(ADC_array);		// Configure the memory address (note that M1AR is used for double-buffer mode)
+	DMA2_Stream0->M0AR = (uint32_t)(ADC_array);		// Configure the memory address (note that M1AR is used for double-buffer mode)
  800094a:	4b11      	ldr	r3, [pc, #68]	; (8000990 <_Z7InitADCv+0x1f8>)
  800094c:	4a12      	ldr	r2, [pc, #72]	; (8000998 <_Z7InitADCv+0x200>)
  800094e:	60da      	str	r2, [r3, #12]
-	DMA2_Stream2->CR |= DMA_SxCR_CHSEL_0;			// channel select to 1 for ADC2
+	DMA2_Stream0->CR &= ~DMA_SxCR_CHSEL;			// channel select to 0 for ADC1
  8000950:	4a0f      	ldr	r2, [pc, #60]	; (8000990 <_Z7InitADCv+0x1f8>)
  8000952:	4b0f      	ldr	r3, [pc, #60]	; (8000990 <_Z7InitADCv+0x1f8>)
  8000954:	681b      	ldr	r3, [r3, #0]
- 8000956:	f043 7300 	orr.w	r3, r3, #33554432	; 0x2000000
+ 8000956:	f023 6360 	bic.w	r3, r3, #234881024	; 0xe000000
  800095a:	6013      	str	r3, [r2, #0]
 
-	DMA2_Stream2->CR |= DMA_SxCR_EN;				// Enable DMA2
+	DMA2_Stream0->CR |= DMA_SxCR_EN;				// Enable DMA2
  800095c:	4a0c      	ldr	r2, [pc, #48]	; (8000990 <_Z7InitADCv+0x1f8>)
  800095e:	4b0c      	ldr	r3, [pc, #48]	; (8000990 <_Z7InitADCv+0x1f8>)
  8000960:	681b      	ldr	r3, [r3, #0]
  8000962:	f043 0301 	orr.w	r3, r3, #1
  8000966:	6013      	str	r3, [r2, #0]
-	ADC2->CR2 |= ADC_CR2_ADON;						// Activate ADC
+	ADC1->CR2 |= ADC_CR2_ADON;						// Activate ADC
  8000968:	4a08      	ldr	r2, [pc, #32]	; (800098c <_Z7InitADCv+0x1f4>)
  800096a:	4b08      	ldr	r3, [pc, #32]	; (800098c <_Z7InitADCv+0x1f4>)
  800096c:	689b      	ldr	r3, [r3, #8]
  800096e:	f043 0301 	orr.w	r3, r3, #1
  8000972:	6093      	str	r3, [r2, #8]
-
-	DMA2_Stream0->CR |= DMA_SxCR_EN;				// Enable DMA2
-	ADC1->CR2 |= ADC_CR2_ADON;						// Activate ADC*/
-
 
 }
  8000974:	bf00      	nop
@@ -1329,9 +1325,9 @@ void InitADC(void)
  8000980:	40023800 	.word	0x40023800
  8000984:	40020800 	.word	0x40020800
  8000988:	40020000 	.word	0x40020000
- 800098c:	40012100 	.word	0x40012100
- 8000990:	40026440 	.word	0x40026440
- 8000994:	4001214c 	.word	0x4001214c
+ 800098c:	40012000 	.word	0x40012000
+ 8000990:	40026410 	.word	0x40026410
+ 8000994:	4001204c 	.word	0x4001204c
  8000998:	20000034 	.word	0x20000034
 
 0800099c <_Z9InitTimerv>:
@@ -1347,16 +1343,16 @@ void InitTimer()
  80009a4:	6c1b      	ldr	r3, [r3, #64]	; 0x40
  80009a6:	f043 0302 	orr.w	r3, r3, #2
  80009aa:	6413      	str	r3, [r2, #64]	; 0x40
-	TIM3->PSC = 1000;	// Set prescaler to fire at sample rate - this is divided by 4 to match the APB2 prescaler
+	TIM3->PSC = 1000;								// Set prescaler to fire at sample rate - this is divided by 4 to match the APB2 prescaler
  80009ac:	4b14      	ldr	r3, [pc, #80]	; (8000a00 <_Z9InitTimerv+0x64>)
  80009ae:	f44f 727a 	mov.w	r2, #1000	; 0x3e8
  80009b2:	851a      	strh	r2, [r3, #40]	; 0x28
-	TIM3->ARR = 30; //SystemCoreClock / 48000 - 1;	// Set maximum count value (auto reload register) - set to system clock / sampling rate
+	TIM3->ARR = 30; 								// Set maximum count value (auto reload register) - set to system clock / sampling rate
  80009b4:	4b12      	ldr	r3, [pc, #72]	; (8000a00 <_Z9InitTimerv+0x64>)
  80009b6:	221e      	movs	r2, #30
  80009b8:	62da      	str	r2, [r3, #44]	; 0x2c
 
-	SET_BIT(TIM3->DIER, TIM_DIER_UIE);				//  DMA/interrupt enable register
+	TIM3->DIER |= TIM_DIER_UIE;						//  DMA/interrupt enable register
  80009ba:	4a11      	ldr	r2, [pc, #68]	; (8000a00 <_Z9InitTimerv+0x64>)
  80009bc:	4b10      	ldr	r3, [pc, #64]	; (8000a00 <_Z9InitTimerv+0x64>)
  80009be:	899b      	ldrh	r3, [r3, #12]
@@ -1372,7 +1368,7 @@ void InitTimer()
  80009d2:	201d      	movs	r0, #29
  80009d4:	f7ff fe04 	bl	80005e0 <NVIC_SetPriority>
 
-	SET_BIT(TIM3->CR1, TIM_CR1_CEN);
+	TIM3->CR1 |= TIM_CR1_CEN;
  80009d8:	4a09      	ldr	r2, [pc, #36]	; (8000a00 <_Z9InitTimerv+0x64>)
  80009da:	4b09      	ldr	r3, [pc, #36]	; (8000a00 <_Z9InitTimerv+0x64>)
  80009dc:	881b      	ldrh	r3, [r3, #0]
@@ -1380,7 +1376,7 @@ void InitTimer()
  80009e0:	f043 0301 	orr.w	r3, r3, #1
  80009e4:	b29b      	uxth	r3, r3
  80009e6:	8013      	strh	r3, [r2, #0]
-	SET_BIT(TIM3->EGR, TIM_EGR_UG);
+	TIM3->EGR |= TIM_EGR_UG;
  80009e8:	4a05      	ldr	r2, [pc, #20]	; (8000a00 <_Z9InitTimerv+0x64>)
  80009ea:	4b05      	ldr	r3, [pc, #20]	; (8000a00 <_Z9InitTimerv+0x64>)
  80009ec:	8a9b      	ldrh	r3, [r3, #20]
@@ -1818,7 +1814,6 @@ int main(void) {
 
 	while (1) {
 
-
 		// check if we should start drawing
 		if (!drawing && capturing) {
  8000d46:	4b8c      	ldr	r3, [pc, #560]	; (8000f78 <main+0x268>)
@@ -1876,7 +1871,6 @@ int main(void) {
  8000da2:	4b7c      	ldr	r3, [pc, #496]	; (8000f94 <main+0x284>)
  8000da4:	4a7c      	ldr	r2, [pc, #496]	; (8000f98 <main+0x288>)
  8000da6:	6013      	str	r3, [r2, #0]
-
 		}
 
 
