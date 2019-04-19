@@ -1,8 +1,8 @@
 core_cm4.h:1467:22:void NVIC_EnableIRQ(IRQn_Type)	16	static
 core_cm4.h:1550:22:void NVIC_SetPriority(IRQn_Type, uint32_t)	16	static
 initialisation.h:37:6:void SystemClock_Config()	16	static
-initialisation.h:85:6:void InitLCD()	4	static
+initialisation.h:85:6:void InitLCDHardware()	4	static
 initialisation.h:148:6:void InitADC()	4	static
 initialisation.h:208:6:void InitTimer()	8	static
-main.cpp:40:7:void TIM3_IRQHandler()	16	static
-main.cpp:87:5:int main()	32	static
+main.cpp:44:7:void TIM3_IRQHandler()	16	static
+main.cpp:91:5:int main()	32	static

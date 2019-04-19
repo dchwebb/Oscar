@@ -82,7 +82,7 @@ void SystemClock_Config(void)
 	// See page 83 of manual for other possible performance boost options: instruction cache enable (ICEN) and data cache enable (DCEN)
 }
 
-void InitLCD(void)
+void InitLCDHardware(void)
 {
 	//	Enable GPIO and SPI clocks
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;			// reset and clock control - advanced high performance bus - GPIO port C
@@ -90,7 +90,7 @@ void InitLCD(void)
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOFEN;			// reset and clock control - advanced high performance bus - GPIO port F
 	RCC->APB2ENR |= RCC_APB2ENR_SPI5EN;
 
-	// Init WRX pin PD13
+	// Init WRX (Write execution control) pin PD13
 	GPIOD->MODER |= GPIO_MODER_MODER13_0;			// 00: Input (reset state)	01: General purpose output mode	10: Alternate function mode	11: Analog mode
 	GPIOD->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR13_0;	// Medium  - 00: Low speed; 01: Medium speed; 10: High speed; 11: Very high speed
 
