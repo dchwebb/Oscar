@@ -4,5 +4,8 @@ initialisation.h:37:6:void SystemClock_Config()	16	static
 initialisation.h:85:6:void InitLCDHardware()	4	static
 initialisation.h:148:6:void InitADC()	4	static
 initialisation.h:208:6:void InitTimer()	8	static
+lcd.h:79:7:Lcd::Lcd()	16	static
 main.cpp:44:7:void TIM3_IRQHandler()	16	static
-main.cpp:91:5:int main()	32	static
+main.cpp:91:5:int main()	56	static
+main.cpp:178:1:void __static_initialization_and_destruction_0(int, int)	16	static
+main.cpp:178:1:cpp)	8	static

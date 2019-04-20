@@ -99,8 +99,10 @@ int main(void) {
 	//Initialize ILI9341
 	lcd.Init();
 	//TM_ILI9341_Init();
-	TM_ILI9341_Rotate(TM_ILI9341_Orientation_Landscape_2);		// Rotate LCD 90 degrees
-	TM_ILI9341_Fill(ILI9341_COLOR_BLACK);						// Fill lcd with black
+	//TM_ILI9341_Rotate(TM_ILI9341_Orientation_Landscape_2);		// Rotate LCD 90 degrees
+	lcd.Rotate(LCD_Landscape_Flipped);
+	lcd.ScreenFill(LCD_BLACK);
+	//TM_ILI9341_Fill(ILI9341_COLOR_BLACK);						// Fill lcd with black
 
 	/*
 	//Put string with black foreground color and blue background with 11x18px font
@@ -113,6 +115,7 @@ int main(void) {
 	DW_Pattern_Fill(50, 50);
 */
 
+	lcd.DrawLine(0, 0, 120, 40, LCD_RED);
 	captureABuffer = ChannelA0;
 	captureBBuffer = ChannelB0;
 	InitTimer();
@@ -147,11 +150,11 @@ int main(void) {
 				}
 
 				// Draw a black line over previous sample
-				TM_ILI9341_DrawLine(drawPos, 0, drawPos, 239, LCD_BLACK);
+				lcd.DrawLine(drawPos, 0, drawPos, 239, LCD_BLACK);
 
 				// Draw current samples as lines from previous pixel position to current sample position
-				TM_ILI9341_DrawLine(drawPos, drawABuffer[calculatedOffset], drawPos, prevAPixel, LCD_GREEN);
-				TM_ILI9341_DrawLine(drawPos, drawBBuffer[calculatedOffset], drawPos, prevBPixel, LCD_LIGHTBLUE);
+				lcd.DrawLine(drawPos, drawABuffer[calculatedOffset], drawPos, prevAPixel, LCD_GREEN);
+				lcd.DrawLine(drawPos, drawBBuffer[calculatedOffset], drawPos, prevBPixel, LCD_LIGHTBLUE);
 
 				// Store previous sample so next sample can be drawn as a line from old to new
 				prevAPixel = drawABuffer[calculatedOffset];
@@ -163,8 +166,8 @@ int main(void) {
 
 				// Draw trigger as a yellow cross
 				if (drawPos == trigger.x + 4) {
-					TM_ILI9341_DrawLine(trigger.x, trigger.y - 4, trigger.x, trigger.y + 4, LCD_YELLOW);
-					TM_ILI9341_DrawLine(trigger.x - 4, trigger.y, trigger.x + 4, trigger.y, LCD_YELLOW);
+					lcd.DrawLine(trigger.x, trigger.y - 4, trigger.x, trigger.y + 4, LCD_YELLOW);
+					lcd.DrawLine(trigger.x - 4, trigger.y, trigger.x + 4, trigger.y, LCD_YELLOW);
 				}
 
 			}
