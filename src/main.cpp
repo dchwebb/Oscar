@@ -1,6 +1,6 @@
 #include "stm32f4xx.h"
-#include "tm_stm32f4_ili9341.h"
-#include "tm_stm32f4_fonts.h"
+//#include "tm_stm32f4_ili9341.h"
+//#include "tm_stm32f4_fonts.h"
 #include <stdio.h>
 #include "initialisation.h"
 #include "lcd.h"
@@ -103,6 +103,8 @@ int main(void) {
 	lcd.Rotate(LCD_Landscape_Flipped);
 	lcd.ScreenFill(LCD_BLACK);
 	//TM_ILI9341_Fill(ILI9341_COLOR_BLACK);						// Fill lcd with black
+
+	lcd.DrawChar(60, 150, 'A', &lcd.Font_Small, LCD_WHITE, LCD_BLUE);
 
 	/*
 	//Put string with black foreground color and blue background with 11x18px font

@@ -126,6 +126,12 @@ void InitLCDHardware(void)
 	// Configure DMA
 	RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
 
+	// Initialise TX stream
+	DMA2_Stream6->CR |= DMA_SxCR_CHSEL;				// 0b111 is channel 7
+	DMA2_Stream6->CR |= DMA_SxCR_MSIZE_0;			// Memory size: 8 bit; 01 = 16 bit; 10 = 32 bit
+	DMA2_Stream6->CR |= DMA_SxCR_PSIZE_0;			// Peripheral size: 8 bit; 01 = 16 bit; 10 = 32 bit
+	DMA2_Stream6->CR |= DMA_SxCR_DIR_0;				// data transfer direction: 00: peripheral-to-memory; 01: memory-to-peripheral; 10: memory-to-memory
+	DMA2_Stream6->PAR = (uint32_t) &(SPI5->DR);		// Configure the peripheral data register address
 
 
 	/*TM_SPI_DMA_INT_t SPI5_DMA_INT = {SPI5_DMA_TX_CHANNEL , SPI5_DMA_TX_STREAM, SPI5_DMA_RX_CHANNEL, SPI5_DMA_RX_STREAM};

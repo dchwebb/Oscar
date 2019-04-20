@@ -1,5 +1,6 @@
 #include "stm32f4xx.h"
 #include <vector>
+#include "fontData.h"
 
 // RGB565 colours
 #define LCD_WHITE		0xFFFF
@@ -75,6 +76,12 @@ typedef enum {
 	SPIDataSize_16b 		// SPI in 16-bits mode
 } SPIDataSize_t;
 
+typedef struct {
+	uint8_t FontWidth;    /*!< Font width in pixels */
+	uint8_t FontHeight;   /*!< Font height in pixels */
+	const uint16_t *data; /*!< Pointer to data font data array */
+} FontDef_t;
+
 
 class Lcd {
 public:
@@ -82,6 +89,9 @@ public:
 	uint16_t width = 240;
 	uint16_t height = 320;
 	uint16_t DMAint16;
+	FontDef_t Font_Small {7, 10, Font7x10};
+	FontDef_t Font_Medium {11, 18, Font11x18};
+	FontDef_t Font_Large {16, 26, Font16x26};
 
 	void Init(void);
 	void Rotate(LCD_Orientation_t orientation);
@@ -89,8 +99,11 @@ public:
 	void ColourFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t& colour);
 	void DrawPixel(uint16_t x, uint16_t y, const uint16_t& colour);
 	void DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint32_t& colour);
-
+	void DrawChar(uint16_t x, uint16_t y, char c, const FontDef_t *font, const uint32_t& foreground, const uint32_t& background);
+	void PatternFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t* PixelData);
 private:
+	uint16_t charPosX;
+	uint16_t charPosY;
 
 	void Delay(volatile uint32_t delay);
 	void Command(uint8_t data);
@@ -104,3 +117,5 @@ private:
 	bool SPI_DMA_SendHalfWord(uint16_t value, uint16_t count);
 
 };
+
+

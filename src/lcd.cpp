@@ -1,7 +1,6 @@
 #include "lcd.h"
 
 
-
 void Lcd::Init(void) {
 
 	// Force reset
@@ -146,6 +145,100 @@ void Lcd::SetCursorPosition(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) 
 
 }
 
+void Lcd::DrawChar(uint16_t x, uint16_t y, char c, const FontDef_t *font, const uint32_t& foreground, const uint32_t& background) {
+	uint32_t px, py, fontOffset;
+	// Set character coordinates
+	charPosX = x;
+	charPosY = y;
+
+	// If at the end of a line of display, go to new line and set x to 0 position
+	if ((charPosX + font->FontWidth) > width) {
+		charPosY += font->FontHeight;
+		charPosX = 0;
+	}
+
+	// Create array containing colour pattern to display
+	uint16_t charDisp[font->FontWidth * font->FontHeight];
+
+	// Draw font data
+	uint16_t i = 0;
+	for (py = 0; py < font->FontHeight; py++) {
+		fontOffset = font->data[(c - 32) * font->FontHeight + py];
+		for (px = 0; px < font->FontWidth; px++) {
+			if ((fontOffset << px) & 0x8000) {
+				charDisp[i] = foreground;
+			} else {
+				charDisp[i] = background;
+			}
+			i++;
+		}
+	}
+
+	// Send array of data to SPI/DMA to draw
+	PatternFill(x, y, x + font->FontWidth - 1, y + font->FontHeight - 1, charDisp);
+
+	// Set new character position
+	charPosX += font->FontWidth;
+}
+
+void Lcd::PatternFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t* PixelData) {
+
+	SetCursorPosition(x0, y0, x1, y1);
+	Command(ILI9341_GRAM);
+	uint32_t pixelCount = (x1 - x0 + 1) * (y1 - y0 + 1);
+
+	LCD_CS_RESET;
+	LCD_DCX_SET;
+
+	SPISetDataSize(SPIDataSize_16b);			// 16-bit SPI mode
+
+	if (DMA2_Stream6->NDTR)							// Check number of data items to transfer is zero (ie stream is free)
+		return;
+
+	// Clear DMA Stream 6 flags using high interrupt flag clear register
+	DMA2->HIFCR = DMA_HIFCR_CFEIF6 | DMA_HIFCR_CDMEIF6 | DMA_HIFCR_CTEIF6 | DMA_HIFCR_CHTIF6 | DMA_HIFCR_CTCIF6;
+
+	DMA2_Stream6->CR |= DMA_SxCR_MINC;				// Memory in increment mode
+	DMA2_Stream6->NDTR = pixelCount;				// Number of data items to transfer
+	DMA2_Stream6->M0AR = (uint32_t) (PixelData);	// DMA_InitStruct.DMA_Memory0BaseAddr
+	DMA2_Stream6->CR |= DMA_SxCR_EN;				// Enable DMA transfer stream
+	SPI5->CR2 |= SPI_CR2_TXDMAEN;					// Enable SPI TX DMA
+
+	while (SPI_DMA_Working);
+
+	LCD_CS_SET;
+	SPISetDataSize(SPIDataSize_8b);				// 8 bit SPI Mode
+}
+
+/*void Lcd::DrawChar(uint16_t x, uint16_t y, char c, const FontDef_t *font, const uint32_t& foreground, const uint32_t& background) {
+	uint32_t i, b, j;
+	// Set character coordinates
+	charPosX = x;
+	charPosY = y;
+
+	if ((charPosX + font->FontWidth) > width) {
+		 If at the end of a line of display, go to new line and set x to 0 position
+		charPosY += font->FontHeight;
+		charPosX = 0;
+	}
+
+	// Draw rectangle for background
+	ColourFill(charPosX, charPosY, charPosX + font->FontWidth, charPosY + font->FontHeight, background);
+
+	// Draw font data
+	for (i = 0; i < font->FontHeight; i++) {
+		b = font->data[(c - 32) * font->FontHeight + i];
+		for (j = 0; j < font->FontWidth; j++) {
+			if ((b << j) & 0x8000) {
+				DrawPixel(charPosX + j, (charPosY + i), foreground);
+			}
+		}
+	}
+
+	// Set new character position
+	charPosX += font->FontWidth;
+}*/
+
 void Lcd::SPISetDataSize(SPIDataSize_t Mode) {
 
 	SPI5->CR1 &= ~SPI_CR1_SPE;						// Disable SPI
@@ -177,18 +270,11 @@ bool Lcd::SPI_DMA_SendHalfWord(uint16_t value, uint16_t count) {
 	// Clear DMA Stream 6 flags using high interrupt flag clear register
 	DMA2->HIFCR = DMA_HIFCR_CFEIF6 | DMA_HIFCR_CDMEIF6 | DMA_HIFCR_CTEIF6 | DMA_HIFCR_CHTIF6 | DMA_HIFCR_CTCIF6;
 
-	// Initialise TX stream
-	DMA2_Stream6->CR |= DMA_SxCR_CHSEL;				// 0b111 is channel 7
-	DMA2_Stream6->CR |= DMA_SxCR_MSIZE_0;			// Memory size: 8 bit; 01 = 16 bit; 10 = 32 bit
-	DMA2_Stream6->CR |= DMA_SxCR_PSIZE_0;			// Peripheral size: 8 bit; 01 = 16 bit; 10 = 32 bit
-	DMA2_Stream6->CR |= DMA_SxCR_DIR_0;				// data transfer direction: 00: peripheral-to-memory; 01: memory-to-peripheral; 10: memory-to-memory
-	DMA2_Stream6->CR &= ~DMA_SxCR_MINC;				// Memory in increment mode
-
+	DMA2_Stream6->CR &= ~DMA_SxCR_MINC;				// Memory not in increment mode
 	DMA2_Stream6->NDTR = count;						// Number of data items to transfer
-	DMA2_Stream6->PAR = (uint32_t) &(SPI5->DR);		// Configure the peripheral data register address
 	DMA2_Stream6->M0AR = (uint32_t) &DMAint16;		// DMA_InitStruct.DMA_Memory0BaseAddr;
-
 	DMA2_Stream6->CR |= DMA_SxCR_EN;				// Enable DMA transfer stream
+
 	SPI5->CR2 |= SPI_CR2_TXDMAEN;					// Enable SPI TX DMA
 
 	return true;
