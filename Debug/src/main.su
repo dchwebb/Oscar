@@ -4,8 +4,9 @@ initialisation.h:37:6:void SystemClock_Config()	16	static
 initialisation.h:85:6:void InitLCDHardware()	4	static
 initialisation.h:154:6:void InitADC()	4	static
 initialisation.h:214:6:void InitTimer()	8	static
-lcd.h:86:7:Lcd::Lcd()	16	static
-main.cpp:44:7:void TIM3_IRQHandler()	16	static
-main.cpp:91:5:int main()	72	static
-main.cpp:180:1:void __static_initialization_and_destruction_0(int, int)	16	static
-main.cpp:180:1:cpp)	8	static
+gthr-default.h:229:1:int __gthread_key_delete(__gthread_key_t)	16	static
+lcd.h:87:7:Lcd::Lcd()	16	static
+main.cpp:42:7:void TIM3_IRQHandler()	16	static
+main.cpp:89:5:int main()	104	static
+main.cpp:165:1:void __static_initialization_and_destruction_0(int, int)	16	static
+main.cpp:165:1:cpp)	8	static

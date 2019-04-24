@@ -1,6 +1,7 @@
 #include "stm32f4xx.h"
-#include <vector>
 #include "fontData.h"
+#include <vector>
+#include <string>
 
 // RGB565 colours
 #define LCD_WHITE		0xFFFF
@@ -77,8 +78,8 @@ typedef enum {
 } SPIDataSize_t;
 
 typedef struct {
-	uint8_t FontWidth;    /*!< Font width in pixels */
-	uint8_t FontHeight;   /*!< Font height in pixels */
+	uint8_t Width;    /*!< Font width in pixels */
+	uint8_t Height;   /*!< Font height in pixels */
 	const uint16_t *data; /*!< Pointer to data font data array */
 } FontDef_t;
 
@@ -97,13 +98,12 @@ public:
 	void Rotate(LCD_Orientation_t orientation);
 	void ScreenFill(const uint16_t& colour);
 	void ColourFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t& colour);
+	void PatternFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t* PixelData);
 	void DrawPixel(uint16_t x, uint16_t y, const uint16_t& colour);
 	void DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint32_t& colour);
 	void DrawChar(uint16_t x, uint16_t y, char c, const FontDef_t *font, const uint32_t& foreground, const uint32_t& background);
-	void PatternFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t* PixelData);
+	void DrawString(uint16_t x0, uint16_t y0, std::string s, const FontDef_t *font, const uint32_t& foreground, const uint32_t& background);
 private:
-	uint16_t charPosX;
-	uint16_t charPosY;
 
 	void Delay(volatile uint32_t delay);
 	void Command(uint8_t data);
