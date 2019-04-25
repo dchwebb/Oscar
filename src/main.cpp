@@ -1,9 +1,10 @@
 #include "stm32f4xx.h"
-//#include <stdio.h>
+#include <cmath>
 #include "initialisation.h"
 #include "lcd.h"
 
 #define OSCWIDTH 320
+#define LUTSIZE 1024
 
 extern uint32_t SystemCoreClock;
 extern volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
@@ -27,16 +28,20 @@ volatile bool drawing = false;
 volatile uint8_t captureBufferNumber = 0;
 volatile uint8_t drawBufferNumber = 0;
 int16_t drawOffset[2] {0, 0};
+float SineLUT[LUTSIZE];
+
+volatile uint32_t coverageTimer = 0;
+volatile uint32_t coverageTotal = 0;
 
 Lcd lcd;
-
 
 struct  {
 	uint16_t x = 10;
 	uint16_t y = 125;
 } trigger;
 
-//	Use extern C to allow linker to find ISR
+
+//	Interrupts: Use extern C to allow linker to find ISR
 extern "C"
 {
 	void TIM3_IRQHandler(void) {
@@ -84,6 +89,114 @@ extern "C"
 
 		}
 	}
+
+	//	Coverage timer
+	void TIM4_IRQHandler(void) {
+		if (TIM4->SR & TIM_SR_UIF) 						// if UIF flag is set
+		{
+			TIM4->SR &= ~TIM_SR_UIF;					// clear UIF flag
+			coverageTimer ++;
+		}
+	}
+}
+
+// Generate Sine LUT
+void GenerateLUT(void) {
+	for (int s = 0; s < LUTSIZE; s++){
+		SineLUT[s] = sin(s * 2.0f * M_PI / LUTSIZE);
+	}
+}
+
+#define samples 128
+float candSin[samples];
+float candCos[samples];
+
+// Fast fourier transform
+void FFT() {
+
+	int bits = log2(samples);
+	int br = 0;
+	coverageTimer = 0;
+
+	// create an test array to transform
+	for (int i = 0; i < samples; i++) {
+		// Saw Tooth
+		//candSin[i] = (2.0f * (samples - i) / samples) - 1;
+
+		// Square wave
+		candSin[i] = i < (samples / 2) ? 1 : 0;
+
+		candCos[i] = 0;
+	}
+	TIM4->CR1 &= ~TIM_CR1_CEN;
+	// Bit reverse samples
+	for (int i = 0; i < samples; i++) {
+		// assembly bit reverses i and then rotates right to correct bit length
+		asm("rbit %[result], %[value]\n\t"
+			"ror %[result], %[shift]"
+			: [result] "=r" (br) : [value] "r" (i), [shift] "r" (32 - bits));
+
+		if (br > i) {
+			// bit reverse samples
+			float temp = candSin[i];
+			candSin[i] = candSin[br];
+			candSin[br] = temp;
+		}
+	}
+
+	// Carry out FFT traversing butterfly diagram
+	int node = 1;
+	// Step through each column in the butterfly diagram
+	while (node < samples) {
+
+		// Step through each value of the W function
+		for (int Wx = 0; Wx < node; Wx++) {
+			float a = Wx * M_PI / node;
+			float c = cos(a);
+			float s = sin(a);
+
+			// replace pairs of nodes with updated values
+			for (int p1 = Wx; p1 < samples; p1 += node * 2) {
+				int p2 = p1 + node;
+
+				float sinP1 = candSin[p1];
+				float cosP1 = candCos[p1];
+
+				float sinP2 = candSin[p2];
+				float cosP2 = candCos[p2];
+
+				float t1 = c * sinP2 - s * cosP2;
+				float t2 = c * cosP2 + s * sinP2;
+
+				candSin[p2] = sinP1 - t1;
+				candCos[p2] = cosP1 - t2;
+				candSin[p1] = sinP1 + t1;
+				candCos[p1] = cosP1 + t2;
+
+				/*candSin[p1] = sinP1;
+				candCos[p1] = cosP1;
+				candSin[p2] = sinP2;
+				candCos[p2] = cosP2;*/
+			}
+		}
+
+		node = node * 2;
+	}
+
+
+	// Combine sine and cosines to get amplitudes
+	int width = OSCWIDTH / (samples / 2);
+	for (int i = 1; i <= samples / 2; i++) {
+
+		int left = (i - 1) * width;
+		float x = std::sqrt(std::pow(candSin[i], 2) + std::pow(candCos[i], 2));
+		int top = 239 * (1 - (x / (samples / 2)));
+		int x1 = left + width;
+
+		lcd.ColourFill(left, top, x1, 239, LCD_BLUE);
+
+	}
+
 }
 
 int main(void) {
@@ -99,9 +212,22 @@ int main(void) {
 	lcd.Rotate(LCD_Landscape_Flipped);
 	lcd.ScreenFill(LCD_BLACK);
 
+
+	InitCoverageTimer();
+
+	// Slow Fourier Transform
+	FFT();
+
+	TIM4->CR1 &= ~TIM_CR1_CEN;
+	coverageTotal = (coverageTimer * 65536) + TIM4->CNT;
+
+
+	//coverage65k = coverageTimer;
+	//coverageCnt = TIM4->CNT;
+
 	// Test code
-	lcd.DrawString(60, 150, "Hello", &lcd.Font_Small, LCD_WHITE, LCD_BLUE);
-	lcd.DrawLine(0, 0, 120, 40, LCD_RED);
+	//lcd.DrawString(60, 150, "Hello", &lcd.Font_Small, LCD_WHITE, LCD_BLUE);
+	//lcd.DrawLine(0, 0, 120, 40, LCD_RED);
 
 	captureABuffer = ChannelA0;
 	captureBBuffer = ChannelB0;

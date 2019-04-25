@@ -223,5 +223,21 @@ void InitTimer()
 	NVIC_SetPriority(TIM3_IRQn, 0);
 
 	TIM3->CR1 |= TIM_CR1_CEN;
-	TIM3->EGR |= TIM_EGR_UG;
+	TIM3->EGR |= TIM_EGR_UG;						//  Re-initializes counter and generates update of registers
+}
+
+void InitCoverageTimer()
+{
+	//	Setup Timer to count clock cycles for coverage profiling
+	RCC->APB1ENR |= RCC_APB1ENR_TIM4EN;				// Enable Timer
+	TIM4->PSC = 10;
+	TIM4->ARR = 65535;
+
+	TIM4->DIER |= TIM_DIER_UIE;						//  DMA/interrupt enable register
+	NVIC_EnableIRQ(TIM4_IRQn);
+	NVIC_SetPriority(TIM4_IRQn, 0);
+
+
+	TIM4->CR1 |= TIM_CR1_CEN;
+	TIM4->EGR |= TIM_EGR_UG;
 }

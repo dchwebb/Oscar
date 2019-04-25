@@ -1,57 +1,159 @@
 CLEAR
-m.s = 128
+m.samples = 32
+m.FFTMode = .t.
 m.output = ""
 
 CREATE CURSOR curOutput (Cnt I, Cnd F(10, 6), Harmonic F(10, 6))
+m.candFormula = "SIN((7.3 * 2 * PI() * m.i / m.samples)) + SIN((7.3 * 3 * 2 * PI() * m.i / m.samples))"
 
 
 *	Square wave
-m.candFormula = "IIF(m.i < (m.s / 2), 1, 0)"
+m.candFormula = "IIF(m.i < (m.samples / 2), 1, 0)"
 
 *	Saw
-m.candFormula = "(2 * (m.s - m.i) / m.s) - 1"
+m.candFormula = "(2 * (m.samples - m.i) / m.samples) - 1"
 
-m.candFormula = "SIN((7.3 * 2 * PI() * m.i / m.s)) + SIN((7.3 * 3 * 2 * PI() * m.i / m.s))"
+*	Sine
+*m.candFormula = "SIN((2 * PI() * m.i / m.samples))"
+
+*m.candFormula = "VAL(STREXTRACT(',0.3102, 0.694, .4731, 0.5149, 0.3393, 0.3336, 0.171, 0.1419, -0.0131, -0.0605, -0.2093, -0.2766, -0.4187, -0.5168, -0.6522, -0.8304,', ',', ',', m.i + 1))"
 
 
-m.output = m.output + "cand" + CHR(9)
-FOR m.i = 0 TO m.s - 1
+*	Create a table containing samples
+CREATE CURSOR curSamples (Cnt I, Br I, Sin F(10, 6), Cos F(10, 6))
+
+FOR m.i = 0 TO m.samples - 1
 	INSERT INTO curOutput (Cnt, Cnd) VALUES (m.i + 1, EVALUATE(m.candFormula))
-
-*	m.output = m.output + TRANSFORM(EVALUATE(m.candFormula), "99.999") + CHR(9)
+	INSERT INTO curSamples (Cnt, Br, Sin, Cos) VALUES (m.i, m.i, EVALUATE(m.candFormula), 0)
 ENDFOR
 
-m.output = m.output + "prd" + CHR(13)
 
-FOR m.cs = 1 TO m.s / 2
 
-	m.cosSum = 0
-	m.sinSum = 0
-
-	FOR m.i = 0 TO m.s - 1
+* Bit reverse samples
+FOR m.i = 1 TO m.samples
+	m.br = 0
+	FOR m.b = 1 TO LOG(m.samples) / LOG(2)
+		IF BITTEST(m.i, m.b - 1)
+			m.br = BITSET(m.br, LOG(m.samples) / LOG(2) - m.b)
+		ENDIF
+	ENDFOR
 	
-		m.cand = EVALUATE(m.candFormula)
-		
-		m.cosine = COS(m.cs * 2 * PI() * m.i / m.s)
-		m.sine = SIN(m.cs * 2 * PI() * m.i / m.s)
+	*	Swap samples
+	IF m.br > m.i
+		SELECT curSamples
+		LOCATE FOR cnt = m.i
+		m.sinA = curSamples.sin
+		LOCATE FOR cnt = m.br
+		m.sinB = curSamples.sin
+		REPLACE Br WITH m.i, sin WITH m.sinA
+		LOCATE FOR cnt = m.i
+		REPLACE Br WITH m.br, sin WITH m.sinB
+	ENDIF
+ENDFOR
 
-		m.cosSum = m.cosSum + (m.cosine * m.cand)
-		m.sinSum = m.sinSum + (m.sine * m.cand)
+*!*	GO TOP
+*!*	BROWSE NORMAL NOWAIT
+
+m.steps = 0
+
+IF m.FFTMode
+
+	m.node = 1
+	* Step through each column in the butterfly diagram
+	DO WHILE m.node < m.samples
+		
+		* Step through each value of the W function
+		FOR m.Wx = 0 TO m.node - 1
+			m.a = m.Wx * PI() / m.node
+			m.c = COS(m.a)
+			m.s = SIN(m.a)
+			
+			* replace pairs of nodes with updated values
+			FOR m.p1 = m.Wx TO m.samples - 1 STEP m.node * 2
+				m.p2 = m.p1 + m.node
+				
+				SELECT curSamples
+				LOCATE FOR cnt = m.p1
+				m.sinP1 = curSamples.sin
+				m.cosP1 = curSamples.cos
+
+				SELECT curSamples
+				LOCATE FOR cnt = m.p2
+				m.sinP2 = curSamples.sin
+				m.cosP2 = curSamples.cos
+				
+				m.t1 = m.c * m.sinP2 - m.s * m.cosP2
+				m.t2 = m.c * m.cosP2 + m.s * m.sinP2
+				
+				m.sinP2 = m.sinP1 - T1
+				m.cosP2 = m.cosP1 - T2
+				m.sinP1 = m.sinP1 + T1
+				m.cosP1 = m.cosP1 + T2
+
+				SELECT curSamples
+				REPLACE sin WITH m.sinP2, cos WITH m.cosP2
+				LOCATE FOR cnt = m.p1
+				REPLACE sin WITH m.sinP1, cos WITH m.cosP1
+				
+				m.steps = m.steps + 1
+				
+			ENDFOR
+		ENDFOR
+
+		m.node = m.node * 2
+	ENDDO
+
+	SELECT cnt, SQRT(sin ^ 2 + cos ^ 2) / (m.samples / 2) AS harmonic FROM cursamples WHERE cnt > 0 AND cnt <= m.samples / 2 INTO CURSOR curLengths
+	SELECT curLengths
+	SCAN
+		SELECT curOutput
+		REPLACE harmonic WITH curLengths.harmonic FOR cnt = curLengths.cnt
+	ENDSCAN
+
+
+ELSE
+
+	*	Slow Fourier Transform
+	FOR m.cs = 1 TO m.samples / 2
+
+		m.cosSum = 0
+		m.sinSum = 0
+
+		FOR m.i = 0 TO m.samples - 1
+		
+			m.cand = EVALUATE(m.candFormula)
+			
+			m.cosine = COS(m.cs * 2 * PI() * m.i / m.samples)
+			m.sine = SIN(m.cs * 2 * PI() * m.i / m.samples)
+
+			m.cosSum = m.cosSum + (m.cosine * m.cand)
+			m.sinSum = m.sinSum + (m.sine * m.cand)
+
+			m.steps = m.steps + 1			
+		ENDFOR
+
+		m.Harmonic = SQRT((m.cosSum ^ 2) + (m.sinSum ^ 2)) / (m.samples / 2)
+
+
+		SELECT curOutput
+		LOCATE FOR cnt = m.cs
+		REPLACE Harmonic WITH m.Harmonic
 		
 	ENDFOR
 
-	m.Harmonic = SQRT((m.cosSum ^ 2) + (m.sinSum ^ 2)) / (m.s / 2)
-
-
-	SELECT curOutput
-	LOCATE FOR cnt = m.cs
-	REPLACE Harmonic WITH m.Harmonic
-ENDFOR
+ENDIF
 
 SELECT curOutput
 COPY TO D:\docs\ARM\Oscar\fourier_tests\Output.xls TYPE XL5
 
-ExcelExport("Fourier")
+ExcelExport(IIF(m.FFTMode, "FFT", "SFT") + "_Fourier")
+
+GO TOP
+*BROWSE NORMAL NOWAIT
+
+WAIT WINDOW IIF(m.FFTMode, "FFT", "SFT") + ":   Samples: " + TRANSFORM(m.samples) + "   Steps: " + TRANSFORM(m.steps)
+
+
 
 RETURN
 
