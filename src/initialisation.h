@@ -226,6 +226,9 @@ void InitTimer()
 	TIM3->EGR |= TIM_EGR_UG;						//  Re-initializes counter and generates update of registers
 }
 
+#define CP_ON		TIM4->EGR |= TIM_EGR_UG;TIM4->CR1 |= TIM_CR1_CEN;coverageTimer=0;
+#define CP_OFF		TIM4->CR1 &= ~TIM_CR1_CEN;
+#define CP_CAP		TIM4->CR1 &= ~TIM_CR1_CEN;coverageTotal = (coverageTimer * 65536) + TIM4->CNT;
 void InitCoverageTimer()
 {
 	//	Setup Timer to count clock cycles for coverage profiling
@@ -237,7 +240,4 @@ void InitCoverageTimer()
 	NVIC_EnableIRQ(TIM4_IRQn);
 	NVIC_SetPriority(TIM4_IRQn, 0);
 
-
-	TIM4->CR1 |= TIM_CR1_CEN;
-	TIM4->EGR |= TIM_EGR_UG;
 }

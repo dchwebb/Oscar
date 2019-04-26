@@ -29,9 +29,11 @@ volatile uint8_t captureBufferNumber = 0;
 volatile uint8_t drawBufferNumber = 0;
 int16_t drawOffset[2] {0, 0};
 float SineLUT[LUTSIZE];
+volatile bool oscFree = false;
 
 volatile uint32_t coverageTimer = 0;
 volatile uint32_t coverageTotal = 0;
+float maxA = 0;
 
 Lcd lcd;
 
@@ -49,9 +51,9 @@ extern "C"
 		{
 			TIM3->SR &= ~TIM_SR_UIF;					// clear UIF flag
 
+			// Average the last four ADC readings to smooth noise
 			adc0 = (((float)(ADC_array[0] + ADC_array[2] + ADC_array[4] + ADC_array[6]) / 4) / 4096 * 240) - 30;
 			adc1 = (((float)(ADC_array[1] + ADC_array[3] + ADC_array[5] + ADC_array[7]) / 4) / 4096 * 240) - 30;
-			//adc0 = ((float)ADC_array[0] / 4096 * 240) - 30;
 
 			// check if we should start capturing - ie not drawing from the capture buffer and crossed over the trigger threshold
 			if ((!drawing || captureBufferNumber != drawBufferNumber) && (!capturing && oldAdc0 < trigger.y && adc0 >= trigger.y)) {
@@ -107,28 +109,44 @@ void GenerateLUT(void) {
 	}
 }
 
-#define samples 128
+inline float QuickHypotenuse(float a, float b) {
+	//	Algorithm to generate an approximate hypotenuse to a max error ≈ 1.04 %
+	if (a > b) { float t = a; a = b;	b = t;	}
+	if (b < 0.1) return a;
+	return b + 0.428 * a * a / b;
+}
+
+#define samples 256
 float candSin[samples];
 float candCos[samples];
 
+
+
 // Fast fourier transform
-void FFT() {
+void FFT(int harm) {
 
 	int bits = log2(samples);
 	int br = 0;
 	coverageTimer = 0;
 
+
+
 	// create an test array to transform
 	for (int i = 0; i < samples; i++) {
+		// Sine Wave
+		candSin[i] = sin(2.0f * M_PI * i / samples) + (1.0f / harm) * sin(harm * 2.0f * M_PI * i / samples);
+
 		// Saw Tooth
 		//candSin[i] = (2.0f * (samples - i) / samples) - 1;
 
 		// Square wave
-		candSin[i] = i < (samples / 2) ? 1 : 0;
+		//candSin[i] = i < (samples / 2) ? 1 : 0;
 
-		candCos[i] = 0;
+		//candCos[i] = 0;
 	}
-	TIM4->CR1 &= ~TIM_CR1_CEN;
+
+	CP_ON
+
 	// Bit reverse samples
 	for (int i = 0; i < samples; i++) {
 		// assembly bit reverses i and then rotates right to correct bit length
@@ -144,65 +162,90 @@ void FFT() {
 		}
 	}
 
+
 	// Carry out FFT traversing butterfly diagram
 	int node = 1;
 	// Step through each column in the butterfly diagram
 	while (node < samples) {
 
-		// Step through each value of the W function
-		for (int Wx = 0; Wx < node; Wx++) {
-			float a = Wx * M_PI / node;
-			float c = cos(a);
-			float s = sin(a);
-
-			// replace pairs of nodes with updated values
-			for (int p1 = Wx; p1 < samples; p1 += node * 2) {
+		if (node == 1) {
+			// for the first loop the sine and cosine values will be 1 and 0 in all cases, simplifying the logic
+			for (int p1 = 0; p1 < samples; p1 += 2) {
 				int p2 = p1 + node;
 
-				float sinP1 = candSin[p1];
-				float cosP1 = candCos[p1];
-
 				float sinP2 = candSin[p2];
-				float cosP2 = candCos[p2];
 
-				float t1 = c * sinP2 - s * cosP2;
-				float t2 = c * cosP2 + s * sinP2;
+				candSin[p2] = candSin[p1] - sinP2;
+				candCos[p2] = 0;
+				candSin[p1] = candSin[p1] + sinP2;
+				candCos[p1] = 0;
+			}
+		} else {
+			// Step through each value of the W function
+			for (int Wx = 0; Wx < node; Wx++) {
+				// unoptimised calculation mode
+				//float a = Wx * M_PI / node;
+				//float c = cos(a);
+				//float s = sin(a);
 
-				candSin[p2] = sinP1 - t1;
-				candCos[p2] = cosP1 - t2;
-				candSin[p1] = sinP1 + t1;
-				candCos[p1] = cosP1 + t2;
+				// faster LUT mode
+				int b = std::round(Wx * LUTSIZE / (2 * node));
+				float s = SineLUT[b];
+				float c = SineLUT[b + LUTSIZE / 4 % LUTSIZE];
 
-				/*candSin[p1] = sinP1;
-				candCos[p1] = cosP1;
-				candSin[p2] = sinP2;
-				candCos[p2] = cosP2;*/
+				// replace pairs of nodes with updated values
+				for (int p1 = Wx; p1 < samples; p1 += node * 2) {
+					int p2 = p1 + node;
+
+					float sinP1 = candSin[p1];
+					float cosP1 = candCos[p1];
+
+					float sinP2 = candSin[p2];
+					float cosP2 = candCos[p2];
+
+					float t1 = c * sinP2 - s * cosP2;
+					float t2 = c * cosP2 + s * sinP2;
+
+					candSin[p2] = sinP1 - t1;
+					candCos[p2] = cosP1 - t2;
+					candSin[p1] = sinP1 + t1;
+					candCos[p1] = cosP1 + t2;
+
+				}
 			}
 		}
 
 		node = node * 2;
 	}
 
-
 	// Combine sine and cosines to get amplitudes
 	int width = OSCWIDTH / (samples / 2);
 	for (int i = 1; i <= samples / 2; i++) {
 
 		int left = (i - 1) * width;
-		float x = std::sqrt(std::pow(candSin[i], 2) + std::pow(candCos[i], 2));
+
+		//float x = std::sqrt(std::pow(candSin[i], 2) + std::pow(candCos[i], 2));
+		float x = QuickHypotenuse(candSin[i], candCos[i]);
+		if (x > 64) {
+			int pause = 1;
+		}
 		int top = 239 * (1 - (x / (samples / 2)));
 		int x1 = left + width;
 
 		lcd.ColourFill(left, top, x1, 239, LCD_BLUE);
 
 	}
+	CP_CAP
 
 }
+
+
 
 int main(void) {
 	SystemInit();				// Activates floating point coprocessor and resets clock
 //	SystemClock_Config();		// Configure the clock and PLL - NB Currently done in SystemInit but will need updating for production board
 	SystemCoreClockUpdate();	// Update SystemCoreClock (system clock frequency) derived from settings of oscillators, prescalers and PLL
+	InitCoverageTimer();		// Timer 4 only activated/deactivated when CP_ON/CP_CAP macros are used
 
 	InitLCDHardware();
 	InitADC();
@@ -213,17 +256,18 @@ int main(void) {
 	lcd.ScreenFill(LCD_BLACK);
 
 
-	InitCoverageTimer();
 
-	// Slow Fourier Transform
-	FFT();
+	GenerateLUT();
 
-	TIM4->CR1 &= ~TIM_CR1_CEN;
-	coverageTotal = (coverageTimer * 65536) + TIM4->CNT;
+	// Fourier Transform
 
-
-	//coverage65k = coverageTimer;
-	//coverageCnt = TIM4->CNT;
+	//FFT(1);
+	while (1) {
+		for (int fft = 2; fft < 64; fft++) {
+			FFT(fft);
+		}
+		lcd.ScreenFill(LCD_BLACK);
+	}
 
 	// Test code
 	//lcd.DrawString(60, 150, "Hello", &lcd.Font_Small, LCD_WHITE, LCD_BLUE);

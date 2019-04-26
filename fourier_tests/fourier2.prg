@@ -1,5 +1,5 @@
 CLEAR
-m.samples = 32
+m.samples = 128
 m.FFTMode = .t.
 m.output = ""
 
@@ -11,7 +11,7 @@ m.candFormula = "SIN((7.3 * 2 * PI() * m.i / m.samples)) + SIN((7.3 * 3 * 2 * PI
 m.candFormula = "IIF(m.i < (m.samples / 2), 1, 0)"
 
 *	Saw
-m.candFormula = "(2 * (m.samples - m.i) / m.samples) - 1"
+m.candFormula = "200 * (2 * (m.samples - m.i) / m.samples) - 1"
 
 *	Sine
 *m.candFormula = "SIN((2 * PI() * m.i / m.samples))"

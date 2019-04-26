@@ -4,14 +4,15 @@ initialisation.h:37:6:void SystemClock_Config()	16	static
 initialisation.h:85:6:void InitLCDHardware()	4	static
 initialisation.h:154:6:void InitADC()	4	static
 initialisation.h:214:6:void InitTimer()	8	static
-initialisation.h:229:6:void InitCoverageTimer()	8	static
+initialisation.h:232:6:void InitCoverageTimer()	8	static
 gthr-default.h:229:1:int __gthread_key_delete(__gthread_key_t)	16	static
 lcd.h:87:7:Lcd::Lcd()	16	static
-main.cpp:47:7:void TIM3_IRQHandler()	16	static
-main.cpp:94:7:void TIM4_IRQHandler()	4	static
-main.cpp:104:6:void GenerateLUT()	24	static
-cmath:438:5:constexpr typename __gnu_cxx::__promote_2<_Tp, _Up>::__type std::pow(_Tp, _Up) [with _Tp = float; _Up = int]	24	static
-main.cpp:115:6:void FFT()	128	static
-main.cpp:202:5:int main()	56	static
-main.cpp:291:1:void __static_initialization_and_destruction_0(int, int)	16	static
-main.cpp:291:1:cpp)	8	static
+main.cpp:49:7:void TIM3_IRQHandler()	16	static
+main.cpp:96:7:void TIM4_IRQHandler()	4	static
+main.cpp:106:6:void GenerateLUT()	24	static
+main.cpp:112:14:float QuickHypotenuse(float, float)	40	static
+cmath:1802:5:constexpr typename __gnu_cxx::__enable_if<std::__is_integer<_Tp>::__value, double>::__type std::round(_Tp) [with _Tp = int]	24	static
+main.cpp:126:6:void FFT(int)	168	static
+main.cpp:244:5:int main()	40	static
+main.cpp:335:1:void __static_initialization_and_destruction_0(int, int)	16	static
+main.cpp:335:1:cpp)	8	static
