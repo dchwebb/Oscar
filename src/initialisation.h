@@ -211,7 +211,7 @@ void InitADC(void)
 
 }
 
-void InitTimer()
+void InitSampleAcquisition()
 {
 	//	Setup Timer 3 on an interrupt to trigger sample acquisition
 	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;				// Enable Timer 3

@@ -3,16 +3,17 @@ core_cm4.h:1550:22:void NVIC_SetPriority(IRQn_Type, uint32_t)	16	static
 initialisation.h:37:6:void SystemClock_Config()	16	static
 initialisation.h:85:6:void InitLCDHardware()	4	static
 initialisation.h:154:6:void InitADC()	4	static
-initialisation.h:214:6:void InitTimer()	8	static
+initialisation.h:214:6:void InitSampleAcquisition()	8	static
 initialisation.h:232:6:void InitCoverageTimer()	8	static
 gthr-default.h:229:1:int __gthread_key_delete(__gthread_key_t)	16	static
 lcd.h:87:7:Lcd::Lcd()	16	static
-main.cpp:49:7:void TIM3_IRQHandler()	16	static
-main.cpp:96:7:void TIM4_IRQHandler()	4	static
-main.cpp:106:6:void GenerateLUT()	24	static
-main.cpp:112:14:float QuickHypotenuse(float, float)	40	static
+main.cpp:59:7:void TIM3_IRQHandler()	16	static
+main.cpp:141:7:void TIM4_IRQHandler()	4	static
+main.cpp:148:6:void GenerateLUT()	24	static
+main.cpp:154:14:float QuickHypotenuse(float, float)	40	static
 cmath:1802:5:constexpr typename __gnu_cxx::__enable_if<std::__is_integer<_Tp>::__value, double>::__type std::round(_Tp) [with _Tp = int]	24	static
-main.cpp:126:6:void FFT(int)	168	static
-main.cpp:244:5:int main()	40	static
-main.cpp:335:1:void __static_initialization_and_destruction_0(int, int)	16	static
-main.cpp:335:1:cpp)	8	static
+main.cpp:166:6:void FFT(volatile int16_t*)	144	static
+main.cpp:266:5:int main()	64	static
+stl_algobase.h:219:5:const _Tp& std::max(const _Tp&, const _Tp&) [with _Tp = int]	16	static
+main.cpp:363:1:void __static_initialization_and_destruction_0(int, int)	16	static
+main.cpp:363:1:cpp)	8	static
