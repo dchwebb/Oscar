@@ -1,23 +1,25 @@
 CLEAR
-m.samples = 128
+m.samples = 256
 m.FFTMode = .t.
 m.output = ""
 
 CREATE CURSOR curOutput (Cnt I, Cnd F(10, 6), Harmonic F(10, 6))
-m.candFormula = "SIN((7.3 * 2 * PI() * m.i / m.samples)) + SIN((7.3 * 3 * 2 * PI() * m.i / m.samples))"
+m.candFormula = "SIN((6.7 * 2 * PI() * m.i / m.samples)) + SIN((6.7 * 3 * 2 * PI() * m.i / m.samples))"
 
 
 *	Square wave
-m.candFormula = "IIF(m.i < (m.samples / 2), 1, 0)"
+*m.candFormula = "IIF(m.i < (m.samples / 2), 1, 0)"
 
 *	Saw
-m.candFormula = "200 * (2 * (m.samples - m.i) / m.samples) - 1"
+*m.candFormula = "(2 * (m.samples - m.i) / m.samples) - 1"
 
 *	Sine
-*m.candFormula = "SIN((2 * PI() * m.i / m.samples))"
+*m.candFormula = "SIN((2 * PI() * m.i / m.samples)) + 0.5 * SIN(5 * 2 * PI() * m.i / m.samples)"
 
 *m.candFormula = "VAL(STREXTRACT(',0.3102, 0.694, .4731, 0.5149, 0.3393, 0.3336, 0.171, 0.1419, -0.0131, -0.0605, -0.2093, -0.2766, -0.4187, -0.5168, -0.6522, -0.8304,', ',', ',', m.i + 1))"
 
+* samples from clipboard
+m.candFormula = "VAL(STREXTRACT(CHR(13) + _CLIPTEXT, CHR(13), CHR(13), m.i + 1))"
 
 *	Create a table containing samples
 CREATE CURSOR curSamples (Cnt I, Br I, Sin F(10, 6), Cos F(10, 6))

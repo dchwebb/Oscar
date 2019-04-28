@@ -5,11 +5,11 @@
 
 #define OSCWIDTH 320
 #define LUTSIZE 1024
-#define FFTSAMPLES 256
+#define FFTSAMPLES 512
 
 extern uint32_t SystemCoreClock;
 extern volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
-
+float SineLUT[LUTSIZE];
 volatile int16_t adcA, oldAdcA, adcB;
 volatile int16_t ChannelA0[OSCWIDTH];
 volatile int16_t ChannelA1[OSCWIDTH];
@@ -30,22 +30,23 @@ volatile int16_t captureSamples1 = 0;
 volatile bool drawing = false;
 volatile uint8_t captureBufferNumber = 0;
 volatile uint8_t drawBufferNumber = 0;
-int16_t drawOffset[2] {0, 0};
-float SineLUT[LUTSIZE];
-volatile bool oscFree = false, FFTMode = false;
-volatile bool dataAvailable[2] {false, false};
-volatile bool dataIn0 = false, dataIn1 = false;
-
-uint8_t VertOffsetA = 30, VertOffsetB = 30;
 volatile uint16_t bufferSamples = 0;
+volatile int16_t drawOffset[2] {0, 0};
+volatile bool dataAvailable[2] {false, false};
+uint8_t VertOffsetA = 30, VertOffsetB = 30;
 
-volatile uint16_t DrawTest[22];
+volatile float candSin0[FFTSAMPLES];
+volatile float candSin1[FFTSAMPLES];
+volatile float* candSin;
+volatile float candCos[FFTSAMPLES];
 
 volatile uint32_t coverageTimer = 0;
 volatile uint32_t coverageTotal = 0;
-float maxA = 0;
 
 Lcd lcd;
+
+volatile bool oscFree = false, FFTMode = true;
+
 
 struct  {
 	uint16_t x = 0;
@@ -61,29 +62,19 @@ extern "C"
 		TIM3->SR &= ~TIM_SR_UIF;					// clear UIF flag
 
 		if (FFTMode) {
-			// For FFT Mode we want a value between +- 2047
-			adcA = 2047 - ((float)(ADC_array[0] + ADC_array[2] + ADC_array[4] + ADC_array[6]) / 4);
+
 
 			if (capturePos == FFTSAMPLES) {
 				dataAvailable[captureBufferNumber] = true;
 				capturing = false;
 			}
 
-			/*if (!capturing) {
-				uint8_t nextBuffer = captureBufferNumber == 0 ? 1 : 0;
-				if (!dataAvailable[nextBuffer] && (!drawing || drawBufferNumber != nextBuffer)) {
-					captureBufferNumber == nextBuffer;
-					capturing = true;
-				}
-
-				if (capturing) {
-					captureABuffer = captureBufferNumber == 0 ? ChannelA0 : ChannelA1;
-					capturePos = 0;
-				}
-			}*/
-
 			if (capturing) {
-				captureABuffer[capturePos] = adcA;
+
+				// For FFT Mode we want a value between +- 2047
+				adcA = 2047 - ((float)(ADC_array[0] + ADC_array[2] + ADC_array[4] + ADC_array[6]) / 4);
+
+				candSin[capturePos] = adcA;
 				capturePos ++;
 			}
 
@@ -159,11 +150,10 @@ inline float QuickHypotenuse(float a, float b) {
 }
 
 
-//float candSin[FFTSAMPLES];
-float candCos[FFTSAMPLES];
+
 
 // Fast fourier transform
-void FFT(volatile int16_t candSin[]) {
+void FFT(volatile float candSin[]) {
 
 	constexpr int bits = log2(FFTSAMPLES);
 	int br = 0;
@@ -249,13 +239,14 @@ void FFT(volatile int16_t candSin[]) {
 
 		int left = (i - 1) * width;
 
-		//float x = std::sqrt(std::pow(candSin[i], 2) + std::pow(candCos[i], 2));
-		float x = QuickHypotenuse(candSin[i], candCos[i]);
+		float x = std::sqrt(std::pow(candSin[i], 2) + std::pow(candCos[i], 2));
+		//float x = QuickHypotenuse(candSin[i], candCos[i]);
 
-		int top = 239 * (1 - (x / (2048 * FFTSAMPLES)));
+		int top = 239 * (1 - (x / (512 * FFTSAMPLES)));
 		int x1 = left + width;
 
 		lcd.ColourFill(left, top, x1, 239, LCD_BLUE);
+		lcd.ColourFill(left, 0, x1, top - 1, LCD_BLACK);
 
 	}
 	//CP_CAP
@@ -275,17 +266,6 @@ int main(void) {
 	lcd.Rotate(LCD_Landscape_Flipped);
 	lcd.ScreenFill(LCD_BLACK);
 
-	// Fourier Transform
-
-	//while (1);
-	/*
-	while (1) {
-		for (int fft = 2; fft < 64; fft++) {
-			FFT(fft);
-		}
-		lcd.ScreenFill(LCD_BLACK);
-	}*/
-
 	// Test code
 	//lcd.DrawString(60, 150, "Hello", &lcd.Font_Small, LCD_WHITE, LCD_BLUE);
 	//lcd.DrawLine(0, 0, 120, 40, LCD_RED);
@@ -295,25 +275,28 @@ int main(void) {
 	InitSampleAcquisition();
 
 	while (1) {
-
+		// Fourier Transform
 		if (FFTMode) {
 			if (!capturing && (!dataAvailable[0] || !dataAvailable[1])) {
 				capturing = true;
 				capturePos = 0;
 				captureBufferNumber = dataAvailable[0] ? 1 : 0;
-				captureABuffer = captureBufferNumber == 0 ? ChannelA0 : ChannelA1;
+				candSin = captureBufferNumber == 0 ? candSin0 : candSin1;
 			} else {
-
+				// select correct draw buffer based on whether buffer 0 or 1 contains data
 				if (dataAvailable[0])		drawBufferNumber = 0;
 				else if (dataAvailable[1])	drawBufferNumber = 1;
 				else continue;
 
-				lcd.ScreenFill(LCD_BLACK);
+				//lcd.ScreenFill(LCD_BLACK);
 
-				FFT(drawBufferNumber == 0 ? ChannelA0 : ChannelA1);
+				FFT(drawBufferNumber == 0 ? candSin0 : candSin1);
 				dataAvailable[drawBufferNumber] = false;
 			}
+
 		} else {
+			// Oscilloscope mode
+
 			// check if we should start drawing
 			if (!drawing && capturing) {
 				drawBufferNumber = captureBufferNumber;
