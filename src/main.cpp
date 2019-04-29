@@ -24,9 +24,6 @@ volatile uint16_t drawPos = 0;
 volatile uint16_t prevAPixel = 0;
 volatile uint16_t prevBPixel = 0;
 volatile bool capturing = false;
-volatile int16_t* captureSamples = 0;
-volatile int16_t captureSamples0 = 0;
-volatile int16_t captureSamples1 = 0;
 volatile bool drawing = false;
 volatile uint8_t captureBufferNumber = 0;
 volatile uint8_t drawBufferNumber = 0;
@@ -34,6 +31,10 @@ volatile uint16_t bufferSamples = 0;
 volatile int16_t drawOffset[2] {0, 0};
 volatile bool dataAvailable[2] {false, false};
 uint8_t VertOffsetA = 30, VertOffsetB = 30;
+
+volatile uint16_t captureSamples[2] {0, 0};
+
+volatile bool Encoder1Btn = false;
 
 volatile float candSin0[FFTSAMPLES];
 volatile float candSin1[FFTSAMPLES];
@@ -88,24 +89,22 @@ extern "C"
 			if (!capturing && (!drawing || captureBufferNumber != drawBufferNumber) && (oscFree || (bufferSamples > trigger.x && oldAdcA < trigger.y && adcA >= trigger.y))) {
 				capturing = true;
 
-				captureSamples = captureBufferNumber == 0 ? &captureSamples0 : &captureSamples1;	// holds the number of drawable samples in the current buffer
-
 				if (oscFree) {
 					// free running mode
 					capturePos = 0;
 					drawOffset[captureBufferNumber] = 0;
-					*captureSamples = -1;
+					captureSamples[captureBufferNumber] = -1;
 				} else {
 					// calculate the drawing offset based on the current capture position minus the horizontal trigger position
 					drawOffset[captureBufferNumber] = capturePos - trigger.x;
 					if (drawOffset[captureBufferNumber] < 0)	drawOffset[captureBufferNumber] += OSCWIDTH;
 
-					*captureSamples = trigger.x - 1;			// used to check if a sample is ready to be drawn
+					captureSamples[captureBufferNumber] = trigger.x - 1;	// used to check if a sample is ready to be drawn
 				}
 			}
 
 			// if capturing check if write buffer is full and switch to next buffer if so; if not full store current reading
-			if (capturing && *captureSamples == OSCWIDTH - 1) {
+			if (capturing && captureSamples[captureBufferNumber] == OSCWIDTH - 1) {
 				// switch the capture buffer and get a pointer to the current capture buffer
 				captureBufferNumber = captureBufferNumber == 1 ? 0 : 1;
 				captureABuffer = captureBufferNumber == 0 ? ChannelA0 : ChannelA1;
@@ -121,12 +120,22 @@ extern "C"
 			if (capturePos == OSCWIDTH - 1)		capturePos = 0;
 			else								capturePos++;
 
-			if (capturing)	(*captureSamples)++;
+			if (capturing)	captureSamples[captureBufferNumber]++;
 			else 			bufferSamples++;
 
 			oldAdcA = adcA;
 		}
 	}
+
+	// Encoder button
+	void EXTI9_5_IRQHandler(void) {
+		// Read PA7
+		if (!(GPIOA->IDR & GPIO_IDR_IDR_7))
+			Encoder1Btn = true;
+
+		EXTI->PR |= EXTI_PR_PR7;						// Clear interrupt pending
+	}
+
 
 	//	Coverage timer
 	void TIM4_IRQHandler(void) {
@@ -149,6 +158,13 @@ inline float QuickHypotenuse(float a, float b) {
 	return b + 0.428 * a * a / b;
 }
 
+void ResetSampleAcquisition() {
+	TIM3->CR1 &= ~TIM_CR1_CEN;			// Disable the sample acquisiton timer
+	lcd.ScreenFill(LCD_BLACK);
+	capturing = drawing = false;
+	bufferSamples = capturePos = oldAdcA = 0;
+	TIM3->CR1 |= TIM_CR1_CEN;			// Reenable the sample acquisiton timer
+}
 
 
 
@@ -261,6 +277,7 @@ int main(void) {
 	InitCoverageTimer();		// Timer 4 only activated/deactivated when CP_ON/CP_CAP macros are used
 	InitLCDHardware();
 	InitADC();
+	InitEncoders();
 	GenerateLUT();				// Generate Sine LUT used for FFT
 	lcd.Init();					// Initialize ILI9341 LCD
 	lcd.Rotate(LCD_Landscape_Flipped);
@@ -275,6 +292,12 @@ int main(void) {
 	InitSampleAcquisition();
 
 	while (1) {
+		if (Encoder1Btn) {
+			Encoder1Btn = false;
+			FFTMode = !FFTMode;
+			ResetSampleAcquisition();
+		}
+
 		// Fourier Transform
 		if (FFTMode) {
 			if (!capturing && (!dataAvailable[0] || !dataAvailable[1])) {
@@ -287,8 +310,6 @@ int main(void) {
 				if (dataAvailable[0])		drawBufferNumber = 0;
 				else if (dataAvailable[1])	drawBufferNumber = 1;
 				else continue;
-
-				//lcd.ScreenFill(LCD_BLACK);
 
 				FFT(drawBufferNumber == 0 ? candSin0 : candSin1);
 				dataAvailable[drawBufferNumber] = false;
@@ -309,7 +330,7 @@ int main(void) {
 			}
 
 			// Check if drawing and that the sample capture is at or ahead of the draw position
-			if (drawing && (drawBufferNumber != captureBufferNumber || (captureBufferNumber == 0 ? captureSamples0 : captureSamples1) >= drawPos)) {
+			if (drawing && (drawBufferNumber != captureBufferNumber || captureSamples[captureBufferNumber] >= drawPos)) {
 
 				// Calculate offset between capture and drawing positions to display correct sample
 				uint16_t calculatedOffset = (drawOffset[drawBufferNumber] + drawPos) % OSCWIDTH;

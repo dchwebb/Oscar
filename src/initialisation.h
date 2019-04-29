@@ -34,8 +34,7 @@
 1111: system clock divided by 512
 */
 
-void SystemClock_Config(void)
-{
+void SystemClock_Config(void) {
 	uint32_t temp = 0x00000000;
 
 	RCC->APB1ENR |= RCC_APB1ENR_PWREN;			// Enable Power Control clock
@@ -82,8 +81,7 @@ void SystemClock_Config(void)
 	// See page 83 of manual for other possible performance boost options: instruction cache enable (ICEN) and data cache enable (DCEN)
 }
 
-void InitLCDHardware(void)
-{
+void InitLCDHardware(void) {
 	//	Enable GPIO and SPI clocks
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;			// reset and clock control - advanced high performance bus - GPIO port C
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIODEN;			// reset and clock control - advanced high performance bus - GPIO port D
@@ -127,32 +125,18 @@ void InitLCDHardware(void)
 	RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
 
 	// Initialise TX stream
-	DMA2_Stream6->CR |= DMA_SxCR_CHSEL;				// 0b111 is channel 7
+	DMA2_Stream6->CR |= DMA_SxCR_CHSEL;				// 0b111 is DMA_Channel_7
 	DMA2_Stream6->CR |= DMA_SxCR_MSIZE_0;			// Memory size: 8 bit; 01 = 16 bit; 10 = 32 bit
 	DMA2_Stream6->CR |= DMA_SxCR_PSIZE_0;			// Peripheral size: 8 bit; 01 = 16 bit; 10 = 32 bit
 	DMA2_Stream6->CR |= DMA_SxCR_DIR_0;				// data transfer direction: 00: peripheral-to-memory; 01: memory-to-peripheral; 10: memory-to-memory
 	DMA2_Stream6->PAR = (uint32_t) &(SPI5->DR);		// Configure the peripheral data register address
-
-
-	/*TM_SPI_DMA_INT_t SPI5_DMA_INT = {SPI5_DMA_TX_CHANNEL , SPI5_DMA_TX_STREAM, SPI5_DMA_RX_CHANNEL, SPI5_DMA_RX_STREAM};
-	 SPI5 TX and RX default settings
-	#ifndef SPI5_DMA_TX_STREAM
-	#define SPI5_DMA_TX_STREAM    DMA2_Stream6
-	#define SPI5_DMA_TX_CHANNEL   DMA_Channel_7
-	#endif
-	#ifndef SPI5_DMA_RX_STREAM
-	#define SPI5_DMA_RX_STREAM    DMA2_Stream5
-	#define SPI5_DMA_RX_CHANNEL   DMA_Channel_7
-	#endif
-*/
-
 }
+
 
 #define ADC_BUFFER_LENGTH 8
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 
-void InitADC(void)
-{
+void InitADC(void) {
 	//	Setup Timer 2 to trigger ADC
 	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;				// Enable Timer 2 clock
 	TIM2->CR2 |= TIM_CR2_MMS_2;						// 100: Compare - OC1REF signal is used as trigger output (TRGO)
@@ -211,8 +195,8 @@ void InitADC(void)
 
 }
 
-void InitSampleAcquisition()
-{
+
+void InitSampleAcquisition() {
 	//	Setup Timer 3 on an interrupt to trigger sample acquisition
 	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;				// Enable Timer 3
 	TIM3->PSC = 1000;								// Set prescaler to fire at sample rate - this is divided by 4 to match the APB2 prescaler
@@ -226,11 +210,14 @@ void InitSampleAcquisition()
 	TIM3->EGR |= TIM_EGR_UG;						//  Re-initializes counter and generates update of registers
 }
 
+
+
+// Coverage profiler macros using timer 4 to count clock cycles / 10
 #define CP_ON		TIM4->EGR |= TIM_EGR_UG;TIM4->CR1 |= TIM_CR1_CEN;coverageTimer=0;
 #define CP_OFF		TIM4->CR1 &= ~TIM_CR1_CEN;
 #define CP_CAP		TIM4->CR1 &= ~TIM_CR1_CEN;coverageTotal = (coverageTimer * 65536) + TIM4->CNT;
-void InitCoverageTimer()
-{
+
+void InitCoverageTimer() {
 	//	Setup Timer to count clock cycles for coverage profiling
 	RCC->APB1ENR |= RCC_APB1ENR_TIM4EN;				// Enable Timer
 	TIM4->PSC = 10;
@@ -240,4 +227,22 @@ void InitCoverageTimer()
 	NVIC_EnableIRQ(TIM4_IRQn);
 	NVIC_SetPriority(TIM4_IRQn, 0);
 
+}
+
+void InitEncoders() {
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;			// reset and clock control - advanced high performance bus - GPIO port C
+	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;			// Enable system configuration clock: used to manage external interrupt line connection to GPIOs
+
+	// Set up PA7 as encoder 1
+	GPIOA->MODER &= ~(GPIO_MODER_MODER7);			// input mode is default
+	GPIOA->PUPDR |= GPIO_PUPDR_PUPDR7_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
+
+	// configure PA7 button to fire on an interrupt
+	SYSCFG->EXTICR[2] |= SYSCFG_EXTICR2_EXTI7_PA;	// Select Pin PA7 which uses External interrupt 2
+//	EXTI->RTSR |= EXTI_RTSR_TR7;					// Enable rising edge trigger for line 7
+	EXTI->FTSR |= EXTI_FTSR_TR7;					// Enable falling edge trigger for line 7
+	EXTI->IMR |= EXTI_IMR_MR7;						// Activate interrupt using mask register 7
+
+	NVIC_SetPriority(EXTI9_5_IRQn, 3);
+	NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
