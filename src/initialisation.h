@@ -124,7 +124,7 @@ void InitLCDHardware(void) {
 	// Configure DMA
 	RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
 
-	// Initialise TX stream
+	// Initialise TX stream - Stream 6 = SPI5_TX; Stream 5 = SPI5_RX; Manual p308
 	DMA2_Stream6->CR |= DMA_SxCR_CHSEL;				// 0b111 is DMA_Channel_7
 	DMA2_Stream6->CR |= DMA_SxCR_MSIZE_0;			// Memory size: 8 bit; 01 = 16 bit; 10 = 32 bit
 	DMA2_Stream6->CR |= DMA_SxCR_PSIZE_0;			// Peripheral size: 8 bit; 01 = 16 bit; 10 = 32 bit

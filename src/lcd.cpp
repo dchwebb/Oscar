@@ -1,5 +1,10 @@
 #include "lcd.h"
 
+#define CP_ON		TIM4->EGR |= TIM_EGR_UG;TIM4->CR1 |= TIM_CR1_CEN;coverageTimer=0;
+#define CP_OFF		TIM4->CR1 &= ~TIM_CR1_CEN;
+#define CP_CAP		TIM4->CR1 &= ~TIM_CR1_CEN;coverageTotal = (coverageTimer * 65536) + TIM4->CNT;
+extern volatile uint32_t coverageTimer;
+extern volatile uint32_t coverageTotal;
 
 void Lcd::Init(void) {
 
@@ -117,6 +122,8 @@ void Lcd::ScreenFill(const uint16_t& colour) {
 
 void Lcd::ColourFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t& colour) {
 
+
+
 	SetCursorPosition(x0, y0, x1, y1);
 
 	Command(ILI9341_GRAM);
@@ -131,7 +138,9 @@ void Lcd::ColourFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const u
 	// Send first 65535 bytes, SPI must be in 16-bit Mode
 	SPI_DMA_SendHalfWord(colour, (pixelCount > 0xFFFF) ? 0xFFFF : pixelCount);
 
+	CP_ON
 	while (SPI_DMA_Working);
+	CP_CAP
 
 	// Check if there is more data to send
 	if (pixelCount > 0xFFFF) {
@@ -143,6 +152,8 @@ void Lcd::ColourFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const u
 	LCD_CS_SET;
 
 	SPISetDataSize(SPIDataSize_8b);				// 8 bit SPI Mode
+
+
 }
 
 
