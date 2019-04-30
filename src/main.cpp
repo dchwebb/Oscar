@@ -5,33 +5,28 @@
 
 #define OSCWIDTH 320
 #define LUTSIZE 1024
-#define FFTSAMPLES 512
+#define FFTSAMPLES 1024
+#define FFTDRAWBUFFERSIZE 16
 
 extern uint32_t SystemCoreClock;
 extern volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 float SineLUT[LUTSIZE];
-volatile uint16_t adcA, oldAdcA, adcB;
-volatile uint16_t OscBufferA[2][OSCWIDTH];
-volatile uint16_t OscBufferB[2][OSCWIDTH];
-volatile uint16_t prevAPixel = 0, prevBPixel = 0;
-volatile bool capturing = false;
-volatile bool drawing = false;
-volatile uint8_t captureBufferNumber = 0, drawBufferNumber = 0;
-volatile uint16_t capturePos = 0, drawPos = 0, bufferSamples = 0;
+volatile uint16_t OscBufferA[2][OSCWIDTH], OscBufferB[2][OSCWIDTH];
+volatile uint16_t prevAPixel = 0, prevBPixel = 0, adcA, oldAdcA, adcB, capturePos = 0, drawPos = 0, bufferSamples = 0;
+volatile bool capturing = false, drawing = false;
+volatile uint8_t VertOffsetA = 30, VertOffsetB = 30, captureBufferNumber = 0, drawBufferNumber = 0;
 volatile int16_t drawOffset[2] {0, 0};
 volatile bool dataAvailable[2] {false, false};
-uint8_t VertOffsetA = 30, VertOffsetB = 30;
-
 volatile uint16_t capturedSamples[2] {0, 0};
 volatile bool Encoder1Btn = false, oscFree = false, FFTMode = true;
 
-
-volatile float FFTBuffer[2][FFTSAMPLES];
-volatile float candCos[FFTSAMPLES];
+volatile float FFTBuffer[2][FFTSAMPLES], candCos[FFTSAMPLES];
+volatile uint16_t FFTPrevDraw[FFTSAMPLES];
+ uint16_t FFTDrawBuffer[2][240 * FFTDRAWBUFFERSIZE];
 constexpr int FFTbits = log2(FFTSAMPLES);
+constexpr float FFTWidth = (FFTSAMPLES / 2) > OSCWIDTH ? 1 : (float)OSCWIDTH / (FFTSAMPLES / 2);
 
-volatile uint32_t coverageTimer = 0;
-volatile uint32_t coverageTotal = 0;
+volatile uint32_t debugCount = 0, coverageTimer = 0, coverageTotal = 0;
 
 Lcd lcd;
 
@@ -135,9 +130,10 @@ void ResetSampleAcquisition() {
 	TIM3->CR1 |= TIM_CR1_CEN;			// Reenable the sample acquisiton timer
 }
 
-
 // Fast fourier transform
 void FFT(volatile float candSin[]) {
+
+	CP_ON
 
 	int bitReverse = 0;
 
@@ -182,6 +178,44 @@ void FFT(volatile float candSin[]) {
 				candSin[p1] = candSin[p1] + sinP2;
 				candCos[p1] = 0;
 			}
+		} else if (node == FFTSAMPLES / 2) {
+			// last node - this draws samples rather than calculate them
+			for (uint16_t p1 = 1; p1 < std::min(node, OSCWIDTH); p1++) {
+				// Use Sine LUT to generate sine and cosine values faster than sine or cosine functions
+				uint16_t b = std::round(p1 * LUTSIZE / (2 * node));
+				float s = SineLUT[b];
+				float c = SineLUT[b + LUTSIZE / 4 % LUTSIZE];
+
+				int p2 = p1 + node;
+
+				// true if drawing after FFT calculations
+				if (true) {
+					candSin[p1] += c * candSin[p2] - s * candCos[p2];
+					candCos[p1] += c * candCos[p2] + s * candSin[p2];
+				} else {
+
+
+					uint16_t left = FFTWidth * (p1 - 1);
+					float hypotenuse = std::sqrt(std::pow(candSin[p1] + (c * candSin[p2] - s * candCos[p2]), 2) + std::pow(candCos[p1] + (c * candCos[p2] + s * candSin[p2]), 2));
+					uint16_t top = 239 * (1 - (hypotenuse / (512 * FFTSAMPLES)));
+					uint16_t x1 = left + FFTWidth;
+
+					debugCount = DMA2_Stream6->NDTR;
+
+					if (true) {		// this mode is slower but results in smoother FFT draws
+						lcd.ColourFill(left, top, x1, 239, LCD_BLUE);
+						lcd.ColourFill(left, 0, x1, top - 1, LCD_BLACK);
+					} else {
+						// since drawing the entire screen is relatively slow only update areas that have changed
+						if (top < FFTPrevDraw[p1])
+							lcd.ColourFill(left, 0, x1, top - 1, LCD_BLACK);
+						else
+							lcd.ColourFill(left, top, x1, 239, LCD_BLUE);
+
+						FFTPrevDraw[p1] = top;
+					}
+				}
+			}
 		} else {
 			// Step through each value of the W function
 			for (int Wx = 0; Wx < node; Wx++) {
@@ -213,18 +247,52 @@ void FFT(volatile float candSin[]) {
 	}
 
 	// Combine sine and cosines to get amplitudes
-	constexpr float FFTWidth = (float)OSCWIDTH / (FFTSAMPLES / 2);
-	for (uint16_t i = 1; i <= FFTSAMPLES / 2; i++) {
+	for (uint16_t i = 1; i <= std::min(FFTSAMPLES / 2, OSCWIDTH); i++) {
 
-		uint16_t left = FFTWidth * (i - 1);
-		float x = std::sqrt(std::pow(candSin[i], 2) + std::pow(candCos[i], 2));
-		uint16_t top = 239 * (1 - (x / (512 * FFTSAMPLES)));
-		uint16_t x1 = left + FFTWidth;
+		float hypotenuse = std::sqrt(std::pow(candSin[i], 2) + std::pow(candCos[i], 2));
+		uint16_t top = std::min(239 * (1 - (hypotenuse / (512 * FFTSAMPLES))), 239.0f);
 
-		lcd.ColourFill(left, 0, x1, top, LCD_BLACK);
-		lcd.ColourFill(left, top, x1, 239, LCD_BLUE);
+		int buffCount = FFTSAMPLES / FFTDRAWBUFFERSIZE;
+		int blockCols = FFTDRAWBUFFERSIZE;
+
+		uint8_t FFTDrawBufferNumber = (((i - 1) / blockCols) % 2 == 0) ? 0 : 1;
+
+		if (true) {		// draw screen in series of buffers
+			uint16_t buffPos = 0;
+
+			for (int h = 0; h < 240; ++h) {
+				buffPos = h * blockCols;
+				buffPos += ((i - 1) % blockCols);
+
+				if (h < top) {
+					FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = LCD_BLACK;
+				} else {
+					FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = LCD_BLUE;
+				}
+			}
+
+
+			// check if ready to draw next buffer
+			if ((i % blockCols) == 0) {
+				debugCount = DMA2_Stream6->NDTR;
+				// draw buffer
+				lcd.PatternFill(i - blockCols, 0, i - 1, 239, FFTDrawBuffer[FFTDrawBufferNumber]);
+			}
+
+
+		} else {
+			// draw screen one column at a time
+			uint16_t left = FFTWidth * (i - 1);
+			uint16_t right = left + FFTWidth;
+
+			// since drawing the entire screen is relatively slow only update areas that have changed
+			lcd.ColourFill(left, top, right, 239, LCD_BLUE);
+			lcd.ColourFill(left, 0, right, top - 1, LCD_BLACK);
+		}
+
+		//lcd.DrawString(60, 150, "Hello", &lcd.Font_Small, LCD_WHITE, LCD_BLUE);
 	}
-
+	CP_CAP
 }
 
 
@@ -265,6 +333,7 @@ int main(void) {
 				else continue;
 
 				FFT(FFTBuffer[drawBufferNumber]);
+
 				dataAvailable[drawBufferNumber] = false;
 			}
 
@@ -280,6 +349,9 @@ int main(void) {
 
 			// Check if drawing and that the sample capture is at or ahead of the draw position
 			if (drawing && (drawBufferNumber != captureBufferNumber || capturedSamples[captureBufferNumber] >= drawPos)) {
+				CP_ON
+				// Draw a black line over previous sample
+				lcd.ColourFill(drawPos, 0, drawPos, 239, LCD_BLACK);
 
 				// Calculate offset between capture and drawing positions to display correct sample
 				uint16_t calculatedOffset = (drawOffset[drawBufferNumber] + drawPos) % OSCWIDTH;
@@ -290,9 +362,6 @@ int main(void) {
 					prevBPixel = OscBufferB[drawBufferNumber][calculatedOffset];
 				}
 
-				// Draw a black line over previous sample
-				lcd.DrawLine(drawPos, 0, drawPos, 239, LCD_BLACK);
-
 				// Draw current samples as lines from previous pixel position to current sample position
 				lcd.DrawLine(drawPos, OscBufferA[drawBufferNumber][calculatedOffset], drawPos, prevAPixel, LCD_GREEN);
 				lcd.DrawLine(drawPos, OscBufferB[drawBufferNumber][calculatedOffset], drawPos, prevBPixel, LCD_LIGHTBLUE);
@@ -300,6 +369,10 @@ int main(void) {
 				// Store previous sample so next sample can be drawn as a line from old to new
 				prevAPixel = OscBufferA[drawBufferNumber][calculatedOffset];
 				prevBPixel = OscBufferB[drawBufferNumber][calculatedOffset];
+
+				if (prevAPixel > 239) {
+					int pause = 1;
+				}
 
 				drawPos ++;
 				if (drawPos == OSCWIDTH) drawing = false;
@@ -309,6 +382,7 @@ int main(void) {
 					lcd.DrawLine(trigger.x, trigger.y - 4, trigger.x, trigger.y + 4, LCD_YELLOW);
 					lcd.DrawLine(std::max(trigger.x - 4, 0), trigger.y, trigger.x + 4, trigger.y, LCD_YELLOW);
 				}
+				CP_CAP
 			}
 		}
 

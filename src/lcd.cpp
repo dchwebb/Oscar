@@ -6,6 +6,13 @@
 extern volatile uint32_t coverageTimer;
 extern volatile uint32_t coverageTotal;
 
+Lcd::Lcd() {
+	//	 Hacky way of storing a reference to the character draw buffers in their respective fon typedefs
+	Font_Small.charBuffer = charSmallBuffer;
+	Font_Medium.charBuffer = charMediumBuffer;
+	Font_Large.charBuffer = charLargeBuffer;
+}
+
 void Lcd::Init(void) {
 
 	// Force reset
@@ -47,42 +54,34 @@ void Lcd::Init(void) {
 };
 
 void Lcd::CommandData(CDARGS cmds) {
+	while (SPI_DMA_Working);
 	Command(cmds[0]);
-
 	LCD_DCX_SET;
-	LCD_CS_RESET;
-
 	for (uint8_t i = 1; i < cmds.size(); ++i)
 		SPISendByte(cmds[i]);
-
-	LCD_CS_SET;
 }
 
 void Lcd::Delay(volatile uint32_t delay) {
 	for (; delay != 0; delay--);
 }
 
-void Lcd::Command(uint8_t data) {
+void Lcd::Command(const uint8_t& data) {
+	while (SPI_DMA_Working);
 	LCD_DCX_RESET;
-	LCD_CS_RESET;
 	SPISendByte(data);
-	LCD_CS_SET;
 }
 
-//	Send data - use overloads to allow 16 and 32 bit sends
-void Lcd::Data(uint8_t data) {
+//	Send data in either 8 or 16 bit modes
+void Lcd::Data(const uint8_t& data) {
 	LCD_DCX_SET;
-	LCD_CS_RESET;
 	SPISendByte(data);
-	LCD_CS_SET;
 }
 
-void Lcd::Data16b(uint16_t data) {
+void Lcd::Data16b(const uint16_t& data) {
+
 	LCD_DCX_SET;
-	LCD_CS_RESET;
 	SPISendByte(data >> 8);
 	SPISendByte(data & 0xFF);
-	LCD_CS_SET;
 }
 
 void Lcd::SetCursorPosition(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) {
@@ -93,7 +92,6 @@ void Lcd::SetCursorPosition(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) 
 	Command(ILI9341_PAGE_ADDR);
 	Data16b(y1);
 	Data16b(y2);
-
 }
 
 
@@ -121,69 +119,39 @@ void Lcd::ScreenFill(const uint16_t& colour) {
 }
 
 void Lcd::ColourFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t& colour) {
-
-
-
-	SetCursorPosition(x0, y0, x1, y1);
-
-	Command(ILI9341_GRAM);
-
 	uint32_t pixelCount = (x1 - x0 + 1) * (y1 - y0 + 1);
 
-	LCD_CS_RESET;
+	SetCursorPosition(x0, y0, x1, y1);
+	Command(ILI9341_GRAM);
 	LCD_DCX_SET;
-
-	SPISetDataSize(SPIDataSize_16b);			// 16-bit SPI mode
+	SPISetDataSize(SPIDataSize_16b);				// 16-bit SPI mode
 
 	// Send first 65535 bytes, SPI must be in 16-bit Mode
 	SPI_DMA_SendHalfWord(colour, (pixelCount > 0xFFFF) ? 0xFFFF : pixelCount);
 
-	CP_ON
-	while (SPI_DMA_Working);
-	CP_CAP
-
-	// Check if there is more data to send
-	if (pixelCount > 0xFFFF) {
-		SPI_DMA_SendHalfWord(colour, pixelCount - 0xFFFF);		// Send remaining data
-
+	if (pixelCount > 0xFFFF) {						// Send remaining data
 		while (SPI_DMA_Working);
+		SPI_DMA_SendHalfWord(colour, pixelCount - 0xFFFF);
 	}
-
-	LCD_CS_SET;
-
-	SPISetDataSize(SPIDataSize_8b);				// 8 bit SPI Mode
-
-
 }
 
 
 void Lcd::PatternFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t* PixelData) {
+	uint32_t pixelCount = (x1 - x0 + 1) * (y1 - y0 + 1);
 
 	SetCursorPosition(x0, y0, x1, y1);
 	Command(ILI9341_GRAM);
-	uint32_t pixelCount = (x1 - x0 + 1) * (y1 - y0 + 1);
-
-	LCD_CS_RESET;
 	LCD_DCX_SET;
-
-	SPISetDataSize(SPIDataSize_16b);			// 16-bit SPI mode
-
-	if (DMA2_Stream6->NDTR)							// Check number of data items to transfer is zero (ie stream is free)
-		return;
+	SPISetDataSize(SPIDataSize_16b);				// 16-bit SPI mode
 
 	// Clear DMA Stream 6 flags using high interrupt flag clear register
 	DMA2->HIFCR = DMA_HIFCR_CFEIF6 | DMA_HIFCR_CDMEIF6 | DMA_HIFCR_CTEIF6 | DMA_HIFCR_CHTIF6 | DMA_HIFCR_CTCIF6;
 
 	DMA2_Stream6->CR |= DMA_SxCR_MINC;				// Memory in increment mode
 	DMA2_Stream6->NDTR = pixelCount;				// Number of data items to transfer
-	DMA2_Stream6->M0AR = (uint32_t) (PixelData);	// DMA_InitStruct.DMA_Memory0BaseAddr
+	DMA2_Stream6->M0AR = (uint32_t)PixelData;		// DMA_InitStruct.DMA_Memory0BaseAddr
 	DMA2_Stream6->CR |= DMA_SxCR_EN;				// Enable DMA transfer stream
 	SPI5->CR2 |= SPI_CR2_TXDMAEN;					// Enable SPI TX DMA
-
-	while (SPI_DMA_Working);
-
-	LCD_CS_SET;
-	SPISetDataSize(SPIDataSize_8b);				// 8 bit SPI Mode
 }
 
 void Lcd::DrawPixel(uint16_t x, uint16_t y, const uint16_t& colour) {
@@ -191,7 +159,6 @@ void Lcd::DrawPixel(uint16_t x, uint16_t y, const uint16_t& colour) {
 
 	Command(ILI9341_GRAM);
 	Data16b(colour);
-
 }
 
 
@@ -245,8 +212,7 @@ void Lcd::DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uin
 }
 
 
-void Lcd::DrawChar(uint16_t x, uint16_t y, char c, const FontDef_t *font, const uint32_t& foreground, const uint32_t& background) {
-
+void Lcd::DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
 
 	// If at the end of a line of display, go to new line and set x to 0 position
 	if ((x + font->Width) > width) {
@@ -254,65 +220,34 @@ void Lcd::DrawChar(uint16_t x, uint16_t y, char c, const FontDef_t *font, const 
 		x = 0;
 	}
 
-	// Create array containing colour pattern to display
-	uint16_t charDisp[font->Width * font->Height];
-
 	// Write character colour data to array
 	uint16_t px, py, fontRow, i = 0;
 	for (py = 0; py < font->Height; py++) {
 		fontRow = font->data[(c - 32) * font->Height + py];
 		for (px = 0; px < font->Width; px++) {
 			if ((fontRow << px) & 0x8000) {
-				charDisp[i] = foreground;
+				font->charBuffer[i] = foreground;
 			} else {
-				charDisp[i] = background;
+				font->charBuffer[i] = background;
 			}
 			i++;
 		}
 	}
 
 	// Send array of data to SPI/DMA to draw
-	PatternFill(x, y, x + font->Width - 1, y + font->Height - 1, charDisp);
+	PatternFill(x, y, x + font->Width - 1, y + font->Height - 1, font->charBuffer);
 }
 
-void Lcd::DrawString(uint16_t x0, uint16_t y0, std::string s, const FontDef_t *font, const uint32_t& foreground, const uint32_t& background) {
+void Lcd::DrawString(uint16_t x0, uint16_t y0, std::string s, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
 	for (char& c : s) {
+		while (SPI_DMA_Working);
 		DrawChar(x0, y0, c, font, foreground, background);
 		x0 += font->Width;
 	}
 }
 
 
-/*void Lcd::DrawChar(uint16_t x, uint16_t y, char c, const FontDef_t *font, const uint32_t& foreground, const uint32_t& background) {
-	uint32_t i, b, j;
-	// Set character coordinates
-	charPosX = x;
-	charPosY = y;
-
-	if ((charPosX + font->Width) > width) {
-		 If at the end of a line of display, go to new line and set x to 0 position
-		charPosY += font->Height;
-		charPosX = 0;
-	}
-
-	// Draw rectangle for background
-	ColourFill(charPosX, charPosY, charPosX + font->Width, charPosY + font->Height, background);
-
-	// Draw font data
-	for (i = 0; i < font->Height; i++) {
-		b = font->data[(c - 32) * font->Height + i];
-		for (j = 0; j < font->Width; j++) {
-			if ((b << j) & 0x8000) {
-				DrawPixel(charPosX + j, (charPosY + i), foreground);
-			}
-		}
-	}
-
-	// Set new character position
-	charPosX += font->Width;
-}*/
-
-void Lcd::SPISetDataSize(SPIDataSize_t Mode) {
+void Lcd::SPISetDataSize(const SPIDataSize_t& Mode) {
 
 	SPI5->CR1 &= ~SPI_CR1_SPE;						// Disable SPI
 
@@ -325,18 +260,22 @@ void Lcd::SPISetDataSize(SPIDataSize_t Mode) {
 	SPI5->CR1 |= SPI_CR1_SPE;						// Re-enable SPI
 }
 
-inline void Lcd::SPISendByte(uint8_t data) {
-//	while (SPI_Working);	// Wait for previous transmissions to complete if DMA TX enabled for SPI
+inline void Lcd::SPISendByte(const uint8_t data) {
 
-	SPI5->DR = data;		// Fill output buffer with data
+	while (SPI_DMA_Working);
 
-	while (SPI_Working);	// Wait for transmission to complete
+	// check if in 16 bit mode. Data frame format: 0: 8-bit data frame format; 1: 16-bit data frame format
+	if (SPI5->CR1 & SPI_CR1_DFF)
+		SPISetDataSize(SPIDataSize_8b);
+
+	SPI5->DR = data;								// Fill output buffer with data
+
+	while (SPI_DMA_Working);						// Wait for transmission to complete
 }
 
-bool Lcd::SPI_DMA_SendHalfWord(uint16_t value, uint16_t count) {
+void Lcd::SPI_DMA_SendHalfWord(const uint16_t& value, const uint16_t& count) {
 
-	if (DMA2_Stream6->NDTR)							// Check number of data items to transfer is zero (ie stream is free)
-		return false;
+	while (SPI_DMA_Working);						// Check number of data items to transfer is zero (ie stream is free)
 
 	DMAint16 = value;								// data to transfer - use class property so does not go out of scope
 
@@ -347,10 +286,7 @@ bool Lcd::SPI_DMA_SendHalfWord(uint16_t value, uint16_t count) {
 	DMA2_Stream6->NDTR = count;						// Number of data items to transfer
 	DMA2_Stream6->M0AR = (uint32_t) &DMAint16;		// DMA_InitStruct.DMA_Memory0BaseAddr;
 	DMA2_Stream6->CR |= DMA_SxCR_EN;				// Enable DMA transfer stream
-
 	SPI5->CR2 |= SPI_CR2_TXDMAEN;					// Enable SPI TX DMA
-
-	return true;
 }
 
 

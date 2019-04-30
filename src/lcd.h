@@ -55,15 +55,21 @@
 #define LCD_RST_SET 	GPIOD->BSRRL |= GPIO_BSRR_BS_12
 #define LCD_DCX_RESET	GPIOD->BSRRH |= GPIO_BSRR_BS_13
 #define LCD_DCX_SET		GPIOD->BSRRL |= GPIO_BSRR_BS_13
+
+/*
+// Chip select - active low. Shouldn't need to do anything with this pin
 #define LCD_CS_RESET	GPIOC->BSRRH |= GPIO_BSRR_BS_2
 #define LCD_CS_SET		GPIOC->BSRRL |= GPIO_BSRR_BS_2
+*/
 
 // Macro for creating arguments to CommandData function
-#define CDARGS std::vector<uint8_t>
+#define CDARGS			std::vector<uint8_t>
 
-// Macros to check if DMA or SPI are busy
-#define SPI_DMA_Working	DMA2_Stream5->NDTR || DMA2_Stream6->NDTR || ((SPI5->SR & (SPI_SR_TXE | SPI_SR_RXNE)) == 0 || (SPI5->SR & SPI_SR_BSY))
-#define SPI_Working		(SPI5->SR & (SPI_SR_TXE | SPI_SR_RXNE)) == 0 || (SPI5->SR & SPI_SR_BSY)
+// Macros to check if DMA or SPI are busy - shouldn't need to check Stream5 as this is receive
+//#define SPI_DMA_Working	DMA2_Stream5->NDTR || DMA2_Stream6->NDTR || ((SPI5->SR & (SPI_SR_TXE | SPI_SR_RXNE)) == 0 || (SPI5->SR & SPI_SR_BSY))
+//#define SPI_Working			(SPI5->SR & (SPI_SR_TXE | SPI_SR_RXNE)) == 0 || (SPI5->SR & SPI_SR_BSY)
+#define SPI_DMA_Working		DMA2_Stream6->NDTR || (SPI5->SR & SPI_SR_TXE) == 0
+#define SPI_Working			(SPI5->SR & SPI_SR_TXE) == 0 || (SPI5->SR & SPI_SR_BSY)
 
 typedef enum {
 	LCD_Portrait, 			// Portrait
@@ -73,15 +79,16 @@ typedef enum {
 } LCD_Orientation_t;
 
 typedef enum {
-	SPIDataSize_8b,		// SPI in 8-bits mode
+	SPIDataSize_8b,			// SPI in 8-bits mode
 	SPIDataSize_16b 		// SPI in 16-bits mode
 } SPIDataSize_t;
 
-typedef struct {
-	uint8_t Width;    /*!< Font width in pixels */
-	uint8_t Height;   /*!< Font height in pixels */
-	const uint16_t *data; /*!< Pointer to data font data array */
-} FontDef_t;
+struct FontData {
+	const uint8_t Width;    // Font width in pixels
+	const uint8_t Height;   // Font height in pixels
+	const uint16_t *data;	// Pointer to data font data array
+	uint16_t* charBuffer;
+};
 
 
 class Lcd {
@@ -90,10 +97,11 @@ public:
 	uint16_t width = 240;
 	uint16_t height = 320;
 	uint16_t DMAint16;
-	FontDef_t Font_Small {7, 10, Font7x10};
-	FontDef_t Font_Medium {11, 18, Font11x18};
-	FontDef_t Font_Large {16, 26, Font16x26};
+	FontData Font_Small {7, 10, Font7x10};
+	FontData Font_Medium {11, 18, Font11x18};
+	FontData Font_Large {16, 26, Font16x26};
 
+	Lcd();
 	void Init(void);
 	void Rotate(LCD_Orientation_t orientation);
 	void ScreenFill(const uint16_t& colour);
@@ -101,20 +109,25 @@ public:
 	void PatternFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t* PixelData);
 	void DrawPixel(uint16_t x, uint16_t y, const uint16_t& colour);
 	void DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint32_t& colour);
-	void DrawChar(uint16_t x, uint16_t y, char c, const FontDef_t *font, const uint32_t& foreground, const uint32_t& background);
-	void DrawString(uint16_t x0, uint16_t y0, std::string s, const FontDef_t *font, const uint32_t& foreground, const uint32_t& background);
+	void DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const uint32_t& foreground, const uint32_t& background);
+	void DrawString(uint16_t x0, uint16_t y0, std::string s, const FontData *font, const uint32_t& foreground, const uint32_t& background);
+
+	void Command(const uint8_t& data);
+
 private:
+	uint16_t charSmallBuffer[7 * 10];
+	uint16_t charMediumBuffer[11 * 18];
+	uint16_t charLargeBuffer[16 * 26];
 
 	void Delay(volatile uint32_t delay);
-	void Command(uint8_t data);
-	void Data(uint8_t data);
-	void Data16b(uint16_t data);
+	void Data(const uint8_t& data);
+	void Data16b(const uint16_t& data);
 	void CommandData(CDARGS);
 	void SetCursorPosition(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
 
-	inline void SPISendByte(uint8_t data);
-	void SPISetDataSize(SPIDataSize_t Mode);
-	bool SPI_DMA_SendHalfWord(uint16_t value, uint16_t count);
+	inline void SPISendByte(const uint8_t data);
+	void SPISetDataSize(const SPIDataSize_t& Mode);
+	void SPI_DMA_SendHalfWord(const uint16_t& value, const uint16_t& count);
 
 };
 
