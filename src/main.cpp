@@ -6,7 +6,8 @@
 #define OSCWIDTH 320
 #define LUTSIZE 1024
 #define FFTSAMPLES 1024
-#define FFTDRAWBUFFERSIZE 16
+#define FFTDRAWBUFFERSIZE 160
+#define FFTDRAWAFTERCALC true
 
 extern uint32_t SystemCoreClock;
 extern volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
@@ -18,7 +19,7 @@ volatile uint8_t VertOffsetA = 30, VertOffsetB = 30, captureBufferNumber = 0, dr
 volatile int16_t drawOffset[2] {0, 0};
 volatile bool dataAvailable[2] {false, false};
 volatile uint16_t capturedSamples[2] {0, 0};
-volatile bool Encoder1Btn = false, oscFree = false, FFTMode = true;
+volatile bool Encoder1Btn = false, oscFree = false, FFTMode = false;
 
 volatile float FFTBuffer[2][FFTSAMPLES], candCos[FFTSAMPLES];
 volatile uint16_t FFTPrevDraw[FFTSAMPLES];
@@ -27,6 +28,7 @@ constexpr int FFTbits = log2(FFTSAMPLES);
 constexpr float FFTWidth = (FFTSAMPLES / 2) > OSCWIDTH ? 1 : (float)OSCWIDTH / (FFTSAMPLES / 2);
 
 volatile uint32_t debugCount = 0, coverageTimer = 0, coverageTotal = 0;
+volatile int16_t oldencoderUp = 0, oldencoderDown = 0, encoderUp = 0, encoderDown = 0, encoderVal = 0, encoderState = 0;
 
 Lcd lcd;
 
@@ -87,25 +89,41 @@ extern "C"
 				capturing = false;
 			}
 
-			OscBufferA[captureBufferNumber][capturePos] = adcA;
-			OscBufferB[captureBufferNumber][capturePos] = adcB;
+			// If capturing or buffering samples waiting for trigger store current readings in buffer and increment counters
+			if (capturing || !drawing || captureBufferNumber != drawBufferNumber) {
+				OscBufferA[captureBufferNumber][capturePos] = adcA;
+				OscBufferB[captureBufferNumber][capturePos] = adcB;
+				oldAdcA = adcA;
 
-			if (capturePos == OSCWIDTH - 1)		capturePos = 0;
-			else								capturePos++;
+				if (capturePos == OSCWIDTH - 1)		capturePos = 0;
+				else								capturePos++;
 
-			if (capturing)	capturedSamples[captureBufferNumber]++;
-			else 			bufferSamples++;
+				if (capturing)	capturedSamples[captureBufferNumber]++;
+				else 			bufferSamples++;
 
-			oldAdcA = adcA;
+			}
+
+
 		}
 	}
 
 	// Encoder button
 	void EXTI9_5_IRQHandler(void) {
-		if (!(GPIOA->IDR & GPIO_IDR_IDR_7))				// Read PA7
+		if (!(GPIOA->IDR & GPIO_IDR_IDR_7))				// Read Encoder button PA7
 			Encoder1Btn = true;
 
-		EXTI->PR |= EXTI_PR_PR7;						// Clear interrupt pending
+		if (!(GPIOE->IDR & GPIO_IDR_IDR_8))				// Read Encoder up PE8
+			encoderUp++;
+		if (!(GPIOE->IDR & GPIO_IDR_IDR_9))				// Read Encoder down PE9
+			encoderDown++;
+
+		if (encoderUp > 1 || encoderDown > 1) {
+			encoderVal += (encoderUp > encoderDown) ? 1 : -1;
+			encoderUp = 0;
+			encoderDown = 0;
+		}
+
+		EXTI->PR |= EXTI_PR_PR7 | EXTI_PR_PR8 | EXTI_PR_PR9;	// Clear interrupt pending
 	}
 
 	//	Coverage timer
@@ -167,6 +185,7 @@ void FFT(volatile float candSin[]) {
 	while (node < FFTSAMPLES) {
 
 		if (node == 1) {
+
 			// for the first loop the sine and cosine values will be 1 and 0 in all cases, simplifying the logic
 			for (int p1 = 0; p1 < FFTSAMPLES; p1 += 2) {
 				int p2 = p1 + node;
@@ -179,8 +198,9 @@ void FFT(volatile float candSin[]) {
 				candCos[p1] = 0;
 			}
 		} else if (node == FFTSAMPLES / 2) {
+
 			// last node - this draws samples rather than calculate them
-			for (uint16_t p1 = 1; p1 < std::min(node, OSCWIDTH); p1++) {
+			for (uint16_t p1 = 1; p1 <= OSCWIDTH; p1++) {
 				// Use Sine LUT to generate sine and cosine values faster than sine or cosine functions
 				uint16_t b = std::round(p1 * LUTSIZE / (2 * node));
 				float s = SineLUT[b];
@@ -189,33 +209,30 @@ void FFT(volatile float candSin[]) {
 				int p2 = p1 + node;
 
 				// true if drawing after FFT calculations
-				if (true) {
+				if (FFTDRAWAFTERCALC) {
 					candSin[p1] += c * candSin[p2] - s * candCos[p2];
 					candCos[p1] += c * candCos[p2] + s * candSin[p2];
 				} else {
 
-
-					uint16_t left = FFTWidth * (p1 - 1);
+					// Combine final node calculation sine and cosines to get amplitudes and store in alternate buffers, transmitting as each buffer is completed
 					float hypotenuse = std::sqrt(std::pow(candSin[p1] + (c * candSin[p2] - s * candCos[p2]), 2) + std::pow(candCos[p1] + (c * candCos[p2] + s * candSin[p2]), 2));
-					uint16_t top = 239 * (1 - (hypotenuse / (512 * FFTSAMPLES)));
-					uint16_t x1 = left + FFTWidth;
+					uint16_t top = std::min(239 * (1 - (hypotenuse / (512 * FFTSAMPLES))), 239.0f);
 
-					debugCount = DMA2_Stream6->NDTR;
+					uint8_t FFTDrawBufferNumber = (((p1 - 1) / FFTDRAWBUFFERSIZE) % 2 == 0) ? 0 : 1;		// Alternate between buffer 0 and buffer 1
 
-					if (true) {		// this mode is slower but results in smoother FFT draws
-						lcd.ColourFill(left, top, x1, 239, LCD_BLUE);
-						lcd.ColourFill(left, 0, x1, top - 1, LCD_BLACK);
-					} else {
-						// since drawing the entire screen is relatively slow only update areas that have changed
-						if (top < FFTPrevDraw[p1])
-							lcd.ColourFill(left, 0, x1, top - 1, LCD_BLACK);
-						else
-							lcd.ColourFill(left, top, x1, 239, LCD_BLUE);
+					// draw column into memory buffer
+					for (int h = 0; h < 240; ++h) {
+						uint16_t buffPos = h * FFTDRAWBUFFERSIZE + ((p1 - 1) % FFTDRAWBUFFERSIZE);
+						FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = (h < top || p1 >= node) ? LCD_BLACK: LCD_BLUE;
+					}
 
-						FFTPrevDraw[p1] = top;
+					// check if ready to draw next buffer
+					if ((p1 % FFTDRAWBUFFERSIZE) == 0) {
+						lcd.PatternFill(p1 - FFTDRAWBUFFERSIZE, 0, p1 - 1, 239, FFTDrawBuffer[FFTDrawBufferNumber]);
 					}
 				}
 			}
+
 		} else {
 			// Step through each value of the W function
 			for (int Wx = 0; Wx < node; Wx++) {
@@ -243,55 +260,37 @@ void FFT(volatile float candSin[]) {
 				}
 			}
 		}
+
 		node = node * 2;
 	}
 
-	// Combine sine and cosines to get amplitudes
-	for (uint16_t i = 1; i <= std::min(FFTSAMPLES / 2, OSCWIDTH); i++) {
+	if (FFTDRAWAFTERCALC) {
+		// Combine sine and cosines to get amplitudes and store in alternate buffers, transmitting as each buffer is completed
+		for (uint16_t i = 1; i <= std::min(FFTSAMPLES / 2, OSCWIDTH); i++) {
 
-		float hypotenuse = std::sqrt(std::pow(candSin[i], 2) + std::pow(candCos[i], 2));
-		uint16_t top = std::min(239 * (1 - (hypotenuse / (512 * FFTSAMPLES))), 239.0f);
+			float hypotenuse = std::sqrt(std::pow(candSin[i], 2) + std::pow(candCos[i], 2));
+			uint16_t top = std::min(239 * (1 - (hypotenuse / (512 * FFTSAMPLES))), 239.0f);
 
-		int buffCount = FFTSAMPLES / FFTDRAWBUFFERSIZE;
-		int blockCols = FFTDRAWBUFFERSIZE;
+			uint8_t FFTDrawBufferNumber = (((i - 1) / FFTDRAWBUFFERSIZE) % 2 == 0) ? 0 : 1;
 
-		uint8_t FFTDrawBufferNumber = (((i - 1) / blockCols) % 2 == 0) ? 0 : 1;
-
-		if (true) {		// draw screen in series of buffers
-			uint16_t buffPos = 0;
-
+			// draw column into memory buffer
 			for (int h = 0; h < 240; ++h) {
-				buffPos = h * blockCols;
-				buffPos += ((i - 1) % blockCols);
+				uint16_t buffPos = h * FFTDRAWBUFFERSIZE + ((i - 1) % FFTDRAWBUFFERSIZE);
+				FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = h < top ? LCD_BLACK: LCD_BLUE;
 
-				if (h < top) {
-					FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = LCD_BLACK;
-				} else {
-					FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = LCD_BLUE;
+				if (top < 10 && i > 100) {
+					int susp = 1;
 				}
 			}
 
-
 			// check if ready to draw next buffer
-			if ((i % blockCols) == 0) {
+			if ((i % FFTDRAWBUFFERSIZE) == 0) {
 				debugCount = DMA2_Stream6->NDTR;
-				// draw buffer
-				lcd.PatternFill(i - blockCols, 0, i - 1, 239, FFTDrawBuffer[FFTDrawBufferNumber]);
+				lcd.PatternFill(i - FFTDRAWBUFFERSIZE, 0, i - 1, 239, FFTDrawBuffer[FFTDrawBufferNumber]);
 			}
-
-
-		} else {
-			// draw screen one column at a time
-			uint16_t left = FFTWidth * (i - 1);
-			uint16_t right = left + FFTWidth;
-
-			// since drawing the entire screen is relatively slow only update areas that have changed
-			lcd.ColourFill(left, top, right, 239, LCD_BLUE);
-			lcd.ColourFill(left, 0, right, top - 1, LCD_BLACK);
 		}
-
-		//lcd.DrawString(60, 150, "Hello", &lcd.Font_Small, LCD_WHITE, LCD_BLUE);
 	}
+
 	CP_CAP
 }
 
@@ -314,6 +313,13 @@ int main(void) {
 
 
 	while (1) {
+
+		if (encoderVal != 0) {
+			if ((encoderVal * 2) + TIM3->ARR > 0)
+				TIM3->ARR += encoderVal * 2;
+			encoderVal = 0;
+		}
+
 		if (Encoder1Btn) {
 			Encoder1Btn = false;
 			FFTMode = !FFTMode;
@@ -333,7 +339,6 @@ int main(void) {
 				else continue;
 
 				FFT(FFTBuffer[drawBufferNumber]);
-
 				dataAvailable[drawBufferNumber] = false;
 			}
 
@@ -370,12 +375,14 @@ int main(void) {
 				prevAPixel = OscBufferA[drawBufferNumber][calculatedOffset];
 				prevBPixel = OscBufferB[drawBufferNumber][calculatedOffset];
 
-				if (prevAPixel > 239) {
+				if (drawPos == OSCWIDTH - 1) {
 					int pause = 1;
 				}
 
 				drawPos ++;
-				if (drawPos == OSCWIDTH) drawing = false;
+				if (drawPos == OSCWIDTH){
+					drawing = false;
+				}
 
 				// Draw trigger as a yellow cross
 				if (drawPos == trigger.x + 4) {

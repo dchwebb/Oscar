@@ -5,19 +5,19 @@ initialisation.h:84:6:void InitLCDHardware()	4	static
 initialisation.h:139:6:void InitADC()	4	static
 initialisation.h:199:6:void InitSampleAcquisition()	8	static
 initialisation.h:220:6:void InitCoverageTimer()	8	static
-initialisation.h:232:6:void InitEncoders()	8	static
+initialisation.h:233:6:void InitEncoders()	8	static
 gthr-default.h:229:1:int __gthread_key_delete(__gthread_key_t)	16	static
-main.cpp:44:7:void TIM3_IRQHandler()	16	static
-main.cpp:104:7:void EXTI9_5_IRQHandler()	4	static
-main.cpp:112:7:void TIM4_IRQHandler()	4	static
-main.cpp:119:6:void GenerateLUT()	24	static
-main.cpp:125:6:void ResetSampleAcquisition()	16	static
+main.cpp:46:7:void TIM3_IRQHandler()	16	static
+main.cpp:111:7:void EXTI9_5_IRQHandler()	4	static
+main.cpp:130:7:void TIM4_IRQHandler()	4	static
+main.cpp:137:6:void GenerateLUT()	24	static
+main.cpp:143:6:void ResetSampleAcquisition()	16	static
 cmath:1802:5:constexpr typename __gnu_cxx::__enable_if<std::__is_integer<_Tp>::__value, double>::__type std::round(_Tp) [with _Tp = int]	24	static
 cmath:438:5:constexpr typename __gnu_cxx::__promote_2<_Tp, _Up>::__type std::pow(_Tp, _Up) [with _Tp = float; _Up = int]	24	static
-main.cpp:134:6:void FFT(volatile float*)	192	static
-main.cpp:299:5:int main()	64	static
-stl_algobase.h:195:5:const _Tp& std::min(const _Tp&, const _Tp&) [with _Tp = int]	16	static
+main.cpp:152:6:void FFT(volatile float*)	176	static
+main.cpp:298:5:int main()	64	static
 stl_algobase.h:195:5:const _Tp& std::min(const _Tp&, const _Tp&) [with _Tp = float]	16	static
+stl_algobase.h:195:5:const _Tp& std::min(const _Tp&, const _Tp&) [with _Tp = int]	16	static
 stl_algobase.h:219:5:const _Tp& std::max(const _Tp&, const _Tp&) [with _Tp = int]	16	static
-main.cpp:390:1:void __static_initialization_and_destruction_0(int, int)	16	static
-main.cpp:390:1:cpp)	8	static
+main.cpp:397:1:void __static_initialization_and_destruction_0(int, int)	16	static
+main.cpp:397:1:cpp)	8	static
