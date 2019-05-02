@@ -81,6 +81,24 @@ void SystemClock_Config(void) {
 	// See page 83 of manual for other possible performance boost options: instruction cache enable (ICEN) and data cache enable (DCEN)
 }
 
+void InitSysTick()
+{
+	// using as a simple debounce counter
+
+	// Register macros found in core_cm4.h
+	SysTick->CTRL = 0;									// Disable SysTick
+	SysTick->LOAD = 0x1000000 - 1;						// Set reload register to maximum 2^24
+
+	// Set priority of Systick interrupt to least urgency (ie largest priority value)
+//	NVIC_SetPriority (SysTick_IRQn, (1 << __NVIC_PRIO_BITS) - 1);
+
+	SysTick->VAL = 0;									// Reset the SysTick counter value
+
+//	SysTick->CTRL |= SysTick_CTRL_CLKSOURCE_Msk;		// Select processor clock: 1 = processor clock; 0 = external clock
+//	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;			// Enable SysTick interrupt
+	SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;			// Enable SysTick
+}
+
 void InitLCDHardware(void) {
 	//	Enable GPIO and SPI clocks
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;			// reset and clock control - advanced high performance bus - GPIO port C
@@ -199,8 +217,8 @@ void InitADC(void) {
 void InitSampleAcquisition() {
 	//	Setup Timer 3 on an interrupt to trigger sample acquisition
 	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;				// Enable Timer 3
-	TIM3->PSC = 500;								// Set prescaler to fire at sample rate - this is divided by 4 to match the APB2 prescaler
-	TIM3->ARR = 10; 								// Set maximum count value (auto reload register) - set to system clock / sampling rate
+	TIM3->PSC = 500;								// Set prescaler
+	TIM3->ARR = 10; 								// Set auto reload register
 
 	TIM3->DIER |= TIM_DIER_UIE;						//  DMA/interrupt enable register
 	NVIC_EnableIRQ(TIM3_IRQn);
@@ -231,7 +249,7 @@ void InitCoverageTimer() {
 
 
 void InitEncoders() {
-	// Button on PA7, up/down on PE8 and PE9
+	// Encoder 1: Button on PA7, up/down on PE8 and PE9; Encoder 2: up/down on PE10 and PE11
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;			// reset and clock control - advanced high performance bus - GPIO port C
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN;			// reset and clock control - advanced high performance bus - GPIO port E
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;			// Enable system configuration clock: used to manage external interrupt line connection to GPIOs
@@ -240,6 +258,8 @@ void InitEncoders() {
 	GPIOA->PUPDR |= GPIO_PUPDR_PUPDR7_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
 	GPIOE->PUPDR |= GPIO_PUPDR_PUPDR8_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
 	GPIOE->PUPDR |= GPIO_PUPDR_PUPDR9_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
+	GPIOE->PUPDR |= GPIO_PUPDR_PUPDR10_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
+	GPIOE->PUPDR |= GPIO_PUPDR_PUPDR11_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
 
 
 	// configure PA7 button to fire on an interrupt
@@ -256,6 +276,18 @@ void InitEncoders() {
 	EXTI->FTSR |= EXTI_FTSR_TR9;					// Enable falling edge trigger
 	EXTI->IMR |= EXTI_IMR_MR9;						// Activate interrupt using mask register
 
+	SYSCFG->EXTICR[2] |= SYSCFG_EXTICR3_EXTI10_PE;	// Select Pin PE10 which uses External interrupt 3
+	//EXTI->RTSR |= EXTI_RTSR_TR10;					// Enable rising edge trigger
+	EXTI->FTSR |= EXTI_FTSR_TR10;					// Enable falling edge trigger
+	EXTI->IMR |= EXTI_IMR_MR10;						// Activate interrupt using mask register
+
+	SYSCFG->EXTICR[2] |= SYSCFG_EXTICR3_EXTI11_PE;	// Select Pin PE11 which uses External interrupt 3
+	//EXTI->RTSR |= EXTI_RTSR_TR11;					// Enable rising edge trigger
+	EXTI->FTSR |= EXTI_FTSR_TR11;					// Enable falling edge trigger
+	EXTI->IMR |= EXTI_IMR_MR11;						// Activate interrupt using mask register
+
 	NVIC_SetPriority(EXTI9_5_IRQn, 3);
 	NVIC_EnableIRQ(EXTI9_5_IRQn);
+	NVIC_SetPriority(EXTI15_10_IRQn, 3);
+	NVIC_EnableIRQ(EXTI15_10_IRQn);
 }

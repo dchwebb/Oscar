@@ -1,3 +1,5 @@
 
 *.BAK
 *.FXP
+*.zip
+*.o

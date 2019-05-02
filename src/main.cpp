@@ -1,18 +1,21 @@
 #include "stm32f4xx.h"
 #include <cmath>
+#include <string>
+#include <sstream>
 #include "initialisation.h"
 #include "lcd.h"
 
-#define OSCWIDTH 320
+#define DRAWWIDTH 320
 #define LUTSIZE 1024
 #define FFTSAMPLES 1024
 #define FFTDRAWBUFFERSIZE 160
 #define FFTDRAWAFTERCALC true
+#define DRAWHEIGHT 215
 
 extern uint32_t SystemCoreClock;
 extern volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 float SineLUT[LUTSIZE];
-volatile uint16_t OscBufferA[2][OSCWIDTH], OscBufferB[2][OSCWIDTH];
+volatile uint16_t OscBufferA[2][DRAWWIDTH], OscBufferB[2][DRAWWIDTH];
 volatile uint16_t prevAPixel = 0, prevBPixel = 0, adcA, oldAdcA, adcB, capturePos = 0, drawPos = 0, bufferSamples = 0;
 volatile bool capturing = false, drawing = false;
 volatile uint8_t VertOffsetA = 30, VertOffsetB = 30, captureBufferNumber = 0, drawBufferNumber = 0;
@@ -20,18 +23,19 @@ volatile int16_t drawOffset[2] {0, 0};
 volatile bool dataAvailable[2] {false, false};
 volatile uint16_t capturedSamples[2] {0, 0};
 volatile bool Encoder1Btn = false, oscFree = false, FFTMode = false;
+volatile int8_t encoderPendingL = 0, encoderPendingR = 0;
+volatile uint16_t bounce = 0, nobounce = 0;
 
 volatile float FFTBuffer[2][FFTSAMPLES], candCos[FFTSAMPLES];
-volatile uint16_t FFTPrevDraw[FFTSAMPLES];
- uint16_t FFTDrawBuffer[2][240 * FFTDRAWBUFFERSIZE];
+ uint16_t FFTDrawBuffer[2][(DRAWHEIGHT + 1) * FFTDRAWBUFFERSIZE];
 constexpr int FFTbits = log2(FFTSAMPLES);
-constexpr float FFTWidth = (FFTSAMPLES / 2) > OSCWIDTH ? 1 : (float)OSCWIDTH / (FFTSAMPLES / 2);
+constexpr float FFTWidth = (FFTSAMPLES / 2) > DRAWWIDTH ? 1 : (float)DRAWWIDTH / (FFTSAMPLES / 2);
+
 
 volatile uint32_t debugCount = 0, coverageTimer = 0, coverageTotal = 0;
 volatile int16_t oldencoderUp = 0, oldencoderDown = 0, encoderUp = 0, encoderDown = 0, encoderVal = 0, encoderState = 0;
 
 Lcd lcd;
-
 
 
 struct  {
@@ -62,8 +66,8 @@ extern "C"
 
 		} else {
 			// Average the last four ADC readings to smooth noise
-			adcA = (((float)(ADC_array[0] + ADC_array[2] + ADC_array[4] + ADC_array[6]) / 4) / 4096 * 240) - VertOffsetA;
-			adcB = (((float)(ADC_array[1] + ADC_array[3] + ADC_array[5] + ADC_array[7]) / 4) / 4096 * 240) - VertOffsetB;
+			adcA = (((float)(ADC_array[0] + ADC_array[2] + ADC_array[4] + ADC_array[6]) / 4) / 4096 * DRAWHEIGHT) - VertOffsetA;
+			adcB = (((float)(ADC_array[1] + ADC_array[3] + ADC_array[5] + ADC_array[7]) / 4) / 4096 * DRAWHEIGHT) - VertOffsetB;
 
 			// check if we should start capturing - ie not drawing from the capture buffer and crossed over the trigger threshold (or in free mode)
 			if (!capturing && (!drawing || captureBufferNumber != drawBufferNumber) && (oscFree || (bufferSamples > trigger.x && oldAdcA < trigger.y && adcA >= trigger.y))) {
@@ -76,14 +80,14 @@ extern "C"
 				} else {
 					// calculate the drawing offset based on the current capture position minus the horizontal trigger position
 					drawOffset[captureBufferNumber] = capturePos - trigger.x;
-					if (drawOffset[captureBufferNumber] < 0)	drawOffset[captureBufferNumber] += OSCWIDTH;
+					if (drawOffset[captureBufferNumber] < 0)	drawOffset[captureBufferNumber] += DRAWWIDTH;
 
 					capturedSamples[captureBufferNumber] = trigger.x - 1;	// used to check if a sample is ready to be drawn
 				}
 			}
 
 			// if capturing check if write buffer is full and switch to next buffer if so; if not full store current reading
-			if (capturing && capturedSamples[captureBufferNumber] == OSCWIDTH - 1) {
+			if (capturing && capturedSamples[captureBufferNumber] == DRAWWIDTH - 1) {
 				captureBufferNumber = captureBufferNumber == 1 ? 0 : 1;		// switch the capture buffer
 				bufferSamples = 0;			// stores number of samples captured since switching buffers to ensure triggered mode works correctly
 				capturing = false;
@@ -95,7 +99,7 @@ extern "C"
 				OscBufferB[captureBufferNumber][capturePos] = adcB;
 				oldAdcA = adcA;
 
-				if (capturePos == OSCWIDTH - 1)		capturePos = 0;
+				if (capturePos == DRAWWIDTH - 1)		capturePos = 0;
 				else								capturePos++;
 
 				if (capturing)	capturedSamples[captureBufferNumber]++;
@@ -112,7 +116,7 @@ extern "C"
 		if (!(GPIOA->IDR & GPIO_IDR_IDR_7))				// Read Encoder button PA7
 			Encoder1Btn = true;
 
-		if (!(GPIOE->IDR & GPIO_IDR_IDR_8))				// Read Encoder up PE8
+		/*if (!(GPIOE->IDR & GPIO_IDR_IDR_8))				// Read Encoder up PE8
 			encoderUp++;
 		if (!(GPIOE->IDR & GPIO_IDR_IDR_9))				// Read Encoder down PE9
 			encoderDown++;
@@ -121,14 +125,33 @@ extern "C"
 			encoderVal += (encoderUp > encoderDown) ? 1 : -1;
 			encoderUp = 0;
 			encoderDown = 0;
-		}
+		}*/
+		// Encoder sequence is one goes down then the other (and v bouncy) - set pending based on first action then let main loop check both are up before actioning
+		if (!encoderPendingR && !(GPIOE->IDR & GPIO_IDR_IDR_8) && (GPIOE->IDR & GPIO_IDR_IDR_9))
+			encoderPendingR = 1;
+
+		if (!encoderPendingR && !(GPIOE->IDR & GPIO_IDR_IDR_9) && (GPIOE->IDR & GPIO_IDR_IDR_8))
+			encoderPendingR = -1;
+
 
 		EXTI->PR |= EXTI_PR_PR7 | EXTI_PR_PR8 | EXTI_PR_PR9;	// Clear interrupt pending
 	}
 
+	void EXTI15_10_IRQHandler(void) {
+
+		// Encoder sequence is one goes down then the other (and v bouncy) - set pending based on first action then let main loop check both are up before actioning
+		if (!encoderPendingL && !(GPIOE->IDR & GPIO_IDR_IDR_10) && (GPIOE->IDR & GPIO_IDR_IDR_11))
+			encoderPendingL = 1;
+
+		if (!encoderPendingL && !(GPIOE->IDR & GPIO_IDR_IDR_11) && (GPIOE->IDR & GPIO_IDR_IDR_10))
+			encoderPendingL = -1;
+
+		EXTI->PR |= EXTI_PR_PR10 | EXTI_PR_PR11;			// Clear interrupt pending
+	}
+
 	//	Coverage timer
 	void TIM4_IRQHandler(void) {
-		TIM4->SR &= ~TIM_SR_UIF;						// clear UIF flag
+		TIM4->SR &= ~TIM_SR_UIF;							// clear UIF flag
 		coverageTimer ++;
 	}
 }
@@ -140,9 +163,31 @@ void GenerateLUT(void) {
 	}
 }
 
+void DrawUI() {
+	// Draw UI
+	lcd.ColourFill(0, DRAWHEIGHT + 1, DRAWWIDTH - 1, DRAWHEIGHT + 1, LCD_GREY);
+	lcd.ColourFill(0, 239, DRAWWIDTH - 1, 239, LCD_GREY);
+	lcd.ColourFill(0, DRAWHEIGHT + 1, 0, 239, LCD_GREY);
+	lcd.ColourFill(90, DRAWHEIGHT + 1, 90, 239, LCD_GREY);
+	lcd.ColourFill(230, DRAWHEIGHT + 1, 230, 239, LCD_GREY);
+	lcd.ColourFill(319, DRAWHEIGHT + 1, 319, 239, LCD_GREY);
+
+	lcd.DrawString(10, DRAWHEIGHT + 8, "Zoom Horiz", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
+	lcd.DrawString(240, DRAWHEIGHT + 8, "Zoom Vert", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
+
+	uint16_t screenMs = 1.7777f * TIM3->ARR;
+	std::stringstream ss;
+	ss << screenMs << "ms ";
+
+	std::string s = ss.str();
+	lcd.DrawString(140, DRAWHEIGHT + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+
+}
+
 void ResetSampleAcquisition() {
 	TIM3->CR1 &= ~TIM_CR1_CEN;			// Disable the sample acquisiton timer
 	lcd.ScreenFill(LCD_BLACK);
+	DrawUI();
 	capturing = drawing = false;
 	bufferSamples = capturePos = oldAdcA = 0;
 	TIM3->CR1 |= TIM_CR1_CEN;			// Reenable the sample acquisiton timer
@@ -200,7 +245,7 @@ void FFT(volatile float candSin[]) {
 		} else if (node == FFTSAMPLES / 2) {
 
 			// last node - this draws samples rather than calculate them
-			for (uint16_t p1 = 1; p1 <= OSCWIDTH; p1++) {
+			for (uint16_t p1 = 1; p1 <= DRAWWIDTH; p1++) {
 				// Use Sine LUT to generate sine and cosine values faster than sine or cosine functions
 				uint16_t b = std::round(p1 * LUTSIZE / (2 * node));
 				float s = SineLUT[b];
@@ -216,19 +261,19 @@ void FFT(volatile float candSin[]) {
 
 					// Combine final node calculation sine and cosines to get amplitudes and store in alternate buffers, transmitting as each buffer is completed
 					float hypotenuse = std::sqrt(std::pow(candSin[p1] + (c * candSin[p2] - s * candCos[p2]), 2) + std::pow(candCos[p1] + (c * candCos[p2] + s * candSin[p2]), 2));
-					uint16_t top = std::min(239 * (1 - (hypotenuse / (512 * FFTSAMPLES))), 239.0f);
+					uint16_t top = std::min(DRAWHEIGHT * (1 - (hypotenuse / (512 * FFTSAMPLES))), (float)DRAWHEIGHT);
 
 					uint8_t FFTDrawBufferNumber = (((p1 - 1) / FFTDRAWBUFFERSIZE) % 2 == 0) ? 0 : 1;		// Alternate between buffer 0 and buffer 1
 
 					// draw column into memory buffer
-					for (int h = 0; h < 240; ++h) {
+					for (int h = 0; h <= DRAWHEIGHT; ++h) {
 						uint16_t buffPos = h * FFTDRAWBUFFERSIZE + ((p1 - 1) % FFTDRAWBUFFERSIZE);
 						FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = (h < top || p1 >= node) ? LCD_BLACK: LCD_BLUE;
 					}
 
 					// check if ready to draw next buffer
 					if ((p1 % FFTDRAWBUFFERSIZE) == 0) {
-						lcd.PatternFill(p1 - FFTDRAWBUFFERSIZE, 0, p1 - 1, 239, FFTDrawBuffer[FFTDrawBufferNumber]);
+						lcd.PatternFill(p1 - FFTDRAWBUFFERSIZE, 0, p1 - 1, DRAWHEIGHT, FFTDrawBuffer[FFTDrawBufferNumber]);
 					}
 				}
 			}
@@ -266,15 +311,15 @@ void FFT(volatile float candSin[]) {
 
 	if (FFTDRAWAFTERCALC) {
 		// Combine sine and cosines to get amplitudes and store in alternate buffers, transmitting as each buffer is completed
-		for (uint16_t i = 1; i <= std::min(FFTSAMPLES / 2, OSCWIDTH); i++) {
+		for (uint16_t i = 1; i <= std::min(FFTSAMPLES / 2, DRAWWIDTH); i++) {
 
 			float hypotenuse = std::sqrt(std::pow(candSin[i], 2) + std::pow(candCos[i], 2));
-			uint16_t top = std::min(239 * (1 - (hypotenuse / (512 * FFTSAMPLES))), 239.0f);
+			uint16_t top = std::min(DRAWHEIGHT * (1 - (hypotenuse / (512 * FFTSAMPLES))), (float)DRAWHEIGHT);
 
 			uint8_t FFTDrawBufferNumber = (((i - 1) / FFTDRAWBUFFERSIZE) % 2 == 0) ? 0 : 1;
 
 			// draw column into memory buffer
-			for (int h = 0; h < 240; ++h) {
+			for (int h = 0; h <= DRAWHEIGHT; ++h) {
 				uint16_t buffPos = h * FFTDRAWBUFFERSIZE + ((i - 1) % FFTDRAWBUFFERSIZE);
 				FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = h < top ? LCD_BLACK: LCD_BLUE;
 
@@ -286,7 +331,7 @@ void FFT(volatile float candSin[]) {
 			// check if ready to draw next buffer
 			if ((i % FFTDRAWBUFFERSIZE) == 0) {
 				debugCount = DMA2_Stream6->NDTR;
-				lcd.PatternFill(i - FFTDRAWBUFFERSIZE, 0, i - 1, 239, FFTDrawBuffer[FFTDrawBufferNumber]);
+				lcd.PatternFill(i - FFTDRAWBUFFERSIZE, 0, i - 1, DRAWHEIGHT, FFTDrawBuffer[FFTDrawBufferNumber]);
 			}
 		}
 	}
@@ -294,11 +339,11 @@ void FFT(volatile float candSin[]) {
 	CP_CAP
 }
 
-
 int main(void) {
 	SystemInit();				// Activates floating point coprocessor and resets clock
 //	SystemClock_Config();		// Configure the clock and PLL - NB Currently done in SystemInit but will need updating for production board
 	SystemCoreClockUpdate();	// Update SystemCoreClock (system clock frequency) derived from settings of oscillators, prescalers and PLL
+	InitSysTick();
 	InitCoverageTimer();		// Timer 4 only activated/deactivated when CP_ON/CP_CAP macros are used
 	InitLCDHardware();
 	InitADC();
@@ -311,13 +356,27 @@ int main(void) {
 
 	//lcd.DrawString(60, 150, "Hello", &lcd.Font_Small, LCD_WHITE, LCD_BLUE);
 
+	DrawUI();
 
 	while (1) {
 
-		if (encoderVal != 0) {
-			if ((encoderVal * 2) + TIM3->ARR > 0)
-				TIM3->ARR += encoderVal * 2;
+
+/*		if (encoderVal != 0) {
+			if ((encoderVal * 4) + TIM3->ARR > 10)
+				TIM3->ARR += encoderVal * 4;
 			encoderVal = 0;
+			DrawUI();
+		}*/
+
+		if (encoderPendingR && (GPIOE->IDR & GPIO_IDR_IDR_8) && (GPIOE->IDR & GPIO_IDR_IDR_9)) {
+			TIM3->ARR += 4 * encoderPendingR;
+			encoderPendingR = 0;
+			DrawUI();
+		}
+		if (encoderPendingL && (GPIOE->IDR & GPIO_IDR_IDR_11) && (GPIOE->IDR & GPIO_IDR_IDR_10)) {
+			TIM3->ARR += encoderPendingL;
+			encoderPendingL = 0;
+			DrawUI();
 		}
 
 		if (Encoder1Btn) {
@@ -356,10 +415,10 @@ int main(void) {
 			if (drawing && (drawBufferNumber != captureBufferNumber || capturedSamples[captureBufferNumber] >= drawPos)) {
 				CP_ON
 				// Draw a black line over previous sample
-				lcd.ColourFill(drawPos, 0, drawPos, 239, LCD_BLACK);
+				lcd.ColourFill(drawPos, 0, drawPos, DRAWHEIGHT, LCD_BLACK);
 
 				// Calculate offset between capture and drawing positions to display correct sample
-				uint16_t calculatedOffset = (drawOffset[drawBufferNumber] + drawPos) % OSCWIDTH;
+				uint16_t calculatedOffset = (drawOffset[drawBufferNumber] + drawPos) % DRAWWIDTH;
 
 				// Set previous pixel to current pixel if starting a new screen
 				if (drawPos == 0) {
@@ -375,12 +434,12 @@ int main(void) {
 				prevAPixel = OscBufferA[drawBufferNumber][calculatedOffset];
 				prevBPixel = OscBufferB[drawBufferNumber][calculatedOffset];
 
-				if (drawPos == OSCWIDTH - 1) {
+				/*if (drawPos == DRAWWIDTH - 1) {
 					int pause = 1;
-				}
+				}*/
 
 				drawPos ++;
-				if (drawPos == OSCWIDTH){
+				if (drawPos == DRAWWIDTH){
 					drawing = false;
 				}
 

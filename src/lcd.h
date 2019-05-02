@@ -6,6 +6,7 @@
 // RGB565 colours
 #define LCD_WHITE		0xFFFF
 #define LCD_BLACK		0x0000
+#define LCD_GREY		0x528A
 #define LCD_RED			0xF800
 #define LCD_GREEN		0x07E0
 #define LCD_GREEN2		0xB723

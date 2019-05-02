@@ -28,7 +28,6 @@
 								<option id="com.atollic.truestudio.common_options.target.fpu.1043673497" name="Floating point" superClass="com.atollic.truestudio.common_options.target.fpu" useByScannerDiscovery="false" value="com.atollic.truestudio.common_options.target.fpu.hard" valueType="enumerated"/>
 								<option id="com.atollic.truestudio.as.symbols.defined.1067112892" name="Defined symbols" superClass="com.atollic.truestudio.as.symbols.defined" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32F42_43xxx"/>
-									<listOptionValue builtIn="false" value="USE_STDPERIPH_DRIVER"/>
 									<listOptionValue builtIn="false" value="HSE_VALUE=8000000"/>
 									<listOptionValue builtIn="false" value="USE_STM32F429I_DISCO"/>
 								</option>
@@ -38,14 +37,12 @@
 									<listOptionValue builtIn="false" value="../Libraries/Device/ST/STM32F4xx/Include"/>
 									<listOptionValue builtIn="false" value="../Libraries/STM32F4xx_StdPeriph_Driver/inc"/>
 									<listOptionValue builtIn="false" value="../Utilities/Common"/>
-									<listOptionValue builtIn="false" value="../Libraries/TM"/>
 								</option>
 								<inputType id="com.atollic.truestudio.as.input.1734140408" name="Input" superClass="com.atollic.truestudio.as.input"/>
 							</tool>
 							<tool id="com.atollic.truestudio.exe.debug.toolchain.gcc.1175208655" name="C Compiler" superClass="com.atollic.truestudio.exe.debug.toolchain.gcc">
 								<option id="com.atollic.truestudio.gcc.symbols.defined.379393456" name="Defined symbols" superClass="com.atollic.truestudio.gcc.symbols.defined" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32F42_43xxx"/>
-									<listOptionValue builtIn="false" value="USE_STDPERIPH_DRIVER"/>
 									<listOptionValue builtIn="false" value="HSE_VALUE=8000000"/>
 									<listOptionValue builtIn="false" value="USE_STM32F429I_DISCO"/>
 								</option>
@@ -54,7 +51,6 @@
 									<listOptionValue builtIn="false" value="../Libraries/Device/ST/STM32F4xx/Include"/>
 									<listOptionValue builtIn="false" value="../Libraries/STM32F4xx_StdPeriph_Driver/inc"/>
 									<listOptionValue builtIn="false" value="../Utilities/Common"/>
-									<listOptionValue builtIn="false" value="../Libraries/TM"/>
 									<listOptionValue builtIn="false" value="../src"/>
 								</option>
 								<option id="com.atollic.truestudio.common_options.target.endianess.1725175212" name="Endianess" superClass="com.atollic.truestudio.common_options.target.endianess" useByScannerDiscovery="false"/>
@@ -78,7 +74,6 @@
 							<tool id="com.atollic.truestudio.exe.debug.toolchain.gpp.1865787299" name="C++ Compiler" superClass="com.atollic.truestudio.exe.debug.toolchain.gpp">
 								<option id="com.atollic.truestudio.gpp.symbols.defined.1708580913" name="Defined symbols" superClass="com.atollic.truestudio.gpp.symbols.defined" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32F42_43xxx"/>
-									<listOptionValue builtIn="false" value="USE_STDPERIPH_DRIVER"/>
 									<listOptionValue builtIn="false" value="HSE_VALUE=8000000"/>
 									<listOptionValue builtIn="false" value="USE_STM32F429I_DISCO"/>
 								</option>
@@ -88,7 +83,6 @@
 									<listOptionValue builtIn="false" value="../Libraries/Device/ST/STM32F4xx/Include"/>
 									<listOptionValue builtIn="false" value="../Libraries/STM32F4xx_StdPeriph_Driver/inc"/>
 									<listOptionValue builtIn="false" value="../Utilities/Common"/>
-									<listOptionValue builtIn="false" value="../Libraries/TM"/>
 								</option>
 								<option id="com.atollic.truestudio.common_options.target.endianess.42682640" name="Endianess" superClass="com.atollic.truestudio.common_options.target.endianess" useByScannerDiscovery="false"/>
 								<option id="com.atollic.truestudio.common_options.target.mcpu.487934808" name="Microcontroller" superClass="com.atollic.truestudio.common_options.target.mcpu" useByScannerDiscovery="false" value="STM32F429ZI" valueType="enumerated"/>
@@ -100,7 +94,7 @@
 								<option id="com.atollic.truestudio.gpp.optimization.fno_rtti.143726534" name="Disable RTTI" superClass="com.atollic.truestudio.gpp.optimization.fno_rtti" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<option id="com.atollic.truestudio.gpp.optimization.fno_exceptions.658957835" name="Disable exception handling" superClass="com.atollic.truestudio.gpp.optimization.fno_exceptions" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<option id="com.atollic.truestudio.gpp.cppstandard.1523493313" name="C++ standard" superClass="com.atollic.truestudio.gpp.cppstandard" useByScannerDiscovery="false" value="com.atollic.truestudio.gpp.cppstandard.gnupp0x" valueType="enumerated"/>
-								<option id="com.atollic.truestudio.gpp.misc.otherflags.529598371" superClass="com.atollic.truestudio.gpp.misc.otherflags" useByScannerDiscovery="false" value="-Wno-unused-variable" valueType="string"/>
+								<option id="com.atollic.truestudio.gpp.misc.otherflags.529598371" name="Other options" superClass="com.atollic.truestudio.gpp.misc.otherflags" useByScannerDiscovery="false" value="-Wno-unused-variable" valueType="string"/>
 								<inputType id="com.atollic.truestudio.gpp.input.158625593" superClass="com.atollic.truestudio.gpp.input"/>
 							</tool>
 							<tool id="com.atollic.truestudio.exe.debug.toolchain.ldcc.397552629" name="C++ Linker" superClass="com.atollic.truestudio.exe.debug.toolchain.ldcc">
