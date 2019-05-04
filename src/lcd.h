@@ -1,7 +1,12 @@
+#pragma once
+
 #include "stm32f4xx.h"
 #include "fontData.h"
 #include <vector>
 #include <string>
+
+#define DRAWWIDTH 320
+#define DRAWHEIGHT 215
 
 // RGB565 colours
 #define LCD_WHITE		0xFFFF

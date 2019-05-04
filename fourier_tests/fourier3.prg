@@ -1,5 +1,5 @@
 CLEAR
-m.samples = 32
+m.samples = 128
 m.FFTMode = .t.
 m.output = ""
 
@@ -28,10 +28,10 @@ CREATE CURSOR curSamples (Cnt I, Br I, Sin F(10, 6), Cos F(10, 6))
 FOR m.i = 0 TO m.samples - 1
 	INSERT INTO curOutput (Cnt, Cnd) VALUES (m.i + 1, EVALUATE(m.candFormula))
 	IF i % 2 = 0
-		INSERT INTO curSamples (Cnt, Br, Sin, Cos) VALUES (m.i / 2, m.i / 2, EVALUATE(m.candFormula), 0)
+		INSERT INTO curSamples (Cnt, Br, Sin) VALUES (m.i / 2, m.i / 2, EVALUATE(m.candFormula))
 	ELSE
 		SELECT curSamples
-		REPLACE Cos WITH EVALUATE(m.candFormula)
+		REPLACE cos WITH EVALUATE(m.candFormula)
 	ENDIF
 ENDFOR
 
@@ -110,6 +110,67 @@ IF m.FFTMode
 
 		m.node = m.node * 2
 	ENDDO
+	
+	FOR m.x = 1 TO process / 2
+		SELECT curSamples
+		LOCATE FOR cnt = m.x
+		m.a = curSamples.sin
+		m.b = curSamples.cos
+		
+		LOCATE FOR cnt = m.process - m.x
+		m.c = curSamples.sin
+		m.d = curSamples.cos
+		
+		m.sn = SIN(-1 * PI() * m.x / m.process)
+		m.cs = COS(-1 * PI() * m.x / m.process)
+		
+		
+*!*			m.e = (m.a + m.b) - (m.a - m.b) * m.sn + (m.c + m.d) * m.cs
+*!*			m.f = (m.c - m.d) - (m.a - m.b) * m.cs + (m.c + m.d) * m.sn
+*!*			m.g = (m.a + m.b) + (m.a - m.b) * m.sn - (m.c + m.d) * m.cs
+*!*			m.h = (m.d - m.c) - (m.a + m.b) * m.cs - (m.c + m.d) * m.sn
+*!*			REPLACE sin WITH m.g, cos WITH m.h
+*!*			
+*!*			SELECT curSamples
+*!*			LOCATE FOR cnt = m.x		
+*!*			REPLACE sin WITH m.e, cos WITH m.f
+
+		m.h = (m.a + m.c) - (m.a - m.c) * m.sn - (m.b + m.d) * m.cs
+		m.f = (m.b - m.d) - (m.a - m.c) * m.cs + (m.b + m.d) * m.sn
+		m.g = (m.a + m.c) + (m.a - m.c) * m.sn - (m.b + m.d) * m.cs
+		m.e = -(m.b - m.d) - (m.a - m.c) * m.cs + (m.b + m.d) * m.sn
+		REPLACE sin WITH m.g, cos WITH m.h
+		
+		SELECT curSamples
+		LOCATE FOR cnt = m.x		
+		REPLACE sin WITH m.e, cos WITH m.f
+
+		
+*!*			m.t1 = (m.a + m.c) / 2
+*!*			m.t2 = (m.a - m.c) / 2
+*!*			m.t3 = (m.b + m.d) / 2
+*!*			m.t4 = (m.b - m.d) / 2
+
+*!*			
+*!*			m.t5 = m.t2 * m.sn - m.t3 * m.cs
+*!*			m.t6 = m.t2 * m.cs + m.t3 * m.sn
+*!*			
+*!*			e-> (m.a + m.c) - (m.a - m.c) * m.sn - (m.b + m.d) * m.cs
+*!*			f-> (m.b - m.d) - (m.a - m.c) * m.cs + (m.b + m.d) * m.sn
+*!*			g-> (m.a + m.c) + (m.a - m.c) * m.sn - (m.b + m.d) * m.cs
+*!*			h-> -(m.b - m.d) - (m.a - m.c) * m.cs + (m.b + m.d) * m.sn
+*!*			
+*!*			REPLACE sin WITH m.t1 + m.t5, cos WITH -m.t4 - m.t6
+*!*			
+*!*			SELECT curSamples
+*!*			LOCATE FOR cnt = m.x		
+*!*			REPLACE sin WITH m.t1 - m.t5, cos WITH m.t4 - m.t6
+		
+	ENDFOR
+	
+	* last one is just values doubled
+*	LOCATE FOR cnt = process / 2
+*	REPLACE sin WITH 2 * sin, cos WITH 2 * cos
 
 	SELECT cnt, SQRT(sin ^ 2 + cos ^ 2) / (m.samples / 2) AS harmonic FROM cursamples WHERE cnt > 0 AND cnt <= m.samples / 2 INTO CURSOR curLengths
 	SELECT curLengths
@@ -152,7 +213,7 @@ ELSE
 ENDIF
 
 SELECT curOutput
-COPY TO D:\docs\ARM\Oscar\fourier_tests\Output.xls TYPE XL5
+COPY TO Output.xls TYPE XL5
 
 ExcelExport(IIF(m.FFTMode, "FFT", "SFT") + "_Fourier")
 

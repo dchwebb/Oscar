@@ -51,6 +51,9 @@ void Lcd::Init(void) {
 
 	Command(ILI9341_DISPLAY_ON);
 	Command(ILI9341_GRAM);
+
+	Rotate(LCD_Landscape_Flipped);
+	ScreenFill(LCD_BLACK);
 };
 
 void Lcd::CommandData(CDARGS cmds) {

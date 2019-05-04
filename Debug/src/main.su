@@ -1,27 +1,14 @@
-core_cm4.h:1467:22:void NVIC_EnableIRQ(IRQn_Type)	16	static
-core_cm4.h:1550:22:void NVIC_SetPriority(IRQn_Type, uint32_t)	16	static
+cmath:1790:3:constexpr float std::round(float)	16	static
 gthr-default.h:229:1:int __gthread_key_delete(__gthread_key_t)	16	static
 ios_base.h:129:3:constexpr std::_Ios_Openmode std::operator|(std::_Ios_Openmode, std::_Ios_Openmode)	16	static
-initialisation.h:37:6:void SystemClock_Config()	16	static
-initialisation.h:84:6:void InitSysTick()	4	static
-initialisation.h:102:6:void InitLCDHardware()	4	static
-initialisation.h:157:6:void InitADC()	4	static
-initialisation.h:217:6:void InitSampleAcquisition()	8	static
-initialisation.h:238:6:void InitCoverageTimer()	8	static
-initialisation.h:251:6:void InitEncoders()	8	static
-main.cpp:50:7:void TIM3_IRQHandler()	16	static
-main.cpp:115:7:void EXTI9_5_IRQHandler()	4	static
-main.cpp:140:7:void EXTI15_10_IRQHandler()	4	static
-main.cpp:153:7:void TIM4_IRQHandler()	4	static
-main.cpp:160:6:void GenerateLUT()	24	static
-main.cpp:166:6:void DrawUI()	384	static
-main.cpp:187:6:void ResetSampleAcquisition()	16	static
-cmath:1802:5:constexpr typename __gnu_cxx::__enable_if<std::__is_integer<_Tp>::__value, double>::__type std::round(_Tp) [with _Tp = int]	24	static
-cmath:438:5:constexpr typename __gnu_cxx::__promote_2<_Tp, _Up>::__type std::pow(_Tp, _Up) [with _Tp = float; _Up = int]	24	static
-main.cpp:197:6:void FFT(volatile float*)	176	static
-main.cpp:342:5:int main()	56	static
-stl_algobase.h:195:5:const _Tp& std::min(const _Tp&, const _Tp&) [with _Tp = float]	16	static
-stl_algobase.h:195:5:const _Tp& std::min(const _Tp&, const _Tp&) [with _Tp = int]	16	static
+main.cpp:48:7:void TIM3_IRQHandler()	8	static
+main.cpp:111:7:void EXTI9_5_IRQHandler()	4	static
+main.cpp:127:7:void EXTI15_10_IRQHandler()	4	static
+main.cpp:140:7:void TIM4_IRQHandler()	4	static
+main.cpp:147:6:void DrawUI()	384	static
+main.cpp:168:6:void ResetSampleAcquisition()	16	static
+main.cpp:177:17:uint16_t CalcVertOffset(volatile uint16_t&, const uint16_t&)	24	static
+main.cpp:181:5:int main()	80	static
 stl_algobase.h:219:5:const _Tp& std::max(const _Tp&, const _Tp&) [with _Tp = int]	16	static
-main.cpp:456:1:void __static_initialization_and_destruction_0(int, int)	16	static
-main.cpp:456:1:cpp)	8	static
+main.cpp:280:1:void __static_initialization_and_destruction_0(int, int)	16	static
+main.cpp:280:1:cpp)	8	static
