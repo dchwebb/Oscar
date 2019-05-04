@@ -21,10 +21,11 @@ volatile uint8_t VertOffsetA = 30, VertOffsetB = 30, captureBufferNumber = 0, dr
 volatile int16_t drawOffset[2] {0, 0};
 volatile bool dataAvailable[2] {false, false};
 volatile uint16_t capturedSamples[2] {0, 0};
-volatile bool Encoder1Btn = false, oscFree = false, FFTMode = false;
+volatile bool Encoder1Btn = false, oscFree = false, FFTMode = true;
 volatile int8_t encoderPendingL = 0, encoderPendingR = 0;
 volatile uint16_t bounce = 0, nobounce = 0;
 volatile uint32_t debugCount = 0, coverageTimer = 0, coverageTotal = 0;
+volatile uint16_t maxHarm = 0;
 
 #define ADC_BUFFER_LENGTH 8
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
