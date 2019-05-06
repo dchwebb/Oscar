@@ -1,3 +1,4 @@
+#include <ui.h>
 #include "stm32f4xx.h"
 #include <cmath>
 #include <string>
@@ -5,7 +6,6 @@
 #include "initialisation.h"
 #include "lcd.h"
 #include "fft.h"
-
 
 
 extern uint32_t SystemCoreClock;
@@ -25,8 +25,8 @@ volatile bool Encoder1Btn = false, oscFree = false, FFTMode = true;
 volatile int8_t encoderPendingL = 0, encoderPendingR = 0;
 volatile uint16_t bounce = 0, nobounce = 0;
 volatile uint32_t debugCount = 0, coverageTimer = 0, coverageTotal = 0;
-volatile uint16_t maxHarm = 0;
-
+volatile uint32_t diff = 0;
+volatile float freqFund;
 #define ADC_BUFFER_LENGTH 8
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 
@@ -35,6 +35,9 @@ volatile int16_t oldencoderUp = 0, oldencoderDown = 0, encoderUp = 0, encoderDow
 
 Lcd lcd;
 fft Fft;
+ui UI;
+
+volatile uint16_t fundHarm;
 
 struct  {
 	uint16_t x = 10;
@@ -192,10 +195,13 @@ int main(void) {
 	InitSampleAcquisition();
 	DrawUI();
 
-	while (1) {
 
+	while (1) {
+		fundHarm = Fft.fundHarmonic;
 		if (encoderPendingR && (GPIOE->IDR & GPIO_IDR_IDR_8) && (GPIOE->IDR & GPIO_IDR_IDR_9)) {
-			TIM3->ARR += 4 * encoderPendingR;
+			int16_t adj = TIM3->ARR + 10 * encoderPendingR;
+			if (adj > 0 && adj < 3000)
+				TIM3->ARR = adj;
 			encoderPendingR = 0;
 			DrawUI();
 		}

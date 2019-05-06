@@ -58,7 +58,7 @@ void fft::runFFT(volatile float candSin[]) {
 		} else if (node == FFTSAMPLES / 2) {
 
 			// last node - this only needs to calculate the first half of the FFT results as the remainder are redundant
-			for (uint16_t p1 = 1; p1 <= DRAWWIDTH; p1++) {
+			for (uint16_t p1 = 1; p1 <= FFTSAMPLES; p1++) {
 
 				uint16_t b = std::round(p1 * LUTSIZE / (2 * node));
 				float s = SineLUT[b];
@@ -101,54 +101,37 @@ void fft::runFFT(volatile float candSin[]) {
 		node = node * 2;
 	}
 
-	if (autoTune && tunePass < 16) {
-
-		uint16_t newARR = TIM3->ARR;
-
-		maxHyp = 0;
-		for (uint16_t i = 1; i <= FFTSAMPLES / 2 - 1; i++) {
-			float hypotenuse = std::sqrt(std::pow(candSin[i], 2) + std::pow(candCos[i], 2)) / FFTSAMPLES;
-			if (hypotenuse > maxHyp) {
-				maxHyp = hypotenuse;		//hypotenuse = 237
-				maxHarm = i;
-			}
-		}
-
-		// take the timer ARR, divide by fundamental to get new ARR setting tuned fundamental to 10th harmonic
-		if (maxHarm != 10) {
-			newARR = 10 * TIM3->ARR / maxHarm;
-
-
-		}
-
-		int sampleBefore = std::sqrt(candSin[maxHarm - 1] * candSin[maxHarm - 1] + candCos[maxHarm - 1] * candCos[maxHarm - 1]);
-		int sampleAfter = std::sqrt(candSin[maxHarm + 1] * candSin[maxHarm + 1] + candCos[maxHarm + 1] * candCos[maxHarm + 1]);
-
-		if (tunePass == 8) {
-			int pause = 1;
-		}
-
-		if (sampleAfter > sampleBefore) {
-			newARR --;
-		} else if (sampleBefore > sampleAfter) {
-			newARR ++;
-		}
-
-		TIM3->ARR = newARR;
-
-		tunePass ++;
-
-	}
-
+	fundHarmonic = 0;
+	int badFFT = 0;
+	harmonic2 = harmonic3 = harmonic4 = 0;
 
 	// Draw results: Combine sine and cosines to get amplitudes and store in buffers, transmitting as each buffer is completed
-	for (uint16_t i = 1; i <= std::min(FFTSAMPLES / 2, DRAWWIDTH); i++) {
-
-		if (autotune) {
-
-		}
+	for (uint16_t i = 1; i <= DRAWWIDTH; i++) {
 
 		float hypotenuse = std::sqrt(std::pow(candSin[i], 2) + std::pow(candCos[i], 2));
+
+		// get fundamental harmonic
+		if (fundHarmonic == 0 && hypotenuse > 200000) {
+			maxHyp = hypotenuse;
+			fundHarmonic = i;
+
+			// calculate the frequency of the fundamental
+			freqFund = ((float)SystemCoreClock * fundHarmonic) / (2 * FFTSAMPLES * (TIM3->PSC + 1) * (TIM3->ARR + 1));
+
+			// write fundamental frequency to display
+			std::string s = UI.floatToString(freqFund) + "Hz   ";
+			lcd.DrawString(140, DRAWHEIGHT + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+		}
+
+		// get next three harmonics
+		if (fundHarmonic > 0 && hypotenuse > 50000 && harmonic4 == 0 && i > fundHarmonic + 1) {
+			if (harmonic2 == 0)				harmonic2 = i;
+			else if (harmonic3 == 0) {
+				if (i > harmonic2 + 1)		harmonic3 = i;
+			}
+			else if (i > harmonic3 + 1)		harmonic4 = i;
+		}
+
 		uint16_t top = std::min(DRAWHEIGHT * (1 - (hypotenuse / (512 * FFTSAMPLES))), (float)DRAWHEIGHT);
 
 		uint8_t FFTDrawBufferNumber = (((i - 1) / FFTDRAWBUFFERSIZE) % 2 == 0) ? 0 : 1;
@@ -156,19 +139,60 @@ void fft::runFFT(volatile float candSin[]) {
 		// draw column into memory buffer
 		for (int h = 0; h <= DRAWHEIGHT; ++h) {
 			uint16_t buffPos = h * FFTDRAWBUFFERSIZE + ((i - 1) % FFTDRAWBUFFERSIZE);
-			FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = h < top ? LCD_BLACK: LCD_BLUE;
+			uint16_t harmColour = LCD_BLACK;
+			// use different colours to indicate different harmonics
 
-			if (top < 10 && i > 100) {
-				int susp = 1;
+			if (h >= top) {
+				if (fundHarmonic == i)			harmColour = LCD_WHITE;
+				else if (harmonic2 == i)		harmColour = LCD_YELLOW;
+				else if (harmonic3 == i)		harmColour = LCD_ORANGE;
+				else if (harmonic4 == i)		harmColour = LCD_GREEN;
+				else							harmColour = LCD_BLUE;
+
+				badFFT++;					// every so often the FFT fails with extremely large numbers in all positions - just abort the draw and resample
+				if (badFFT > 10000)
+					return;
 			}
+			FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = harmColour;
+
 		}
 
 		// check if ready to draw next buffer
 		if ((i % FFTDRAWBUFFERSIZE) == 0) {
-			debugCount = DMA2_Stream6->NDTR;
 			lcd.PatternFill(i - FFTDRAWBUFFERSIZE, 0, i - 1, DRAWHEIGHT, FFTDrawBuffer[FFTDrawBufferNumber]);
 		}
 
 	}
+
+	if (autoTune && fundHarmonic > 0) {
+
+
+		// work out which harmonic we want the fundamental to be - to adjust the sampling rate so a change in ARR affects the tuning of the FFT proportionally
+		uint16_t targFund = std::max(std::round(freqFund / 10), 8.0f);
+
+		// take the timer ARR, divide by fundamental to get new ARR setting tuned fundamental to target harmonic
+		if (std::abs(targFund - fundHarmonic) > 1)	newARR = targFund * TIM3->ARR / fundHarmonic;
+		else										newARR = TIM3->ARR;
+
+		//	fine tune - check the sample before and after the fundamental and adjust to center around the fundamental
+		int sampleBefore = std::sqrt(candSin[fundHarmonic - 1] * candSin[fundHarmonic - 1] + candCos[fundHarmonic - 1] * candCos[fundHarmonic - 1]);
+		int sampleAfter = std::sqrt(candSin[fundHarmonic + 1] * candSin[fundHarmonic + 1] + candCos[fundHarmonic + 1] * candCos[fundHarmonic + 1]);
+
+		// apply some hysteresis to avoid jumping around the target - the hysteresis needs to be scaled to the frequency
+		if (sampleAfter > sampleBefore + 2 * freqFund * targFund) {
+			diff = sampleAfter - sampleBefore;
+			newARR -= 1;
+		} else if (sampleBefore > sampleAfter + 2 * freqFund * targFund) {
+			diff = sampleBefore - sampleAfter;
+			newARR += 1;
+		}
+
+		if (newARR > 0 && newARR < 6000) {
+			TIM3->ARR = newARR;
+
+		}
+
+	}
+	debugCount = DMA2_Stream6->NDTR;
 	CP_CAP
 }
