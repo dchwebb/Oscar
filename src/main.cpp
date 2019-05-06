@@ -29,7 +29,7 @@ volatile uint32_t diff = 0;
 volatile float freqFund;
 #define ADC_BUFFER_LENGTH 8
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
-
+uint16_t drawTest[10000];
 
 volatile int16_t oldencoderUp = 0, oldencoderDown = 0, encoderUp = 0, encoderDown = 0, encoderVal = 0, encoderState = 0;
 
@@ -195,7 +195,12 @@ int main(void) {
 	InitSampleAcquisition();
 	DrawUI();
 
+	// test character drawing
 
+	lcd.DrawStringMem(25, 25, 100, drawTest, "hello", &lcd.Font_Small, LCD_RED, LCD_BLACK);
+	lcd.PatternFill(10, 10, 109, 109, drawTest);
+	/*while (1)
+	{};*/
 	while (1) {
 		fundHarm = Fft.harmonic[0];
 		if (encoderPendingR && (GPIOE->IDR & GPIO_IDR_IDR_8) && (GPIOE->IDR & GPIO_IDR_IDR_9)) {

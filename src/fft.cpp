@@ -141,8 +141,8 @@ void fft::runFFT(volatile float candSin[]) {
 		for (int h = 0; h <= DRAWHEIGHT; ++h) {
 			uint16_t buffPos = h * FFTDRAWBUFFERSIZE + ((i - 1) % FFTDRAWBUFFERSIZE);
 			uint16_t harmColour = LCD_BLACK;
-			// use different colours to indicate different harmonics
 
+			// use different colours to indicate different harmonics
 			if (h >= top) {
 				if (harmonic[0] == i)			harmColour = LCD_WHITE;
 				else if (harmonic[1] == i)		harmColour = LCD_YELLOW;

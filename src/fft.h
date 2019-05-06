@@ -25,7 +25,6 @@ class fft {
 public:
 	float FFTBuffer[2][FFTSAMPLES];
 	bool autoTune = true;
-	uint16_t fundHarmonic = 0;
 	std::array<uint16_t, 4> harmonic;
 
 	fft();
@@ -39,9 +38,6 @@ private:
 	uint16_t newARR = 0;
 	uint16_t drawFFTOffset = 0;
 
-	uint16_t harmonic2 = 0;
-	uint16_t harmonic3 = 0;
-	uint16_t harmonic4 = 0;
 };
 
 

@@ -8,9 +8,9 @@ main.cpp:144:7:void TIM4_IRQHandler()	4	static
 main.cpp:151:6:void DrawUI()	384	static
 main.cpp:172:6:void ResetSampleAcquisition()	16	static
 main.cpp:181:17:uint16_t CalcVertOffset(volatile uint16_t&, const uint16_t&)	24	static
-main.cpp:185:5:int main()	80	static
+main.cpp:185:5:int main()	136	static
 array:53:7:static constexpr _Tp& std::__array_traits<_Tp, _Nm>::_S_ref(const _Tp (&)[_Nm], std::size_t) [with _Tp = short unsigned int; unsigned int _Nm = 4u]	16	static
 array:181:7:std::array<_Tp, _Nm>::value_type& std::array<_Tp, _Nm>::operator[](std::array<_Tp, _Nm>::size_type) [with _Tp = short unsigned int; unsigned int _Nm = 4u]	16	static
 stl_algobase.h:219:5:const _Tp& std::max(const _Tp&, const _Tp&) [with _Tp = int]	16	static
-main.cpp:287:1:void __static_initialization_and_destruction_0(int, int)	16	static
-main.cpp:287:1:cpp)	8	static
+main.cpp:292:1:void __static_initialization_and_destruction_0(int, int)	16	static
+main.cpp:292:1:cpp)	8	static

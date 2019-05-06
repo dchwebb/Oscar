@@ -241,6 +241,29 @@ void Lcd::DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const u
 	PatternFill(x, y, x + font->Width - 1, y + font->Height - 1, font->charBuffer);
 }
 
+
+// writes a character to an existing display array
+void Lcd::DrawCharMem(uint16_t x, uint16_t y, uint16_t memWidth, uint16_t* memBuffer, char c, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
+
+	// Write character colour data to array
+	uint16_t px, py, fontRow, i;
+
+	for (py = 0; py < font->Height; py++) {
+		i = (memWidth * (y + py)) + x;
+
+		fontRow = font->data[(c - 32) * font->Height + py];
+		for (px = 0; px < font->Width; px++) {
+			if ((fontRow << px) & 0x8000) {
+				memBuffer[i] = foreground;
+			} else {
+				memBuffer[i] = background;
+			}
+			i++;
+		}
+	}
+
+}
+
 void Lcd::DrawString(uint16_t x0, uint16_t y0, std::string s, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
 	for (char& c : s) {
 		while (SPI_DMA_Working);
@@ -249,6 +272,13 @@ void Lcd::DrawString(uint16_t x0, uint16_t y0, std::string s, const FontData *fo
 	}
 }
 
+
+void Lcd::DrawStringMem(uint16_t x0, uint16_t y0, uint16_t memWidth, uint16_t* memBuffer, std::string s, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
+	for (char& c : s) {
+		DrawCharMem(x0, y0, memWidth, memBuffer, c, font, foreground, background);
+		x0 += font->Width;
+	}
+}
 
 void Lcd::SPISetDataSize(const SPIDataSize_t& Mode) {
 
