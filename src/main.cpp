@@ -197,7 +197,7 @@ int main(void) {
 
 
 	while (1) {
-		fundHarm = Fft.fundHarmonic;
+		fundHarm = Fft.harmonic[0];
 		if (encoderPendingR && (GPIOE->IDR & GPIO_IDR_IDR_8) && (GPIOE->IDR & GPIO_IDR_IDR_9)) {
 			int16_t adj = TIM3->ARR + 10 * encoderPendingR;
 			if (adj > 0 && adj < 3000)

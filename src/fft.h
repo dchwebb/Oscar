@@ -3,6 +3,7 @@
 #include "initialisation.h"
 #include <cmath>
 #include <sstream>
+#include <array>
 #include "lcd.h"
 #include "ui.h"
 
@@ -25,6 +26,7 @@ public:
 	float FFTBuffer[2][FFTSAMPLES];
 	bool autoTune = true;
 	uint16_t fundHarmonic = 0;
+	std::array<uint16_t, 4> harmonic;
 
 	fft();
 	void runFFT(volatile float candSin[]);

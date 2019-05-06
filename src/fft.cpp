@@ -101,35 +101,36 @@ void fft::runFFT(volatile float candSin[]) {
 		node = node * 2;
 	}
 
-	fundHarmonic = 0;
-	int badFFT = 0;
-	harmonic2 = harmonic3 = harmonic4 = 0;
+
+	harmonic.fill(0);
+	int16_t badFFT = 0, currHarmonic = -1;
+	maxHyp = 0;
 
 	// Draw results: Combine sine and cosines to get amplitudes and store in buffers, transmitting as each buffer is completed
 	for (uint16_t i = 1; i <= DRAWWIDTH; i++) {
 
 		float hypotenuse = std::sqrt(std::pow(candSin[i], 2) + std::pow(candCos[i], 2));
 
-		// get fundamental harmonic
-		if (fundHarmonic == 0 && hypotenuse > 200000) {
-			maxHyp = hypotenuse;
-			fundHarmonic = i;
+		// get first four harmonics
+		if (currHarmonic < 4 && hypotenuse > 50000) {
+			if (currHarmonic == -1 || i > harmonic[currHarmonic] + 1)
+				currHarmonic++;
 
-			// calculate the frequency of the fundamental
-			freqFund = ((float)SystemCoreClock * fundHarmonic) / (2 * FFTSAMPLES * (TIM3->PSC + 1) * (TIM3->ARR + 1));
+			// check if current hypotenuse next one or is larger than previous one to shift harmonic up one
+			if (harmonic[currHarmonic] == 0 || hypotenuse > maxHyp) {
 
-			// write fundamental frequency to display
-			std::string s = UI.floatToString(freqFund) + "Hz   ";
-			lcd.DrawString(140, DRAWHEIGHT + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
-		}
+				harmonic[currHarmonic] = i;
+				maxHyp = hypotenuse;
 
-		// get next three harmonics
-		if (fundHarmonic > 0 && hypotenuse > 50000 && harmonic4 == 0 && i > fundHarmonic + 1) {
-			if (harmonic2 == 0)				harmonic2 = i;
-			else if (harmonic3 == 0) {
-				if (i > harmonic2 + 1)		harmonic3 = i;
+				if (currHarmonic == 0) {
+					// calculate the frequency of the fundamental
+					freqFund = ((float)SystemCoreClock * harmonic[0]) / (2 * FFTSAMPLES * (TIM3->PSC + 1) * (TIM3->ARR + 1));
+
+					// write fundamental frequency to display
+					std::string s = UI.floatToString(freqFund) + "Hz   ";
+					lcd.DrawString(140, DRAWHEIGHT + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+				}
 			}
-			else if (i > harmonic3 + 1)		harmonic4 = i;
 		}
 
 		uint16_t top = std::min(DRAWHEIGHT * (1 - (hypotenuse / (512 * FFTSAMPLES))), (float)DRAWHEIGHT);
@@ -143,10 +144,10 @@ void fft::runFFT(volatile float candSin[]) {
 			// use different colours to indicate different harmonics
 
 			if (h >= top) {
-				if (fundHarmonic == i)			harmColour = LCD_WHITE;
-				else if (harmonic2 == i)		harmColour = LCD_YELLOW;
-				else if (harmonic3 == i)		harmColour = LCD_ORANGE;
-				else if (harmonic4 == i)		harmColour = LCD_GREEN;
+				if (harmonic[0] == i)			harmColour = LCD_WHITE;
+				else if (harmonic[1] == i)		harmColour = LCD_YELLOW;
+				else if (harmonic[2] == i)		harmColour = LCD_ORANGE;
+				else if (harmonic[3] == i)		harmColour = LCD_GREEN;
 				else							harmColour = LCD_BLUE;
 
 				badFFT++;					// every so often the FFT fails with extremely large numbers in all positions - just abort the draw and resample
@@ -164,19 +165,18 @@ void fft::runFFT(volatile float candSin[]) {
 
 	}
 
-	if (autoTune && fundHarmonic > 0) {
-
+	if (autoTune && harmonic[0] > 0) {
 
 		// work out which harmonic we want the fundamental to be - to adjust the sampling rate so a change in ARR affects the tuning of the FFT proportionally
 		uint16_t targFund = std::max(std::round(freqFund / 10), 8.0f);
 
 		// take the timer ARR, divide by fundamental to get new ARR setting tuned fundamental to target harmonic
-		if (std::abs(targFund - fundHarmonic) > 1)	newARR = targFund * TIM3->ARR / fundHarmonic;
+		if (std::abs(targFund - harmonic[0]) > 1)	newARR = targFund * TIM3->ARR / harmonic[0];
 		else										newARR = TIM3->ARR;
 
 		//	fine tune - check the sample before and after the fundamental and adjust to center around the fundamental
-		int sampleBefore = std::sqrt(candSin[fundHarmonic - 1] * candSin[fundHarmonic - 1] + candCos[fundHarmonic - 1] * candCos[fundHarmonic - 1]);
-		int sampleAfter = std::sqrt(candSin[fundHarmonic + 1] * candSin[fundHarmonic + 1] + candCos[fundHarmonic + 1] * candCos[fundHarmonic + 1]);
+		int sampleBefore = std::sqrt(pow(candSin[harmonic[0] - 1], 2) + pow(candCos[harmonic[0] - 1], 2));
+		int sampleAfter  = std::sqrt(pow(candSin[harmonic[0] + 1], 2) + pow(candCos[harmonic[0] + 1], 2));
 
 		// apply some hysteresis to avoid jumping around the target - the hysteresis needs to be scaled to the frequency
 		if (sampleAfter > sampleBefore + 2 * freqFund * targFund) {
