@@ -30,6 +30,7 @@ volatile float freqFund;
 #define ADC_BUFFER_LENGTH 8
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 uint16_t drawTest[10000];
+volatile uint16_t FFTErrors = 0;
 
 volatile int16_t oldencoderUp = 0, oldencoderDown = 0, encoderUp = 0, encoderDown = 0, encoderVal = 0, encoderState = 0;
 
@@ -54,7 +55,7 @@ extern "C"
 		TIM3->SR &= ~TIM_SR_UIF;					// clear UIF flag
 
 		if (FFTMode) {
-			if (capturePos == FFTSAMPLES) {
+			if (capturePos == FFTSAMPLES && capturing) {
 				dataAvailable[captureBufferNumber] = true;
 				capturing = false;
 			}

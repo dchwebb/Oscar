@@ -7,3 +7,9 @@ std::string ui::floatToString(float f) {
 	s.insert(s.length() - 1, ".");
 	return s;
 }
+
+std::string ui::intToString(uint16_t v) {
+	std::stringstream ss;
+	ss << v;
+	return ss.str();
+}

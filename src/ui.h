@@ -7,6 +7,8 @@
 class ui {
 public:
 	std::string floatToString(float f);
+	std::string intToString(uint16_t v);
+
 };
 
 

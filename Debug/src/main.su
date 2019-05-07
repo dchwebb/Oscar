@@ -1,16 +1,16 @@
 gthr-default.h:229:1:int __gthread_key_delete(__gthread_key_t)	16	static
 ios_base.h:129:3:constexpr std::_Ios_Openmode std::operator|(std::_Ios_Openmode, std::_Ios_Openmode)	16	static
 cmath:1790:3:constexpr float std::round(float)	16	static
-main.cpp:52:7:void TIM3_IRQHandler()	8	static
-main.cpp:115:7:void EXTI9_5_IRQHandler()	4	static
-main.cpp:131:7:void EXTI15_10_IRQHandler()	4	static
-main.cpp:144:7:void TIM4_IRQHandler()	4	static
-main.cpp:151:6:void DrawUI()	384	static
-main.cpp:172:6:void ResetSampleAcquisition()	16	static
-main.cpp:181:17:uint16_t CalcVertOffset(volatile uint16_t&, const uint16_t&)	24	static
-main.cpp:185:5:int main()	136	static
-array:53:7:static constexpr _Tp& std::__array_traits<_Tp, _Nm>::_S_ref(const _Tp (&)[_Nm], std::size_t) [with _Tp = short unsigned int; unsigned int _Nm = 4u]	16	static
-array:181:7:std::array<_Tp, _Nm>::value_type& std::array<_Tp, _Nm>::operator[](std::array<_Tp, _Nm>::size_type) [with _Tp = short unsigned int; unsigned int _Nm = 4u]	16	static
+main.cpp:53:7:void TIM3_IRQHandler()	8	static
+main.cpp:116:7:void EXTI9_5_IRQHandler()	4	static
+main.cpp:132:7:void EXTI15_10_IRQHandler()	4	static
+main.cpp:145:7:void TIM4_IRQHandler()	4	static
+main.cpp:152:6:void DrawUI()	384	static
+main.cpp:173:6:void ResetSampleAcquisition()	16	static
+main.cpp:182:17:uint16_t CalcVertOffset(volatile uint16_t&, const uint16_t&)	24	static
+main.cpp:186:5:int main()	136	static
+array:53:7:static constexpr _Tp& std::__array_traits<_Tp, _Nm>::_S_ref(const _Tp (&)[_Nm], std::size_t) [with _Tp = short unsigned int; unsigned int _Nm = 5u]	16	static
+array:181:7:std::array<_Tp, _Nm>::value_type& std::array<_Tp, _Nm>::operator[](std::array<_Tp, _Nm>::size_type) [with _Tp = short unsigned int; unsigned int _Nm = 5u]	16	static
 stl_algobase.h:219:5:const _Tp& std::max(const _Tp&, const _Tp&) [with _Tp = int]	16	static
-main.cpp:292:1:void __static_initialization_and_destruction_0(int, int)	16	static
-main.cpp:292:1:cpp)	8	static
+main.cpp:293:1:void __static_initialization_and_destruction_0(int, int)	16	static
+main.cpp:293:1:cpp)	8	static

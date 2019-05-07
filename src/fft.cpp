@@ -58,7 +58,7 @@ void fft::runFFT(volatile float candSin[]) {
 		} else if (node == FFTSAMPLES / 2) {
 
 			// last node - this only needs to calculate the first half of the FFT results as the remainder are redundant
-			for (uint16_t p1 = 1; p1 <= FFTSAMPLES; p1++) {
+			for (uint16_t p1 = 1; p1 < FFTSAMPLES; p1++) {
 
 				uint16_t b = std::round(p1 * LUTSIZE / (2 * node));
 				float s = SineLUT[b];
@@ -97,78 +97,89 @@ void fft::runFFT(volatile float candSin[]) {
 				}
 			}
 		}
-
 		node = node * 2;
 	}
 
 
 	harmonic.fill(0);
-	int16_t badFFT = 0, currHarmonic = -1;
+	int16_t badFFT = 0, currHarmonic = -1, smearHarmonic = 0;
 	maxHyp = 0;
+
+	// display frequency spread
+	std::string s = UI.intToString(std::round(harmonicFreq(1))) + " - " + UI.intToString(harmonicFreq(319)) + "Hz   ";
+	lcd.DrawString(130, DRAWHEIGHT + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 
 	// Draw results: Combine sine and cosines to get amplitudes and store in buffers, transmitting as each buffer is completed
 	for (uint16_t i = 1; i <= DRAWWIDTH; i++) {
-
+		uint16_t harmColour = LCD_BLUE;
 		float hypotenuse = std::sqrt(std::pow(candSin[i], 2) + std::pow(candCos[i], 2));
 
 		// get first four harmonics
-		if (currHarmonic < 4 && hypotenuse > 50000) {
-			if (currHarmonic == -1 || i > harmonic[currHarmonic] + 1)
+		if (currHarmonic < FFTHARMONICCOLOURS - 1 && hypotenuse > 50000) {
+			if (currHarmonic == -1 || i > smearHarmonic + 1)
 				currHarmonic++;
+
+			smearHarmonic = i;			// used to display 'smeared' harmonics in the same colour -also avoids smeared harmonics showing as multiple harmonics
+			harmColour = harmColours[currHarmonic];
 
 			// check if current hypotenuse next one or is larger than previous one to shift harmonic up one
 			if (harmonic[currHarmonic] == 0 || hypotenuse > maxHyp) {
-
 				harmonic[currHarmonic] = i;
 				maxHyp = hypotenuse;
-
-				if (currHarmonic == 0) {
-					// calculate the frequency of the fundamental
-					freqFund = ((float)SystemCoreClock * harmonic[0]) / (2 * FFTSAMPLES * (TIM3->PSC + 1) * (TIM3->ARR + 1));
-
-					// write fundamental frequency to display
-					std::string s = UI.floatToString(freqFund) + "Hz   ";
-					lcd.DrawString(140, DRAWHEIGHT + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
-				}
 			}
+		} else {
+			smearHarmonic = 0;
 		}
 
 		uint16_t top = std::min(DRAWHEIGHT * (1 - (hypotenuse / (512 * FFTSAMPLES))), (float)DRAWHEIGHT);
 
-		uint8_t FFTDrawBufferNumber = (((i - 1) / FFTDRAWBUFFERSIZE) % 2 == 0) ? 0 : 1;
+		uint8_t FFTDrawBufferNumber = (((i - 1) / FFTDRAWBUFFERWIDTH) % 2 == 0) ? 0 : 1;
 
 		// draw column into memory buffer
 		for (int h = 0; h <= DRAWHEIGHT; ++h) {
-			uint16_t buffPos = h * FFTDRAWBUFFERSIZE + ((i - 1) % FFTDRAWBUFFERSIZE);
-			uint16_t harmColour = LCD_BLACK;
+			uint16_t buffPos = h * FFTDRAWBUFFERWIDTH + ((i - 1) % FFTDRAWBUFFERWIDTH);
 
-			// use different colours to indicate different harmonics
+			// depending on harmonic height draw either harmonic or black, using different colours to indicate main harmonics
 			if (h >= top) {
-				if (harmonic[0] == i)			harmColour = LCD_WHITE;
-				else if (harmonic[1] == i)		harmColour = LCD_YELLOW;
-				else if (harmonic[2] == i)		harmColour = LCD_ORANGE;
-				else if (harmonic[3] == i)		harmColour = LCD_GREEN;
-				else							harmColour = LCD_BLUE;
-
 				badFFT++;					// every so often the FFT fails with extremely large numbers in all positions - just abort the draw and resample
-				if (badFFT > 10000)
-					return;
+				if (badFFT > 10000) {
+					FFTErrors++;
+					//return;
+				}
+				FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = harmColour;
+			} else {
+				FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = LCD_BLACK;
 			}
-			FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = harmColour;
+
 
 		}
 
 		// check if ready to draw next buffer
-		if ((i % FFTDRAWBUFFERSIZE) == 0) {
-			lcd.PatternFill(i - FFTDRAWBUFFERSIZE, 0, i - 1, DRAWHEIGHT, FFTDrawBuffer[FFTDrawBufferNumber]);
+		if ((i % FFTDRAWBUFFERWIDTH) == 0) {
+
+			// if drawing the second buffer display the harmonic frequencies at the top right
+			if (FFTDrawBufferNumber == 1) {
+				for (uint8_t h = 0; h < FFTHARMONICCOLOURS; ++h) {
+					if (harmonic[h] == 0)	break;
+
+					uint16_t harmonicNumber = harmonic[h] / harmonic[0];
+					std::string harmonicInfo = UI.intToString(harmonicNumber) + " " + UI.floatToString(harmonicFreq(harmonic[h])) + "Hz";
+					lcd.DrawStringMem(70, 20 + 20 * h, FFTDRAWBUFFERWIDTH, FFTDrawBuffer[FFTDrawBufferNumber], harmonicInfo, &lcd.Font_Small, harmColours[h], LCD_BLACK);
+
+					debugCount = DMA2_Stream6->NDTR;			// tracks how many items left in DMA draw buffer
+				}
+			}
+
+			lcd.PatternFill(i - FFTDRAWBUFFERWIDTH, 0, i - 1, DRAWHEIGHT, FFTDrawBuffer[FFTDrawBufferNumber]);
 		}
 
 	}
 
 	if (autoTune && harmonic[0] > 0) {
+		freqFund = harmonicFreq(harmonic[0]);
 
 		// work out which harmonic we want the fundamental to be - to adjust the sampling rate so a change in ARR affects the tuning of the FFT proportionally
-		uint16_t targFund = std::max(std::round(freqFund / 10), 8.0f);
+		uint16_t targFund = std::max(std::round(freqFund / 10), 12.0f);
 
 		// take the timer ARR, divide by fundamental to get new ARR setting tuned fundamental to target harmonic
 		if (std::abs(targFund - harmonic[0]) > 1)	newARR = targFund * TIM3->ARR / harmonic[0];
@@ -187,12 +198,15 @@ void fft::runFFT(volatile float candSin[]) {
 			newARR += 1;
 		}
 
-		if (newARR > 0 && newARR < 6000) {
+		if (newARR > 0 && newARR < 6000 && TIM3->ARR != newARR) {
 			TIM3->ARR = newARR;
-
 		}
 
 	}
-	debugCount = DMA2_Stream6->NDTR;
+
 	CP_CAP
+}
+
+inline float fft::harmonicFreq(uint16_t harmonicNumber) {
+	return ((float)SystemCoreClock * harmonicNumber) / (2 * FFTSAMPLES * (TIM3->PSC + 1) * (TIM3->ARR + 1));
 }
