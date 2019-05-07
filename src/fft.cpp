@@ -22,6 +22,10 @@ void fft::runFFT(volatile float candSin[]) {
 		//candSin[i] = i < (FFTSAMPLES / 2) ? 2047 : -2047;					// Square wave
 	}*/
 
+	if (std::isnan(candSin[0])) {
+		int susp = 1;
+	}
+
 	// Bit reverse samples
 	for (int i = 0; i < FFTSAMPLES; i++) {
 		// assembly bit reverses i and then rotates right to correct bit length
@@ -144,14 +148,12 @@ void fft::runFFT(volatile float candSin[]) {
 				badFFT++;					// every so often the FFT fails with extremely large numbers in all positions - just abort the draw and resample
 				if (badFFT > 10000) {
 					FFTErrors++;
-					//return;
+					return;
 				}
 				FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = harmColour;
 			} else {
 				FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = LCD_BLACK;
 			}
-
-
 		}
 
 		// check if ready to draw next buffer
@@ -162,14 +164,13 @@ void fft::runFFT(volatile float candSin[]) {
 				for (uint8_t h = 0; h < FFTHARMONICCOLOURS; ++h) {
 					if (harmonic[h] == 0)	break;
 
-					uint16_t harmonicNumber = harmonic[h] / harmonic[0];
+					uint16_t harmonicNumber = round((float)harmonic[h] / harmonic[0]);
 					std::string harmonicInfo = UI.intToString(harmonicNumber) + " " + UI.floatToString(harmonicFreq(harmonic[h])) + "Hz";
 					lcd.DrawStringMem(70, 20 + 20 * h, FFTDRAWBUFFERWIDTH, FFTDrawBuffer[FFTDrawBufferNumber], harmonicInfo, &lcd.Font_Small, harmColours[h], LCD_BLACK);
 
 					debugCount = DMA2_Stream6->NDTR;			// tracks how many items left in DMA draw buffer
 				}
 			}
-
 			lcd.PatternFill(i - FFTDRAWBUFFERWIDTH, 0, i - 1, DRAWHEIGHT, FFTDrawBuffer[FFTDrawBufferNumber]);
 		}
 

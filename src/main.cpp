@@ -10,18 +10,15 @@
 
 extern uint32_t SystemCoreClock;
 extern volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
-//volatile float candCos[FFTSAMPLES];
-//uint16_t FFTDrawBuffer[2][(DRAWHEIGHT + 1) * FFTDRAWBUFFERSIZE];
-//float SineLUT[LUTSIZE];
 
 volatile uint16_t OscBufferA[2][DRAWWIDTH], OscBufferB[2][DRAWWIDTH];
 volatile uint16_t prevPixelA = 0, prevPixelB = 0, adcA, oldAdcA, adcB, capturePos = 0, drawPos = 0, bufferSamples = 0;
 volatile bool capturing = false, drawing = false;
-volatile uint8_t VertOffsetA = 30, VertOffsetB = 30, captureBufferNumber = 0, drawBufferNumber = 0;
+volatile uint8_t VertOffsetA = 27, VertOffsetB = 27, captureBufferNumber = 0, drawBufferNumber = 0;
 volatile int16_t drawOffset[2] {0, 0};
 volatile bool dataAvailable[2] {false, false};
 volatile uint16_t capturedSamples[2] {0, 0};
-volatile bool Encoder1Btn = false, oscFree = false, FFTMode = true;
+volatile bool Encoder1Btn = false, oscFree = false, FFTMode = false;
 volatile int8_t encoderPendingL = 0, encoderPendingR = 0;
 volatile uint16_t bounce = 0, nobounce = 0;
 volatile uint32_t debugCount = 0, coverageTimer = 0, coverageTotal = 0;
@@ -149,38 +146,21 @@ extern "C"
 }
 
 
-void DrawUI() {
-	// Draw UI
-	lcd.ColourFill(0, DRAWHEIGHT + 1, DRAWWIDTH - 1, DRAWHEIGHT + 1, LCD_GREY);
-	lcd.ColourFill(0, 239, DRAWWIDTH - 1, 239, LCD_GREY);
-	lcd.ColourFill(0, DRAWHEIGHT + 1, 0, 239, LCD_GREY);
-	lcd.ColourFill(90, DRAWHEIGHT + 1, 90, 239, LCD_GREY);
-	lcd.ColourFill(230, DRAWHEIGHT + 1, 230, 239, LCD_GREY);
-	lcd.ColourFill(319, DRAWHEIGHT + 1, 319, 239, LCD_GREY);
 
-	lcd.DrawString(10, DRAWHEIGHT + 8, "Zoom Horiz", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
-	lcd.DrawString(240, DRAWHEIGHT + 8, "Zoom Vert", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
-
-	uint16_t screenMs = std::round(640000.0f * TIM3->PSC * TIM3->ARR / SystemCoreClock);
-	std::stringstream ss;
-	ss << screenMs << "ms    ";
-
-	std::string s = ss.str();
-	lcd.DrawString(140, DRAWHEIGHT + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
-
-}
 
 void ResetSampleAcquisition() {
 	TIM3->CR1 &= ~TIM_CR1_CEN;			// Disable the sample acquisiton timer
 	lcd.ScreenFill(LCD_BLACK);
-	DrawUI();
+	UI.DrawUI();
 	capturing = drawing = false;
 	bufferSamples = capturePos = oldAdcA = 0;
 	TIM3->CR1 |= TIM_CR1_CEN;			// Reenable the sample acquisiton timer
 }
 
 inline uint16_t CalcVertOffset(volatile uint16_t& vPos, const uint16_t& vOffset) {
-	return (((float)vPos / 4) / 4096 * DRAWHEIGHT) - vOffset;
+	float scale = 0.95f;
+	//return ((float)(vPos) / (4 * 4096) * DRAWHEIGHT * scale) - vOffset * scale;
+	return ((((float)(vPos) / (4 * 4096) - 0.5f) * scale) + 0.5f) * DRAWHEIGHT - vOffset * scale;
 }
 
 int main(void) {
@@ -194,27 +174,22 @@ int main(void) {
 
 	lcd.Init();					// Initialize ILI9341 LCD
 	InitSampleAcquisition();
-	DrawUI();
+	UI.DrawUI();
 
-	// test character drawing
 
-	lcd.DrawStringMem(25, 25, 100, drawTest, "hello", &lcd.Font_Small, LCD_RED, LCD_BLACK);
-	lcd.PatternFill(10, 10, 109, 109, drawTest);
-	/*while (1)
-	{};*/
 	while (1) {
-		fundHarm = Fft.harmonic[0];
+		fundHarm = Fft.harmonic[0];			// for debugging
 		if (encoderPendingR && (GPIOE->IDR & GPIO_IDR_IDR_8) && (GPIOE->IDR & GPIO_IDR_IDR_9)) {
-			int16_t adj = TIM3->ARR + 10 * encoderPendingR;
-			if (adj > 0 && adj < 3000)
+			int16_t adj = TIM3->ARR + 50 * encoderPendingR;
+			if (adj > 0 && adj < 6000)
 				TIM3->ARR = adj;
 			encoderPendingR = 0;
-			DrawUI();
+			UI.DrawUI();
 		}
 		if (encoderPendingL && (GPIOE->IDR & GPIO_IDR_IDR_11) && (GPIOE->IDR & GPIO_IDR_IDR_10)) {
 			TIM3->ARR += encoderPendingL;
 			encoderPendingL = 0;
-			DrawUI();
+			UI.DrawUI();
 		}
 
 		if (Encoder1Btn) {
@@ -267,6 +242,10 @@ int main(void) {
 					prevPixelB = pixelB;
 				}
 
+				// draw center line
+				lcd.DrawPixel(drawPos, DRAWHEIGHT / 2, LCD_GREY);
+				lcd.DrawPixel(drawPos, DRAWHEIGHT / 4, LCD_GREY);
+
 				// Draw current samples as lines from previous pixel position to current sample position
 				lcd.DrawLine(drawPos, pixelA, drawPos, prevPixelA, LCD_GREEN);
 				lcd.DrawLine(drawPos, pixelB, drawPos, prevPixelB, LCD_LIGHTBLUE);
@@ -284,6 +263,12 @@ int main(void) {
 				if (drawPos == trigger.x + 4) {
 					lcd.DrawLine(trigger.x, CalcVertOffset(trigger.y, VertOffsetA) - 4, trigger.x, CalcVertOffset(trigger.y, VertOffsetA) + 4, LCD_YELLOW);
 					lcd.DrawLine(std::max(trigger.x - 4, 0), CalcVertOffset(trigger.y, VertOffsetA), trigger.x + 4, CalcVertOffset(trigger.y, VertOffsetA), LCD_YELLOW);
+				}
+
+				// Write voltage
+				if (drawPos <= 30) {
+					lcd.DrawString(2, 2, "10", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+					lcd.DrawString(2, DRAWHEIGHT - 10, "-10", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 				}
 				CP_CAP
 			}

@@ -179,7 +179,7 @@ void InitADC(void) {
 void InitSampleAcquisition() {
 	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;				// Enable Timer 3
 	TIM3->PSC = 50;								// Set prescaler
-	TIM3->ARR = 604; 								// Set auto reload register
+	TIM3->ARR = 300; 								// Set auto reload register
 
 	TIM3->DIER |= TIM_DIER_UIE;						//  DMA/interrupt enable register
 	NVIC_EnableIRQ(TIM3_IRQn);
