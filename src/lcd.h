@@ -98,7 +98,7 @@ struct FontData {
 };
 
 
-class Lcd {
+class LCD {
 public:
 	LCD_Orientation_t orientation = LCD_Portrait;
 	uint16_t width = 240;
@@ -109,7 +109,7 @@ public:
 	FontData Font_Large {11, 18, Font11x18, false};
 	FontData Font_XLarge {16, 26, Font16x26, false};
 
-	Lcd();
+	LCD();
 	void Init(void);
 	void Rotate(LCD_Orientation_t orientation);
 	void ScreenFill(const uint16_t& colour);

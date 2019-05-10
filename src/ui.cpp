@@ -1,6 +1,6 @@
 #include <ui.h>
 
-void ui::DrawUI() {
+void UI::DrawUI() {
 	// Draw UI
 	lcd.ColourFill(0, DRAWHEIGHT + 1, DRAWWIDTH - 1, DRAWHEIGHT + 1, LCD_GREY);
 	lcd.ColourFill(0, 239, DRAWWIDTH - 1, 239, LCD_GREY);
@@ -10,6 +10,8 @@ void ui::DrawUI() {
 	lcd.ColourFill(319, DRAWHEIGHT + 1, 319, 239, LCD_GREY);
 
 	std::string label;
+
+	CP_ON
 
 	switch (lEncoderMode) {
 	case HorizScaleCoarse :
@@ -46,9 +48,10 @@ void ui::DrawUI() {
 	std::string s = floatToString(640000.0f * (TIM3->PSC + 1) * (TIM3->ARR + 1) / SystemCoreClock) + "ms    ";
 	lcd.DrawString(140, DRAWHEIGHT + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 
+	CP_CAP
 }
 
-std::string ui::floatToString(float f) {
+std::string UI::floatToString(float f) {
 	std::stringstream ss;
 	ss << (int16_t)std::round(f * 10);
 	std::string s = ss.str();
@@ -56,13 +59,13 @@ std::string ui::floatToString(float f) {
 	return s;
 }
 
-std::string ui::intToString(uint16_t v) {
+std::string UI::intToString(uint16_t v) {
 	std::stringstream ss;
 	ss << v;
 	return ss.str();
 }
 
-void ui::handleEncoders() {
+void UI::handleEncoders() {
 	if (encoderPendingL && (GPIOE->IDR & GPIO_IDR_IDR_11) && (GPIOE->IDR & GPIO_IDR_IDR_10)) {
 		int16_t adj;
 		switch (lEncoderMode) {

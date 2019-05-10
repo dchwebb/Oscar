@@ -15,20 +15,20 @@
 constexpr int FFTbits = log2(FFTSAMPLES);
 constexpr float FFTWidth = (FFTSAMPLES / 2) > DRAWWIDTH ? 1 : (float)DRAWWIDTH / (FFTSAMPLES / 2);
 
-extern Lcd lcd;
-extern ui UI;
+extern LCD lcd;
+extern UI ui;
 extern volatile uint32_t debugCount, coverageTotal, coverageTimer;
 extern volatile uint32_t diff;
 extern volatile float freqFund;
 extern volatile uint16_t FFTErrors;
 
-class fft {
+class FFT {
 public:
 	float FFTBuffer[2][FFTSAMPLES];
 	bool autoTune = true;
 	std::array<uint16_t, FFTHARMONICCOLOURS> harmonic;
 
-	fft();
+	FFT();
 	void runFFT(volatile float candSin[]);
 	float harmonicFreq(uint16_t harmonicNumber);
 private:

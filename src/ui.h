@@ -8,15 +8,15 @@
 
 extern void ResetSampleAcquisition();
 
-extern Lcd lcd;
+extern LCD lcd;
 extern volatile int8_t voltScale, encoderPendingL, encoderPendingR;
 extern volatile int16_t vCalibOffset;
 extern volatile bool Encoder1Btn, FFTMode;
 extern volatile float vCalibScale;
 extern encoderType lEncoderMode, rEncoderMode;
+extern volatile uint32_t debugCount, coverageTotal, coverageTimer;
 
-
-class ui {
+class UI {
 public:
 	void DrawUI();
 	std::string floatToString(float f);

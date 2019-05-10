@@ -19,15 +19,12 @@ volatile bool dataAvailable[2] {false, false};
 volatile uint16_t capturedSamples[2] {0, 0};
 volatile bool Encoder1Btn = false, oscFree = false, FFTMode = false;
 volatile int8_t encoderPendingL = 0, encoderPendingR = 0;
-volatile uint16_t bounce = 0, nobounce = 0;
 volatile uint32_t debugCount = 0, coverageTimer = 0, coverageTotal = 0;
 volatile uint32_t diff = 0;
 volatile float freqFund;
-//#define ADC_BUFFER_LENGTH 8
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
-volatile uint16_t FFTErrors = 0;
+volatile uint16_t freqCrossZero, FFTErrors = 0;
 bool freqBelowZero;
-uint16_t freqCrossZero;
 volatile float oscFreq;
 volatile int16_t oldencoderUp = 0, oldencoderDown = 0, encoderUp = 0, encoderDown = 0, encoderVal = 0, encoderState = 0;
 
@@ -40,9 +37,9 @@ volatile int8_t voltScale = 8;
 encoderType lEncoderMode = HorizScaleCoarse;
 encoderType rEncoderMode = VoltScale;
 
-Lcd lcd;
-fft Fft;
-ui UI;
+LCD lcd;
+FFT fft;
+UI ui;
 
 volatile uint16_t fundHarm;
 
@@ -68,7 +65,7 @@ extern "C"
 
 			if (capturing) {
 				// For FFT Mode we want a value between +- 2047
-				Fft.FFTBuffer[captureBufferNumber][capturePos] = 2047 - ((float)(ADC_array[0] + ADC_array[2] + ADC_array[4] + ADC_array[6]) / 4);
+				fft.FFTBuffer[captureBufferNumber][capturePos] = 2047 - ((float)(ADC_array[0] + ADC_array[2] + ADC_array[4] + ADC_array[6]) / 4);
 				capturePos ++;
 			}
 
@@ -158,7 +155,7 @@ extern "C"
 void ResetSampleAcquisition() {
 	TIM3->CR1 &= ~TIM_CR1_CEN;			// Disable the sample acquisiton timer
 	lcd.ScreenFill(LCD_BLACK);
-	UI.DrawUI();
+	ui.DrawUI();
 	capturing = drawing = false;
 	bufferSamples = capturePos = oldAdcA = 0;
 	TIM3->CR1 |= TIM_CR1_CEN;			// Reenable the sample acquisiton timer
@@ -180,18 +177,12 @@ int main(void) {
 	lcd.Init();					// Initialize ILI9341 LCD
 	InitSampleAcquisition();
 
-	lcd.DrawString(10, 10, "O123456789", &lcd.Font_Medium, LCD_WHITE, LCD_BLACK);
-	lcd.DrawString(100, 10, "O123456789", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
-
-	//while (1);
-
-
-	UI.DrawUI();
+	ui.DrawUI();
 
 	while (1) {
-		fundHarm = Fft.harmonic[0];			// for debugging
+		fundHarm = fft.harmonic[0];			// for debugging
 
-		UI.handleEncoders();
+		ui.handleEncoders();
 
 
 
@@ -207,7 +198,7 @@ int main(void) {
 				else if (dataAvailable[1])	drawBufferNumber = 1;
 				else continue;
 
-				Fft.runFFT(Fft.FFTBuffer[drawBufferNumber]);
+				fft.runFFT(fft.FFTBuffer[drawBufferNumber]);
 				dataAvailable[drawBufferNumber] = false;
 			}
 
@@ -223,7 +214,7 @@ int main(void) {
 
 			// Check if drawing and that the sample capture is at or ahead of the draw position
 			if (drawing && (drawBufferNumber != captureBufferNumber || capturedSamples[captureBufferNumber] >= drawPos)) {
-				CP_ON
+				//CP_ON
 				// Draw a black line over previous sample - except at beginning where we shouldn't clear the voltage markers
 				if (drawPos < 27) {
 					lcd.ColourFill(drawPos, 11, drawPos, DRAWHEIGHT - 10, LCD_BLACK);
@@ -236,7 +227,6 @@ int main(void) {
 
 				uint16_t pixelA = CalcVertOffset(OscBufferA[drawBufferNumber][calculatedOffset], VertOffsetA);
 				uint16_t pixelB = CalcVertOffset(OscBufferB[drawBufferNumber][calculatedOffset], VertOffsetB);
-
 
 				// Starting a new screen: Set previous pixel to current pixel and clear frequency calculations
 				if (drawPos == 0) {
@@ -260,12 +250,9 @@ int main(void) {
 				}
 
 
-
 				// draw center line and voltage markers
 				if (drawPos % 4 == 0) {
-					//lcd.DrawPixel(drawPos, 0, LCD_GREY);
 					lcd.DrawPixel(drawPos, DRAWHEIGHT / 2, LCD_GREY);
-
 				}
 				if (drawPos < 5) {
 					for (int m = 0; m < voltScale * 2; ++m) {
@@ -297,10 +284,10 @@ int main(void) {
 
 				// Write voltage
 				if (drawPos == 1) {
-					lcd.DrawString(0, 1, " " + UI.intToString(voltScale) + "v ", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
-					lcd.DrawString(0, DRAWHEIGHT - 10, "-" + UI.intToString(voltScale) + "v ", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
+					lcd.DrawString(0, 1, " " + ui.intToString(voltScale) + "v ", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
+					lcd.DrawString(0, DRAWHEIGHT - 10, "-" + ui.intToString(voltScale) + "v ", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 				}
-				CP_CAP
+				//CP_CAP
 			}
 		}
 

@@ -1,13 +1,13 @@
 #include <fft.h>
 
-fft::fft() {
+FFT::FFT() {
 	for (int s = 0; s < LUTSIZE; s++){
 		SineLUT[s] = sin(s * 2.0f * M_PI / LUTSIZE);
 	}
 }
 
 // Carry out Fast fourier transform
-void fft::runFFT(volatile float candSin[]) {
+void FFT::runFFT(volatile float candSin[]) {
 
 	CP_ON
 
@@ -101,7 +101,7 @@ void fft::runFFT(volatile float candSin[]) {
 	maxHyp = 0;
 
 	// display frequency spread
-	std::string s = UI.intToString(std::round(harmonicFreq(1))) + " - " + UI.intToString(harmonicFreq(319)) + "Hz   ";
+	std::string s = ui.intToString(std::round(harmonicFreq(1))) + " - " + ui.intToString(harmonicFreq(319)) + "Hz   ";
 	lcd.DrawString(130, DRAWHEIGHT + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 
 	// Draw results: Combine sine and cosines to get amplitudes and store in buffers, transmitting as each buffer is completed
@@ -156,7 +156,7 @@ void fft::runFFT(volatile float candSin[]) {
 					if (harmonic[h] == 0)	break;
 
 					uint16_t harmonicNumber = round((float)harmonic[h] / harmonic[0]);
-					std::string harmonicInfo = UI.intToString(harmonicNumber) + " " + UI.floatToString(harmonicFreq(harmonic[h])) + "Hz";
+					std::string harmonicInfo = ui.intToString(harmonicNumber) + " " + ui.floatToString(harmonicFreq(harmonic[h])) + "Hz";
 					lcd.DrawStringMem(0, 20 + 20 * h, FFTDRAWBUFFERWIDTH, FFTDrawBuffer[FFTDrawBufferNumber], harmonicInfo, &lcd.Font_Small, harmColours[h], LCD_BLACK);
 
 					debugCount = DMA2_Stream6->NDTR;			// tracks how many items left in DMA draw buffer
@@ -199,6 +199,6 @@ void fft::runFFT(volatile float candSin[]) {
 
 }
 
-inline float fft::harmonicFreq(uint16_t harmonicNumber) {
+inline float FFT::harmonicFreq(uint16_t harmonicNumber) {
 	return ((float)SystemCoreClock * harmonicNumber) / (2 * FFTSAMPLES * (TIM3->PSC + 1) * (TIM3->ARR + 1));
 }

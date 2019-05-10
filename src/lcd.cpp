@@ -6,14 +6,14 @@
 extern volatile uint32_t coverageTimer;
 extern volatile uint32_t coverageTotal;
 
-Lcd::Lcd() {
+LCD::LCD() {
 	//	 Hacky way of storing a reference to the character draw buffers in their respective fon typedefs
 	Font_Small.charBuffer = charSmallBuffer;
 	Font_Medium.charBuffer = charMediumBuffer;
 	Font_Large.charBuffer = charLargeBuffer;
 }
 
-void Lcd::Init(void) {
+void LCD::Init(void) {
 
 	// Force reset
 	LCD_RST_RESET;
@@ -56,7 +56,7 @@ void Lcd::Init(void) {
 	ScreenFill(LCD_BLACK);
 };
 
-void Lcd::CommandData(CDARGS cmds) {
+void LCD::CommandData(CDARGS cmds) {
 	while (SPI_DMA_Working);
 	Command(cmds[0]);
 	LCD_DCX_SET;
@@ -64,30 +64,30 @@ void Lcd::CommandData(CDARGS cmds) {
 		SPISendByte(cmds[i]);
 }
 
-void Lcd::Delay(volatile uint32_t delay) {
+void LCD::Delay(volatile uint32_t delay) {
 	for (; delay != 0; delay--);
 }
 
-void Lcd::Command(const uint8_t& data) {
+void LCD::Command(const uint8_t& data) {
 	while (SPI_DMA_Working);
 	LCD_DCX_RESET;
 	SPISendByte(data);
 }
 
 //	Send data in either 8 or 16 bit modes
-void Lcd::Data(const uint8_t& data) {
+void LCD::Data(const uint8_t& data) {
 	LCD_DCX_SET;
 	SPISendByte(data);
 }
 
-void Lcd::Data16b(const uint16_t& data) {
+void LCD::Data16b(const uint16_t& data) {
 
 	LCD_DCX_SET;
 	SPISendByte(data >> 8);
 	SPISendByte(data & 0xFF);
 }
 
-void Lcd::SetCursorPosition(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) {
+void LCD::SetCursorPosition(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) {
 	Command(ILI9341_COLUMN_ADDR);
 	Data16b(x1);
 	Data16b(x2);
@@ -98,7 +98,7 @@ void Lcd::SetCursorPosition(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) 
 }
 
 
-void Lcd::Rotate(LCD_Orientation_t o) {
+void LCD::Rotate(LCD_Orientation_t o) {
 	Command(ILI9341_MAC);
 	switch (o) {
 		case LCD_Portrait :				Data(0x58);
@@ -117,11 +117,11 @@ void Lcd::Rotate(LCD_Orientation_t o) {
 	}
 }
 
-void Lcd::ScreenFill(const uint16_t& colour) {
+void LCD::ScreenFill(const uint16_t& colour) {
 	ColourFill(0, 0, width - 1, height - 1, colour);
 }
 
-void Lcd::ColourFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t& colour) {
+void LCD::ColourFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t& colour) {
 	uint32_t pixelCount = (x1 - x0 + 1) * (y1 - y0 + 1);
 
 	SetCursorPosition(x0, y0, x1, y1);
@@ -139,7 +139,7 @@ void Lcd::ColourFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const u
 }
 
 
-void Lcd::PatternFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t* PixelData) {
+void LCD::PatternFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t* PixelData) {
 	uint32_t pixelCount = (x1 - x0 + 1) * (y1 - y0 + 1);
 
 	SetCursorPosition(x0, y0, x1, y1);
@@ -157,7 +157,7 @@ void Lcd::PatternFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const 
 	SPI5->CR2 |= SPI_CR2_TXDMAEN;					// Enable SPI TX DMA
 }
 
-void Lcd::DrawPixel(uint16_t x, uint16_t y, const uint16_t& colour) {
+void LCD::DrawPixel(uint16_t x, uint16_t y, const uint16_t& colour) {
 	SetCursorPosition(x, y, x, y);
 
 	Command(ILI9341_GRAM);
@@ -165,7 +165,7 @@ void Lcd::DrawPixel(uint16_t x, uint16_t y, const uint16_t& colour) {
 }
 
 
-void Lcd::DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint32_t& colour) {
+void LCD::DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint32_t& colour) {
 
 	int16_t dx, dy, err;
 	uint16_t tmp;
@@ -217,7 +217,7 @@ void Lcd::DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uin
 }
 
 
-void Lcd::DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
+void LCD::DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
 
 	// If at the end of a line of display, go to new line and set x to 0 position
 	if ((x + font->Width) > width) {
@@ -245,7 +245,7 @@ void Lcd::DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const u
 
 
 // writes a character to an existing display array
-void Lcd::DrawCharMem(uint16_t x, uint16_t y, uint16_t memWidth, uint16_t* memBuffer, char c, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
+void LCD::DrawCharMem(uint16_t x, uint16_t y, uint16_t memWidth, uint16_t* memBuffer, char c, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
 
 	// Write character colour data to array
 	uint16_t px, py, fontRow, i;
@@ -266,7 +266,7 @@ void Lcd::DrawCharMem(uint16_t x, uint16_t y, uint16_t memWidth, uint16_t* memBu
 
 }
 
-void Lcd::DrawString(uint16_t x0, uint16_t y0, std::string s, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
+void LCD::DrawString(uint16_t x0, uint16_t y0, std::string s, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
 	for (char& c : s) {
 		while (SPI_DMA_Working);
 		DrawChar(x0, y0, c, font, foreground, background);
@@ -275,14 +275,14 @@ void Lcd::DrawString(uint16_t x0, uint16_t y0, std::string s, const FontData *fo
 }
 
 
-void Lcd::DrawStringMem(uint16_t x0, uint16_t y0, uint16_t memWidth, uint16_t* memBuffer, std::string s, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
+void LCD::DrawStringMem(uint16_t x0, uint16_t y0, uint16_t memWidth, uint16_t* memBuffer, std::string s, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
 	for (char& c : s) {
 		DrawCharMem(x0, y0, memWidth, memBuffer, c, font, foreground, background);
 		x0 += font->Width;
 	}
 }
 
-void Lcd::SPISetDataSize(const SPIDataSize_t& Mode) {
+void LCD::SPISetDataSize(const SPIDataSize_t& Mode) {
 
 	SPI5->CR1 &= ~SPI_CR1_SPE;						// Disable SPI
 
@@ -295,7 +295,7 @@ void Lcd::SPISetDataSize(const SPIDataSize_t& Mode) {
 	SPI5->CR1 |= SPI_CR1_SPE;						// Re-enable SPI
 }
 
-inline void Lcd::SPISendByte(const uint8_t data) {
+inline void LCD::SPISendByte(const uint8_t data) {
 
 	while (SPI_DMA_Working);
 
@@ -308,7 +308,7 @@ inline void Lcd::SPISendByte(const uint8_t data) {
 	while (SPI_DMA_Working);						// Wait for transmission to complete
 }
 
-void Lcd::SPI_DMA_SendHalfWord(const uint16_t& value, const uint16_t& count) {
+void LCD::SPI_DMA_SendHalfWord(const uint16_t& value, const uint16_t& count) {
 
 	while (SPI_DMA_Working);						// Check number of data items to transfer is zero (ie stream is free)
 
