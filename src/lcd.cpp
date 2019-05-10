@@ -175,6 +175,8 @@ void Lcd::DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uin
 	if (x1 >= width)	x1 = width - 1;
 	if (y0 >= height)	y0 = height - 1;
 	if (y1 >= height)	y1 = height - 1;
+	if (y0 < 0)			y0 = 0;
+	if (y1 < 0)			y1 = 0;
 
 
 	// Flip co-ordinates if wrong way round
@@ -228,7 +230,7 @@ void Lcd::DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const u
 	for (py = 0; py < font->Height; py++) {
 		fontRow = font->data[(c - 32) * font->Height + py];
 		for (px = 0; px < font->Width; px++) {
-			if ((fontRow << px) & 0x8000) {
+			if ((fontRow << (px)) & 0x8000) {			// for one byte characters use if ((fontRow << px) & 0x200) {
 				font->charBuffer[i] = foreground;
 			} else {
 				font->charBuffer[i] = background;

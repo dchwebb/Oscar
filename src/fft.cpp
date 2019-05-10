@@ -13,15 +13,6 @@ void fft::runFFT(volatile float candSin[]) {
 
 	int bitReverse = 0;
 
-	/*
-	// create an test array to transform
-	for (int i = 0; i < FFTSAMPLES; i++) {
-		// Sine Wave + harmonic
-		candSin[i] = 4096 * (sin(2.0f * M_PI * i / FFTSAMPLES) + (1.0f / harm) * sin(harm * 2.0f * M_PI * i / FFTSAMPLES));
-		//candSin[i] = 4096 * ((2.0f * (FFTSAMPLES - i) / FFTSAMPLES) - 1);	// Saw Tooth
-		//candSin[i] = i < (FFTSAMPLES / 2) ? 2047 : -2047;					// Square wave
-	}*/
-
 	if (std::isnan(candSin[0])) {
 		int susp = 1;
 	}
@@ -159,14 +150,14 @@ void fft::runFFT(volatile float candSin[]) {
 		// check if ready to draw next buffer
 		if ((i % FFTDRAWBUFFERWIDTH) == 0) {
 
-			// if drawing the second buffer display the harmonic frequencies at the top right
-			if (FFTDrawBufferNumber == 1) {
+			// if drawing the last buffer display the harmonic frequencies at the top right
+			if (i > DRAWWIDTH - FFTDRAWBUFFERWIDTH) {
 				for (uint8_t h = 0; h < FFTHARMONICCOLOURS; ++h) {
 					if (harmonic[h] == 0)	break;
 
 					uint16_t harmonicNumber = round((float)harmonic[h] / harmonic[0]);
 					std::string harmonicInfo = UI.intToString(harmonicNumber) + " " + UI.floatToString(harmonicFreq(harmonic[h])) + "Hz";
-					lcd.DrawStringMem(70, 20 + 20 * h, FFTDRAWBUFFERWIDTH, FFTDrawBuffer[FFTDrawBufferNumber], harmonicInfo, &lcd.Font_Small, harmColours[h], LCD_BLACK);
+					lcd.DrawStringMem(0, 20 + 20 * h, FFTDRAWBUFFERWIDTH, FFTDrawBuffer[FFTDrawBufferNumber], harmonicInfo, &lcd.Font_Small, harmColours[h], LCD_BLACK);
 
 					debugCount = DMA2_Stream6->NDTR;			// tracks how many items left in DMA draw buffer
 				}
@@ -202,10 +193,10 @@ void fft::runFFT(volatile float candSin[]) {
 		if (newARR > 0 && newARR < 6000 && TIM3->ARR != newARR) {
 			TIM3->ARR = newARR;
 		}
-
 	}
 
 	CP_CAP
+
 }
 
 inline float fft::harmonicFreq(uint16_t harmonicNumber) {

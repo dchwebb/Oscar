@@ -93,6 +93,7 @@ struct FontData {
 	const uint8_t Width;    // Font width in pixels
 	const uint8_t Height;   // Font height in pixels
 	const uint16_t *data;	// Pointer to data font data array
+	bool oneByte;
 	uint16_t* charBuffer;
 };
 
@@ -103,9 +104,10 @@ public:
 	uint16_t width = 240;
 	uint16_t height = 320;
 	uint16_t DMAint16;
-	FontData Font_Small {7, 10, Font7x10};
-	FontData Font_Medium {11, 18, Font11x18};
-	FontData Font_Large {16, 26, Font16x26};
+	FontData Font_Small {7, 10, Font7x10, false};
+	FontData Font_Medium {12, 12, Font12x12, false};
+	FontData Font_Large {11, 18, Font11x18, false};
+	FontData Font_XLarge {16, 26, Font16x26, false};
 
 	Lcd();
 	void Init(void);
