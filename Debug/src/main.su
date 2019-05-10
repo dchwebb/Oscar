@@ -1,11 +1,11 @@
 gthr-default.h:229:1:int __gthread_key_delete(__gthread_key_t)	16	static
-main.cpp:56:7:void TIM3_IRQHandler()	8	static
-main.cpp:119:7:void EXTI9_5_IRQHandler()	4	static
-main.cpp:135:7:void EXTI15_10_IRQHandler()	4	static
-main.cpp:148:7:void TIM4_IRQHandler()	4	static
-main.cpp:155:6:void ResetSampleAcquisition()	16	static
-main.cpp:164:17:uint16_t CalcVertOffset(volatile uint16_t&, const uint16_t&)	40	static
-main.cpp:168:5:int main()	248	static
+main.cpp:52:7:void TIM3_IRQHandler()	8	static
+main.cpp:115:7:void EXTI9_5_IRQHandler()	4	static
+main.cpp:131:7:void EXTI15_10_IRQHandler()	4	static
+main.cpp:144:7:void TIM4_IRQHandler()	4	static
+main.cpp:151:6:void ResetSampleAcquisition()	16	static
+main.cpp:160:17:uint16_t CalcVertOffset(volatile uint16_t&, const uint16_t&)	40	static
+main.cpp:164:5:int main()	304	static
 move.h:101:5:constexpr typename std::remove_reference< <template-parameter-1-1> >::type&& std::move(_Tp&&) [with _Tp = std::__cxx11::basic_string<char>&]	16	static
 basic_string.h:5033:5:std::__cxx11::basic_string<_CharT, _Traits, _Alloc> std::operator+(const _CharT*, std::__cxx11::basic_string<_CharT, _Traits, _Alloc>&&) [with _CharT = char; _Traits = std::char_traits<char>; _Alloc = std::allocator<char>]	24	static
 stl_algobase.h:195:5:const _Tp& std::min(const _Tp&, const _Tp&) [with _Tp = float]	16	static
@@ -14,5 +14,5 @@ array:53:7:static constexpr _Tp& std::__array_traits<_Tp, _Nm>::_S_ref(const _Tp
 array:181:7:std::array<_Tp, _Nm>::value_type& std::array<_Tp, _Nm>::operator[](std::array<_Tp, _Nm>::size_type) [with _Tp = short unsigned int; unsigned int _Nm = 5u]	16	static
 stl_algobase.h:219:5:const _Tp& std::max(const _Tp&, const _Tp&) [with _Tp = int]	16	static
 basic_string.h:5045:5:std::__cxx11::basic_string<_CharT, _Traits, _Alloc> std::operator+(std::__cxx11::basic_string<_CharT, _Traits, _Alloc>&&, const _CharT*) [with _CharT = char; _Traits = std::char_traits<char>; _Alloc = std::allocator<char>]	24	static
-main.cpp:295:1:void __static_initialization_and_destruction_0(int, int)	16	static
-main.cpp:295:1:cpp)	8	static
+main.cpp:287:1:void __static_initialization_and_destruction_0(int, int)	16	static
+main.cpp:287:1:cpp)	8	static

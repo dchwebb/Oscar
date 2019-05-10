@@ -11,7 +11,7 @@ void UI::DrawUI() {
 
 	std::string label;
 
-	CP_ON
+	//CP_ON
 
 	switch (lEncoderMode) {
 	case HorizScaleCoarse :
@@ -48,7 +48,7 @@ void UI::DrawUI() {
 	std::string s = floatToString(640000.0f * (TIM3->PSC + 1) * (TIM3->ARR + 1) / SystemCoreClock) + "ms    ";
 	lcd.DrawString(140, DRAWHEIGHT + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 
-	CP_CAP
+	//CP_CAP
 }
 
 std::string UI::floatToString(float f) {

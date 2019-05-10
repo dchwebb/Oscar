@@ -93,8 +93,7 @@ struct FontData {
 	const uint8_t Width;    // Font width in pixels
 	const uint8_t Height;   // Font height in pixels
 	const uint16_t *data;	// Pointer to data font data array
-	bool oneByte;
-	uint16_t* charBuffer;
+	//uint16_t* charBuffer;
 };
 
 
@@ -104,10 +103,10 @@ public:
 	uint16_t width = 240;
 	uint16_t height = 320;
 	uint16_t DMAint16;
-	FontData Font_Small {7, 10, Font7x10, false};
-	FontData Font_Medium {12, 12, Font12x12, false};
-	FontData Font_Large {11, 18, Font11x18, false};
-	FontData Font_XLarge {16, 26, Font16x26, false};
+	FontData Font_Small {7, 10, Font7x10};
+	FontData Font_Medium {12, 12, Font12x12};
+	FontData Font_Large {11, 18, Font11x18};
+	FontData Font_XLarge {16, 26, Font16x26};
 
 	LCD();
 	void Init(void);
@@ -125,9 +124,10 @@ public:
 	void Command(const uint8_t& data);
 
 private:
-	uint16_t charSmallBuffer[7 * 10];
-	uint16_t charMediumBuffer[11 * 18];
-	uint16_t charLargeBuffer[16 * 26];
+	//uint16_t charSmallBuffer[7 * 10];
+	//uint16_t charMediumBuffer[11 * 18];
+	uint16_t charBuffer[2][16 * 26];
+	uint8_t currentCharBuffer = 0;
 
 	void Delay(volatile uint32_t delay);
 	void Data(const uint8_t& data);

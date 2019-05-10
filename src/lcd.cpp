@@ -7,10 +7,10 @@ extern volatile uint32_t coverageTimer;
 extern volatile uint32_t coverageTotal;
 
 LCD::LCD() {
-	//	 Hacky way of storing a reference to the character draw buffers in their respective fon typedefs
-	Font_Small.charBuffer = charSmallBuffer;
+	//	 Hacky way of storing a reference to the character draw buffers in their respective font typedefs
+	/*Font_Small.charBuffer = charSmallBuffer;
 	Font_Medium.charBuffer = charMediumBuffer;
-	Font_Large.charBuffer = charLargeBuffer;
+	Font_Large.charBuffer = charLargeBuffer;*/
 }
 
 void LCD::Init(void) {
@@ -231,16 +231,22 @@ void LCD::DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const u
 		fontRow = font->data[(c - 32) * font->Height + py];
 		for (px = 0; px < font->Width; px++) {
 			if ((fontRow << (px)) & 0x8000) {			// for one byte characters use if ((fontRow << px) & 0x200) {
-				font->charBuffer[i] = foreground;
+				//font->charBuffer[i] = foreground;
+				charBuffer[currentCharBuffer][i] = foreground;
 			} else {
-				font->charBuffer[i] = background;
+				//font->charBuffer[i] = background;
+				charBuffer[currentCharBuffer][i] = background;
 			}
 			i++;
 		}
 	}
 
 	// Send array of data to SPI/DMA to draw
-	PatternFill(x, y, x + font->Width - 1, y + font->Height - 1, font->charBuffer);
+	while (SPI_DMA_Working);
+	PatternFill(x, y, x + font->Width - 1, y + font->Height - 1, charBuffer[currentCharBuffer]);
+
+	// alternate between the two character buffers so that the next character can be prepared whilst the last one is being copied to the LCD
+	currentCharBuffer = currentCharBuffer == 1 ? 0 : 1;
 }
 
 
@@ -268,7 +274,6 @@ void LCD::DrawCharMem(uint16_t x, uint16_t y, uint16_t memWidth, uint16_t* memBu
 
 void LCD::DrawString(uint16_t x0, uint16_t y0, std::string s, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
 	for (char& c : s) {
-		while (SPI_DMA_Working);
 		DrawChar(x0, y0, c, font, foreground, background);
 		x0 += font->Width;
 	}

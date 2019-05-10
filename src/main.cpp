@@ -2,7 +2,6 @@
 #include "stm32f4xx.h"
 #include <cmath>
 #include <string>
-#include <sstream>
 #include "initialisation.h"
 #include "lcd.h"
 #include "fft.h"
@@ -12,19 +11,16 @@ extern uint32_t SystemCoreClock;
 
 volatile uint16_t OscBufferA[2][DRAWWIDTH], OscBufferB[2][DRAWWIDTH];
 volatile uint16_t prevPixelA = 0, prevPixelB = 0, adcA, oldAdcA, adcB, capturePos = 0, drawPos = 0, bufferSamples = 0;
-volatile bool capturing = false, drawing = false;
+volatile bool freqBelowZero, capturing = false, drawing = false, Encoder1Btn = false, oscFree = false, FFTMode = false;
 volatile uint8_t VertOffsetA = 0, VertOffsetB = 0, captureBufferNumber = 0, drawBufferNumber = 0;
+volatile int8_t encoderPendingL = 0, encoderPendingR = 0;
 volatile int16_t drawOffset[2] {0, 0};
 volatile bool dataAvailable[2] {false, false};
 volatile uint16_t capturedSamples[2] {0, 0};
-volatile bool Encoder1Btn = false, oscFree = false, FFTMode = false;
-volatile int8_t encoderPendingL = 0, encoderPendingR = 0;
-volatile uint32_t debugCount = 0, coverageTimer = 0, coverageTotal = 0;
-volatile uint32_t diff = 0;
+volatile uint32_t diff = 0, debugCount = 0, coverageTimer = 0, coverageTotal = 0;
 volatile float freqFund;
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 volatile uint16_t freqCrossZero, FFTErrors = 0;
-bool freqBelowZero;
 volatile float oscFreq;
 volatile int16_t oldencoderUp = 0, oldencoderDown = 0, encoderUp = 0, encoderDown = 0, encoderVal = 0, encoderState = 0;
 
@@ -32,7 +28,6 @@ volatile int16_t oldencoderUp = 0, oldencoderDown = 0, encoderUp = 0, encoderDow
 volatile int16_t vCalibOffset = -4190;
 volatile float vCalibScale = 1.24f;
 volatile int8_t voltScale = 8;
-
 
 encoderType lEncoderMode = HorizScaleCoarse;
 encoderType rEncoderMode = VoltScale;
@@ -176,15 +171,12 @@ int main(void) {
 
 	lcd.Init();					// Initialize ILI9341 LCD
 	InitSampleAcquisition();
-
 	ui.DrawUI();
 
 	while (1) {
 		fundHarm = fft.harmonic[0];			// for debugging
 
 		ui.handleEncoders();
-
-
 
 		// Fourier Transform
 		if (FFTMode) {
@@ -214,13 +206,10 @@ int main(void) {
 
 			// Check if drawing and that the sample capture is at or ahead of the draw position
 			if (drawing && (drawBufferNumber != captureBufferNumber || capturedSamples[captureBufferNumber] >= drawPos)) {
-				//CP_ON
-				// Draw a black line over previous sample - except at beginning where we shouldn't clear the voltage markers
-				if (drawPos < 27) {
-					lcd.ColourFill(drawPos, 11, drawPos, DRAWHEIGHT - 10, LCD_BLACK);
-				} else {
-					lcd.ColourFill(drawPos, 0, drawPos, DRAWHEIGHT, LCD_BLACK);
-				}
+
+				CP_ON
+				// Draw a black line over previous sample - except at beginning and end where we shouldn't clear the voltage and frequency markers
+				lcd.ColourFill(drawPos, (drawPos < 27 || drawPos > 250 ? 11 : 0), drawPos, DRAWHEIGHT - (drawPos < 27 ? 10: 0), LCD_BLACK);
 
 				// Calculate offset between capture and drawing positions to display correct sample
 				uint16_t calculatedOffset = (drawOffset[drawBufferNumber] + drawPos) % DRAWWIDTH;
@@ -243,12 +232,11 @@ int main(void) {
 				if (freqBelowZero && OscBufferA[drawBufferNumber][calculatedOffset] >= 8192) {		// zero crossing
 					//	second zero crossing - calculate frequency averaged over two passes to smooth
 					if (freqCrossZero > 0) {
-						oscFreq = (oscFreq + (1 / (2.0f * (drawPos - freqCrossZero) * (TIM3->PSC + 1) * (TIM3->ARR + 1) / SystemCoreClock))) / 2;
+						oscFreq = (15 * oscFreq + (1 / (2.0f * (drawPos - freqCrossZero) * (TIM3->PSC + 1) * (TIM3->ARR + 1) / SystemCoreClock))) / 16;
 					}
 					freqCrossZero = drawPos;
 					freqBelowZero = false;
 				}
-
 
 				// draw center line and voltage markers
 				if (drawPos % 4 == 0) {
@@ -282,15 +270,18 @@ int main(void) {
 					}
 				}
 
-				// Write voltage
+
 				if (drawPos == 1) {
+					// Write voltage
 					lcd.DrawString(0, 1, " " + ui.intToString(voltScale) + "v ", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 					lcd.DrawString(0, DRAWHEIGHT - 10, "-" + ui.intToString(voltScale) + "v ", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
+
+					// Write frequency
+					lcd.DrawString(250, 1, ui.floatToString(oscFreq) + "Hz    ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 				}
-				//CP_CAP
+				CP_CAP
 			}
 		}
-
 	}
 }
 
