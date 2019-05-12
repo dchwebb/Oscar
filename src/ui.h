@@ -4,17 +4,20 @@
 #include <sstream>
 #include <cmath>
 #include "lcd.h"
+//#include "fft.h"
 #include "initialisation.h"
 
 extern void ResetSampleAcquisition();
 
 extern LCD lcd;
+//extern FFT fft;
 extern volatile int8_t voltScale, encoderPendingL, encoderPendingR;
 extern volatile int16_t vCalibOffset;
 extern volatile bool Encoder1Btn, FFTMode;
 extern volatile float vCalibScale;
 extern encoderType lEncoderMode, rEncoderMode;
 extern volatile uint32_t debugCount, coverageTotal, coverageTimer;
+extern mode displayMode;
 
 class UI {
 public:

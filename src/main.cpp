@@ -11,7 +11,7 @@ extern uint32_t SystemCoreClock;
 
 volatile uint16_t OscBufferA[2][DRAWWIDTH], OscBufferB[2][DRAWWIDTH];
 volatile uint16_t prevPixelA = 0, prevPixelB = 0, adcA, oldAdcA, adcB, capturePos = 0, drawPos = 0, bufferSamples = 0;
-volatile bool freqBelowZero, capturing = false, drawing = false, Encoder1Btn = false, oscFree = false, FFTMode = false;
+volatile bool freqBelowZero, capturing = false, drawing = false, Encoder1Btn = false, oscFree = false;
 volatile uint8_t VertOffsetA = 0, VertOffsetB = 0, captureBufferNumber = 0, drawBufferNumber = 0;
 volatile int8_t encoderPendingL = 0, encoderPendingR = 0;
 volatile int16_t drawOffset[2] {0, 0};
@@ -31,6 +31,7 @@ volatile int8_t voltScale = 8;
 
 encoderType lEncoderMode = HorizScaleCoarse;
 encoderType rEncoderMode = VoltScale;
+mode displayMode = Waterfall;
 
 LCD lcd;
 FFT fft;
@@ -52,8 +53,8 @@ extern "C"
 
 		TIM3->SR &= ~TIM_SR_UIF;					// clear UIF flag
 
-		if (FFTMode) {
-			if (capturePos == FFTSAMPLES && capturing) {
+		if (displayMode == Fourier || displayMode == Waterfall) {
+			if (capturePos == fft.samples && capturing) {
 				dataAvailable[captureBufferNumber] = true;
 				capturing = false;
 			}
@@ -65,7 +66,7 @@ extern "C"
 			}
 
 
-		} else {
+		} else if (displayMode == Oscilloscope) {
 			// Average the last four ADC readings to smooth noise
 			adcA = ADC_array[0] + ADC_array[2] + ADC_array[4] + ADC_array[6];
 			adcB = ADC_array[1] + ADC_array[3] + ADC_array[5] + ADC_array[7];
@@ -153,6 +154,7 @@ void ResetSampleAcquisition() {
 	ui.DrawUI();
 	capturing = drawing = false;
 	bufferSamples = capturePos = oldAdcA = 0;
+	fft.samples = displayMode == Fourier ? FFTSAMPLES : WATERFALLSAMPLES;
 	TIM3->CR1 |= TIM_CR1_CEN;			// Reenable the sample acquisiton timer
 }
 
@@ -171,6 +173,7 @@ int main(void) {
 
 	lcd.Init();					// Initialize ILI9341 LCD
 	InitSampleAcquisition();
+	ResetSampleAcquisition();
 	ui.DrawUI();
 
 	while (1) {
@@ -178,8 +181,8 @@ int main(void) {
 
 		ui.handleEncoders();
 
-		// Fourier Transform
-		if (FFTMode) {
+		if (displayMode == Fourier || displayMode == Waterfall) {
+
 			if (!capturing && (!dataAvailable[0] || !dataAvailable[1])) {
 				capturing = true;
 				capturePos = 0;
@@ -190,14 +193,17 @@ int main(void) {
 				else if (dataAvailable[1])	drawBufferNumber = 1;
 				else continue;
 
-				fft.runFFT(fft.FFTBuffer[drawBufferNumber]);
+				if (displayMode == Fourier)
+					fft.runFFT(fft.FFTBuffer[drawBufferNumber]);
+				else
+					fft.waterfall(fft.FFTBuffer[drawBufferNumber]);
+
 				dataAvailable[drawBufferNumber] = false;
 			}
 
 
-		} else {
+		} else if (displayMode == Oscilloscope) {
 
-			// Oscilloscope mode
 			if (!drawing && capturing) {					// check if we should start drawing
 				drawBufferNumber = captureBufferNumber;
 				drawing = true;

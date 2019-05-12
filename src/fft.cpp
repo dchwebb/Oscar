@@ -10,15 +10,88 @@ FFT::FFT() {
 void FFT::runFFT(volatile float candSin[]) {
 
 	CP_ON
+	capture(candSin);
+	displayFFT(candSin);
+	CP_CAP
+}
 
-	int bitReverse = 0;
+// Carry out Fast fourier transform
+void FFT::waterfall(volatile float candSin[]) {
 
-	if (std::isnan(candSin[0])) {
-		int susp = 1;
+	CP_ON
+	capture(candSin);
+	displayWaterfall(candSin);
+	CP_CAP
+}
+
+#define SMOOTHSIZE 4
+
+// Carry out Fast fourier transform
+void FFT::displayWaterfall(volatile float candSin[]) {
+	if (waterfallBuffer == 0)
+		lcd.ScreenFill(LCD_BLACK);
+
+	//lcd.ScreenFill(LCD_BLACK);
+	lcd.DrawString(250, 1, ui.intToString(waterfallBuffer), &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+	float hypotenuse;
+	uint16_t hypPos = 0;
+	uint16_t top, lastTop;
+
+	// Cycle through each column in the display and draw
+	for (uint16_t i = 1; i < WATERFALLSIZE; i++) {
+		// calculate hypotenuse ahead of draw position to apply smoothing
+		while (hypPos < i + SMOOTHSIZE && hypPos < WATERFALLSIZE) {
+			hypotenuse = std::sqrt(std::pow(candSin[hypPos], 2) + std::pow(candCos[hypPos], 2));
+			top = WATERFALLDRAWHEIGHT * (1 - (hypotenuse / (128 * WATERFALLSAMPLES)));
+			drawWaterfall[waterfallBuffer][hypPos] = top;
+			if (hypPos == 1) {
+				drawWaterfall[waterfallBuffer][0] = drawWaterfall[waterfallBuffer][1];
+				lastTop = drawWaterfall[waterfallBuffer][0];
+			}
+			hypPos++;
+		}
+
+		if (i == 129) {
+			int susp = 1;
+		}
+
+		// apply smoothing
+		top = 0;
+		int mult;
+		int div = 0;
+		for (int16_t x = i - SMOOTHSIZE; x <= i + SMOOTHSIZE; x++) {
+
+			if (x >= 0 && x < WATERFALLSIZE) {
+				mult = 1 << (SMOOTHSIZE - std::abs(i - x));
+				div += mult;
+				top += mult * drawWaterfall[waterfallBuffer][x];
+			}
+		}
+		top = top / div;
+
+		int xOffset = 40 - waterfallBuffer * 2;
+		int yOffset = waterfallBuffer * 5;
+
+		lcd.DrawLine(i + xOffset, top + yOffset, i + xOffset, lastTop + yOffset, top > 95 ? LCD_LIGHTBLUE : LCD_WHITE);
+		lcd.DrawLine(i + xOffset, std::max(top, lastTop) + yOffset + 1, i + xOffset, WATERFALLDRAWHEIGHT + yOffset + 0, top > 95 ? LCD_BLUE : LCD_GREY);
+
+		//lcd.DrawLine(i, top, i, lastTop, LCD_GREEN);
+		lastTop = top;
 	}
 
+
+
+	waterfallBuffer = (waterfallBuffer + 1) % WATERFALLBUFFERS;
+}
+
+// Carry out Fast fourier transform
+void FFT::capture(volatile float candSin[]) {
+
+	uint16_t bitReverse = 0;
+	uint16_t FFTbits = log2(samples);
+
 	// Bit reverse samples
-	for (int i = 0; i < FFTSAMPLES; i++) {
+	for (int i = 0; i < samples; i++) {
 		// assembly bit reverses i and then rotates right to correct bit length
 		asm("rbit %[result], %[value]\n\t"
 			"ror %[result], %[shift]"
@@ -35,12 +108,12 @@ void FFT::runFFT(volatile float candSin[]) {
 
 	// Step through each column in the butterfly diagram
 	int node = 1;
-	while (node < FFTSAMPLES) {
+	while (node < samples) {
 
 		if (node == 1) {
 
 			// for the first loop the sine and cosine values will be 1 and 0 in all cases, simplifying the logic
-			for (int p1 = 0; p1 < FFTSAMPLES; p1 += 2) {
+			for (int p1 = 0; p1 < samples; p1 += 2) {
 				int p2 = p1 + node;
 
 				float sinP2 = candSin[p2];
@@ -50,10 +123,10 @@ void FFT::runFFT(volatile float candSin[]) {
 				candSin[p1] = candSin[p1] + sinP2;
 				candCos[p1] = 0;
 			}
-		} else if (node == FFTSAMPLES / 2) {
+		} else if (node == samples / 2) {
 
 			// last node - this only needs to calculate the first half of the FFT results as the remainder are redundant
-			for (uint16_t p1 = 1; p1 < FFTSAMPLES; p1++) {
+			for (uint16_t p1 = 1; p1 < samples / 2; p1++) {
 
 				uint16_t b = std::round(p1 * LUTSIZE / (2 * node));
 				float s = SineLUT[b];
@@ -74,7 +147,7 @@ void FFT::runFFT(volatile float candSin[]) {
 				float c = SineLUT[b + LUTSIZE / 4 % LUTSIZE];
 
 				// replace pairs of nodes with updated values
-				for (int p1 = Wx; p1 < FFTSAMPLES; p1 += node * 2) {
+				for (int p1 = Wx; p1 < samples; p1 += node * 2) {
 					int p2 = p1 + node;
 
 					float sinP1 = candSin[p1];
@@ -94,7 +167,11 @@ void FFT::runFFT(volatile float candSin[]) {
 		}
 		node = node * 2;
 	}
+}
 
+
+// Display results of FFT: Combine sine and cosines to get amplitudes and store in buffers, transmitting as each buffer is completed
+void FFT::displayFFT(volatile float candSin[]) {
 
 	harmonic.fill(0);
 	int16_t badFFT = 0, currHarmonic = -1, smearHarmonic = 0;
@@ -104,12 +181,12 @@ void FFT::runFFT(volatile float candSin[]) {
 	std::string s = ui.intToString(std::round(harmonicFreq(1))) + " - " + ui.intToString(harmonicFreq(319)) + "Hz   ";
 	lcd.DrawString(130, DRAWHEIGHT + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 
-	// Draw results: Combine sine and cosines to get amplitudes and store in buffers, transmitting as each buffer is completed
+	// Cycle through each column in the display and draw
 	for (uint16_t i = 1; i <= DRAWWIDTH; i++) {
 		uint16_t harmColour = LCD_BLUE;
 		float hypotenuse = std::sqrt(std::pow(candSin[i], 2) + std::pow(candCos[i], 2));
 
-		// get first four harmonics
+		// get first few harmonics for colour coding and info
 		if (currHarmonic < FFTHARMONICCOLOURS - 1 && hypotenuse > 50000) {
 			if (currHarmonic == -1 || i > smearHarmonic + 1)
 				currHarmonic++;
@@ -167,6 +244,7 @@ void FFT::runFFT(volatile float candSin[]) {
 
 	}
 
+	// autotune attempts to lock the capture to an integer multiple of the fundamental for a clear display
 	if (autoTune && harmonic[0] > 0) {
 		freqFund = harmonicFreq(harmonic[0]);
 
@@ -195,7 +273,7 @@ void FFT::runFFT(volatile float candSin[]) {
 		}
 	}
 
-	CP_CAP
+
 
 }
 

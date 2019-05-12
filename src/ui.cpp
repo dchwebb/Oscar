@@ -108,7 +108,18 @@ void UI::handleEncoders() {
 
 	if (Encoder1Btn) {
 		Encoder1Btn = false;
-		FFTMode = !FFTMode;
+		switch (displayMode) {
+		case Oscilloscope :
+			displayMode = Fourier;
+			break;
+		case Fourier :
+			displayMode = Waterfall;
+			break;
+		case Waterfall :
+			displayMode = Oscilloscope;
+			break;
+		}
+
 		ResetSampleAcquisition();
 	}
 }
