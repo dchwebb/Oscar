@@ -4,6 +4,13 @@ FFT::FFT() {
 	for (int s = 0; s < LUTSIZE; s++){
 		SineLUT[s] = sin(s * 2.0f * M_PI / LUTSIZE);
 	}
+
+	// clear the waterfall buffers
+	for (uint16_t w = 0; w < WATERFALLBUFFERS; ++w) {
+		for (uint16_t i = 0; i < WATERFALLSIZE; i++) {
+			drawWaterfall[w][i]  = WATERFALLDRAWHEIGHT;
+		}
+	}
 }
 
 // Carry out Fast fourier transform
@@ -26,41 +33,35 @@ void FFT::waterfall(volatile float candSin[]) {
 
 #define SMOOTHSIZE 4
 
+inline float FFT::hypotenuse(volatile float sinArray[], uint16_t& pos) {
+	return std::sqrt(std::pow(sinArray[pos], 2) + std::pow(candCos[pos], 2));
+}
+
 // Carry out Fast fourier transform
 void FFT::displayWaterfall(volatile float candSin[]) {
 	if (waterfallBuffer == 0)
 		lcd.ScreenFill(LCD_BLACK);
 
-	//lcd.ScreenFill(LCD_BLACK);
 	lcd.DrawString(250, 1, ui.intToString(waterfallBuffer), &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
-	float hypotenuse;
 	uint16_t hypPos = 0;
-	uint16_t top, lastTop;
+	uint16_t top, mult, div, sPos = 0;
+	uint16_t smoothVals[SMOOTHSIZE];
 
 	// Cycle through each column in the display and draw
 	for (uint16_t i = 1; i < WATERFALLSIZE; i++) {
 		// calculate hypotenuse ahead of draw position to apply smoothing
 		while (hypPos < i + SMOOTHSIZE && hypPos < WATERFALLSIZE) {
-			hypotenuse = std::sqrt(std::pow(candSin[hypPos], 2) + std::pow(candCos[hypPos], 2));
-			top = WATERFALLDRAWHEIGHT * (1 - (hypotenuse / (128 * WATERFALLSAMPLES)));
+			top = WATERFALLDRAWHEIGHT * (1 - (hypotenuse(candSin, hypPos) / (128 * WATERFALLSAMPLES)));
 			drawWaterfall[waterfallBuffer][hypPos] = top;
 			if (hypPos == 1) {
-				drawWaterfall[waterfallBuffer][0] = drawWaterfall[waterfallBuffer][1];
-				lastTop = drawWaterfall[waterfallBuffer][0];
+				drawWaterfall[waterfallBuffer][0] = top;
 			}
 			hypPos++;
 		}
 
-		if (i == 129) {
-			int susp = 1;
-		}
-
-		// apply smoothing
-		top = 0;
-		int mult;
-		int div = 0;
+		// apply smoothing - uses binary weighting around center point eg: (1w(i-2) + 2w(i-1) + 4w(i) + 2w(i+1) + 1w(i+2)) / (1+2+4+2+1)
+		top = div = 0;
 		for (int16_t x = i - SMOOTHSIZE; x <= i + SMOOTHSIZE; x++) {
-
 			if (x >= 0 && x < WATERFALLSIZE) {
 				mult = 1 << (SMOOTHSIZE - std::abs(i - x));
 				div += mult;
@@ -69,19 +70,38 @@ void FFT::displayWaterfall(volatile float candSin[]) {
 		}
 		top = top / div;
 
-		int xOffset = 40 - waterfallBuffer * 2;
-		int yOffset = waterfallBuffer * 5;
+		// store smoothed values back to waterfallBuffer once all smoothing calculations have been done on that value
+		smoothVals[sPos] = top;
+		sPos = (sPos + 1) % SMOOTHSIZE;
+		if (i >= SMOOTHSIZE) {
+			drawWaterfall[waterfallBuffer][i - SMOOTHSIZE] = smoothVals[sPos];
+		}
 
-		lcd.DrawLine(i + xOffset, top + yOffset, i + xOffset, lastTop + yOffset, top > 95 ? LCD_LIGHTBLUE : LCD_WHITE);
-		lcd.DrawLine(i + xOffset, std::max(top, lastTop) + yOffset + 1, i + xOffset, WATERFALLDRAWHEIGHT + yOffset + 0, top > 95 ? LCD_BLUE : LCD_GREY);
-
-		//lcd.DrawLine(i, top, i, lastTop, LCD_GREEN);
-		lastTop = top;
 	}
 
+	// draw all readings
+	uint8_t lastTop;
+	for (uint16_t w = 0; w < WATERFALLBUFFERS; ++w) {
+		// work backwards through the buffers so the newest buffer is drawn at the back and older buffers move forward
+		int16_t buff = waterfallBuffer - w;
 
+		if (buff < 0)	buff += WATERFALLBUFFERS;
+		lastTop = drawWaterfall[buff][0];
 
+		for (uint16_t i = 0; i < WATERFALLSIZE; i++) {
+
+			int xOffset = 40 - w * 2;
+			int yOffset = w * 5;
+
+			lcd.DrawLine(i + xOffset, drawWaterfall[buff][i] + yOffset, i + xOffset, lastTop + yOffset, drawWaterfall[buff][i] > 95 ? LCD_LIGHTBLUE : LCD_WHITE);
+			lcd.DrawLine(i + xOffset, std::max(drawWaterfall[buff][i], lastTop) + yOffset + 1, i + xOffset, WATERFALLDRAWHEIGHT + yOffset + 0, drawWaterfall[buff][i] > 95 ? LCD_BLUE : LCD_GREY);
+
+			lastTop = drawWaterfall[buff][i];
+		}
+
+	}
 	waterfallBuffer = (waterfallBuffer + 1) % WATERFALLBUFFERS;
+
 }
 
 // Carry out Fast fourier transform

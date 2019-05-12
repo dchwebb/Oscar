@@ -52,7 +52,7 @@ private:
 	void capture(volatile float candSin[]);
 	void displayFFT(volatile float candSin[]);
 	void displayWaterfall(volatile float candSin[]);
-
+	float hypotenuse(volatile float sinArray[], uint16_t& pos);
 
 };
 
