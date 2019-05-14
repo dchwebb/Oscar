@@ -31,7 +31,7 @@ class FFT {
 public:
 	float FFTBuffer[2][FFTSAMPLES];
 	uint16_t samples = FFTSAMPLES;
-	bool autoTune = false;
+	bool autoTune = true;
 	std::array<uint16_t, FFTHARMONICCOLOURS> harmonic;
 
 	FFT();
