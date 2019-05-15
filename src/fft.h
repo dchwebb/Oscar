@@ -13,12 +13,10 @@
 #define FFTDRAWAFTERCALC true
 #define FFTHARMONICCOLOURS 5
 
-#define WATERFALLDRAWHEIGHT 100
+#define WATERFALLDRAWHEIGHT 80
 #define WATERFALLSAMPLES 512
 #define WATERFALLSIZE 256
-#define WATERFALLBUFFERS 20
-//constexpr int FFTbits = log2(FFTSAMPLES);
-//constexpr float FFTWidth = (FFTSAMPLES / 2) > DRAWWIDTH ? 1 : (float)DRAWWIDTH / (FFTSAMPLES / 2);
+#define WATERFALLBUFFERS 26
 
 extern LCD lcd;
 extern UI ui;

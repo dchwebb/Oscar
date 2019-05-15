@@ -39,13 +39,8 @@ inline float FFT::hypotenuse(volatile float sinArray[], uint16_t& pos) {
 
 // Carry out Fast fourier transform
 void FFT::displayWaterfall(volatile float candSin[]) {
-	//if (waterfallBuffer == 0)
-		//lcd.ScreenFill(LCD_BLACK);
 
-	//lcd.DrawString(250, 1, ui.intToString(waterfallBuffer), &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
-
-	uint16_t hypPos = 0;
-	uint16_t top, mult, div, sPos = 0;
+	uint16_t top, mult, div, sPos = 0, hypPos = 0;
 	uint16_t smoothVals[SMOOTHSIZE];
 
 	// Cycle through each column in the display and draw
@@ -82,72 +77,44 @@ void FFT::displayWaterfall(volatile float candSin[]) {
 
 	}
 
-/*
-	// draw all readings
-	// clear display buffer
-	for (uint16_t b = 0; b < (DRAWHEIGHT + 1) * FFTDRAWBUFFERWIDTH; ++b) {
-		FFTDrawBuffer[0][b] = LCD_BLACK;
-		FFTDrawBuffer[1][b] = LCD_BLACK;
-	}
-*/
-
-	/*// draw each buffer using separate lines (slow and flickery)
-	uint8_t lastTop;
-	for (uint16_t w = 0; w < WATERFALLBUFFERS; ++w) {
-		// work backwards through the buffers so the newest buffer is drawn at the back and older buffers move forward
-		int16_t buff = waterfallBuffer - w;
-
-		if (buff < 0)	buff += WATERFALLBUFFERS;
-		lastTop = drawWaterfall[buff][0];
-
-		for (uint16_t i = 0; i < WATERFALLSIZE; i++) {
-
-			int xOffset = 40 - w * 2;
-			int yOffset = w * 5;
-
-			lcd.DrawLine(i + xOffset, drawWaterfall[buff][i] + yOffset, i + xOffset, lastTop + yOffset, drawWaterfall[buff][i] > 95 ? LCD_LIGHTBLUE : LCD_WHITE);
-			lcd.DrawLine(i + xOffset, std::max(drawWaterfall[buff][i], lastTop) + yOffset + 1, i + xOffset, WATERFALLDRAWHEIGHT + yOffset + 0, drawWaterfall[buff][i] > 95 ? LCD_BLUE : LCD_GREY);
-
-			lastTop = drawWaterfall[buff][i];
-		}
-
-	}*/
-
-
 	waterfallBuffer = (waterfallBuffer + 1) % WATERFALLBUFFERS;
-	//lcd.ScreenFill(LCD_BLACK);
 
+	int16_t h0, h1;
 
 	// Cycle through each column in the display and draw
 	for (uint16_t i = 1; i <= DRAWWIDTH; i++) {
 		uint8_t FFTDrawBufferNumber = (((i - 1) / FFTDRAWBUFFERWIDTH) % 2 == 0) ? 0 : 1;
-		uint16_t lastTop, vPos = DRAWHEIGHT;		// track the vertical position to apply blanking or skip drawing rows as required
+		uint16_t vPos = DRAWHEIGHT;		// track the vertical position to apply blanking or skip drawing rows as required
 
-		// work forwards through the buffers so the oldest buffer is drawn first at the front older buffers move forward
+		// work forwards through the buffers so the oldest buffer is drawn first at the front, newer buffers move forward
 		for (uint16_t w = 0; w < WATERFALLBUFFERS; ++w) {
 
+			uint16_t greenShade = (63 - w * 2) << 5;
+
 			int16_t buff = (waterfallBuffer + w) % WATERFALLBUFFERS;
-			int xOffset = w * 2;
-			int yOffset = (WATERFALLBUFFERS - w) * 5;
+			int xOffset = w * 2 + 3;
+			int yOffset = (WATERFALLBUFFERS - w) * 5 - 12;
 
 			// check that buffer is visible after applying offset
 			if (i > xOffset && i < WATERFALLSIZE + xOffset) {
 
-				top = drawWaterfall[buff][i - xOffset] + yOffset;
-				lastTop = drawWaterfall[buff][i - xOffset - 1] + yOffset;
+				h1 = drawWaterfall[buff][i - xOffset] + yOffset;
+				h0 = drawWaterfall[buff][i - xOffset - 1] + yOffset;
 
-				while (vPos >= top  || vPos >= lastTop) {
+				if (h0 > 213 || h1 > 213) {
+					int susp = 1;
+				}
+
+				while (vPos > 0 && (vPos >= h1 || vPos >= h0)) {
 
 					// draw column into memory buffer
 					uint16_t buffPos = vPos * FFTDRAWBUFFERWIDTH + ((i - 1) % FFTDRAWBUFFERWIDTH);
 
-					// depending on harmonic height draw either harmonic or black, using different colours to indicate main harmonics
-					if (vPos > top && vPos > lastTop) {
+					// depending on harmonic height draw either green or black, using darker shades of green at the back
+					if (vPos > h1 && vPos > h0) {
 						FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = LCD_BLACK;
-						//lcd.DrawPixel(i, h, LCD_BLACK);
 					} else {
-						FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = LCD_GREEN;
-						//lcd.DrawPixel(i, h, LCD_GREEN);
+						FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = greenShade;
 					}
 					vPos--;
 
