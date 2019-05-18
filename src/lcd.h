@@ -93,7 +93,6 @@ struct FontData {
 	const uint8_t Width;    // Font width in pixels
 	const uint8_t Height;   // Font height in pixels
 	const uint16_t *data;	// Pointer to data font data array
-	//uint16_t* charBuffer;
 };
 
 
@@ -124,8 +123,7 @@ public:
 	void Command(const uint8_t& data);
 
 private:
-	//uint16_t charSmallBuffer[7 * 10];
-	//uint16_t charMediumBuffer[11 * 18];
+
 	uint16_t charBuffer[2][16 * 26];
 	uint8_t currentCharBuffer = 0;
 

@@ -8,7 +8,7 @@ FFT::FFT() {
 	// clear the waterfall buffers
 	for (uint16_t w = 0; w < WATERFALLBUFFERS; ++w) {
 		for (uint16_t i = 0; i < WATERFALLSIZE; i++) {
-			drawWaterfall[w][i]  = WATERFALLDRAWHEIGHT;
+			drawWaterfall[w][i] = WATERFALLDRAWHEIGHT;
 		}
 	}
 }
@@ -16,45 +16,52 @@ FFT::FFT() {
 // Carry out Fast fourier transform
 void FFT::runFFT(volatile float candSin[]) {
 
-	CP_ON
-	capture(candSin);
-	displayFFT(candSin);
 	CP_CAP
+	CP_ON
+	calcFFT(candSin);
+	displayFFT(candSin);
+
 }
 
 // Carry out Fast fourier transform
 void FFT::waterfall(volatile float candSin[]) {
 
-	CP_ON
-	capture(candSin);
-	displayWaterfall(candSin);
 	CP_CAP
+	CP_ON
+	calcFFT(candSin);
+	displayWaterfall(candSin);
 }
 
 #define SMOOTHSIZE 4
 
-inline float FFT::hypotenuse(volatile float sinArray[], uint16_t& pos) {
-	return std::sqrt(std::pow(sinArray[pos], 2) + std::pow(candCos[pos], 2));
-}
 
 // Carry out Fast fourier transform
 void FFT::displayWaterfall(volatile float candSin[]) {
 
-	uint16_t top, mult, div, sPos = 0, hypPos = 0;
+	uint16_t badFFT = 0, top, mult, div, sPos = 0, hypPos = 0;
 	uint16_t smoothVals[SMOOTHSIZE];
 
 	// Cycle through each column in the display and draw
 	for (uint16_t i = 1; i < WATERFALLSIZE; i++) {
 		// calculate hypotenuse ahead of draw position to apply smoothing
 		while (hypPos < i + SMOOTHSIZE && hypPos < WATERFALLSIZE) {
-			top = WATERFALLDRAWHEIGHT * (1 - (hypotenuse(candSin, hypPos) / (128 * WATERFALLSAMPLES)));
+			top = WATERFALLDRAWHEIGHT * (1 - (std::hypot(candSin[hypPos], candCos[hypPos]) / (128 * WATERFALLSAMPLES)));
+
+			if (top < 30) {
+				badFFT++;					// every so often the FFT fails with extremely large numbers in all positions - just abort the draw and resample
+				if (badFFT > 200) {
+					FFTErrors++;
+					dataAvailable[drawBufferNumber] = false;
+					return;
+				}
+			}
+
 			drawWaterfall[waterfallBuffer][hypPos] = top;
 			if (hypPos == 1) {
 				drawWaterfall[waterfallBuffer][0] = top;
 			}
 			hypPos++;
 		}
-
 
 		// apply smoothing - uses binary weighting around center point eg: (1w(i-2) + 2w(i-1) + 4w(i) + 2w(i+1) + 1w(i+2)) / (1+2+4+2+1)
 		top = div = 0;
@@ -76,6 +83,8 @@ void FFT::displayWaterfall(volatile float candSin[]) {
 
 
 	}
+
+	sampleCapture(true);			// Signal to Interrupt that new capture can start
 
 	waterfallBuffer = (waterfallBuffer + 1) % WATERFALLBUFFERS;
 
@@ -100,10 +109,6 @@ void FFT::displayWaterfall(volatile float candSin[]) {
 
 				h1 = drawWaterfall[buff][i - xOffset] + yOffset;
 				h0 = drawWaterfall[buff][i - xOffset - 1] + yOffset;
-
-				if (h0 > 213 || h1 > 213) {
-					int susp = 1;
-				}
 
 				while (vPos > 0 && (vPos >= h1 || vPos >= h0)) {
 
@@ -136,11 +141,13 @@ void FFT::displayWaterfall(volatile float candSin[]) {
 	}
 }
 
+
 // Carry out Fast fourier transform
-void FFT::capture(volatile float candSin[]) {
+void FFT::calcFFT(volatile float candSin[]) {
 
 	uint16_t bitReverse = 0;
 	uint16_t FFTbits = log2(samples);
+
 
 	// Bit reverse samples
 	for (int i = 0; i < samples; i++) {
@@ -166,15 +173,15 @@ void FFT::capture(volatile float candSin[]) {
 
 			// for the first loop the sine and cosine values will be 1 and 0 in all cases, simplifying the logic
 			for (int p1 = 0; p1 < samples; p1 += 2) {
+
 				int p2 = p1 + node;
-
 				float sinP2 = candSin[p2];
-
 				candSin[p2] = candSin[p1] - sinP2;
 				candCos[p2] = 0;
 				candSin[p1] = candSin[p1] + sinP2;
 				candCos[p1] = 0;
 			}
+
 		} else if (node == samples / 2) {
 
 			// last node - this only needs to calculate the first half of the FFT results as the remainder are redundant
@@ -191,8 +198,9 @@ void FFT::capture(volatile float candSin[]) {
 			}
 
 		} else {
-			// Step through each value of the W function
+			// All but first and last nodes: step through each value of the W function
 			for (int Wx = 0; Wx < node; Wx++) {
+
 				// Use Sine LUT to generate sine and cosine values faster than sine or cosine functions
 				int b = std::round(Wx * LUTSIZE / (2 * node));
 				float s = SineLUT[b];
@@ -219,6 +227,8 @@ void FFT::capture(volatile float candSin[]) {
 		}
 		node = node * 2;
 	}
+
+	FFTInfo();		// display frequency spread
 }
 
 
@@ -229,14 +239,10 @@ void FFT::displayFFT(volatile float candSin[]) {
 	int16_t badFFT = 0, currHarmonic = -1, smearHarmonic = 0;
 	maxHyp = 0;
 
-	// display frequency spread
-	std::string s = ui.intToString(std::round(harmonicFreq(1))) + " - " + ui.intToString(harmonicFreq(319)) + "Hz   ";
-	lcd.DrawString(130, DRAWHEIGHT + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
-
 	// Cycle through each column in the display and draw
 	for (uint16_t i = 1; i <= DRAWWIDTH; i++) {
 		uint16_t harmColour = LCD_BLUE;
-		float hypotenuse = std::sqrt(std::pow(candSin[i], 2) + std::pow(candCos[i], 2));
+		float hypotenuse = std::hypot(candSin[i], candCos[i]);
 
 		// get first few harmonics for colour coding and info
 		if (currHarmonic < FFTHARMONICCOLOURS - 1 && hypotenuse > 50000) {
@@ -268,6 +274,7 @@ void FFT::displayFFT(volatile float candSin[]) {
 				badFFT++;					// every so often the FFT fails with extremely large numbers in all positions - just abort the draw and resample
 				if (badFFT > 10000) {
 					FFTErrors++;
+					dataAvailable[drawBufferNumber] = false;
 					return;
 				}
 				FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = harmColour;
@@ -281,11 +288,13 @@ void FFT::displayFFT(volatile float candSin[]) {
 
 			// if drawing the last buffer display the harmonic frequencies at the top right
 			if (i > DRAWWIDTH - FFTDRAWBUFFERWIDTH) {
+				sampleCapture(true);			// Signal to Interrupt that new capture can start
+
 				for (uint8_t h = 0; h < FFTHARMONICCOLOURS; ++h) {
 					if (harmonic[h] == 0)	break;
 
 					uint16_t harmonicNumber = round((float)harmonic[h] / harmonic[0]);
-					std::string harmonicInfo = ui.intToString(harmonicNumber) + " " + ui.floatToString(harmonicFreq(harmonic[h])) + "Hz";
+					std::string harmonicInfo = ui.intToString(harmonicNumber) + " " + ui.floatToString(harmonicFreq(harmonic[h]), false) + "Hz";
 					lcd.DrawStringMem(0, 20 + 20 * h, FFTDRAWBUFFERWIDTH, FFTDrawBuffer[FFTDrawBufferNumber], harmonicInfo, &lcd.Font_Small, harmColours[h], LCD_BLACK);
 
 					debugCount = DMA2_Stream6->NDTR;			// tracks how many items left in DMA draw buffer
@@ -301,7 +310,7 @@ void FFT::displayFFT(volatile float candSin[]) {
 		freqFund = harmonicFreq(harmonic[0]);
 
 		// work out which harmonic we want the fundamental to be - to adjust the sampling rate so a change in ARR affects the tuning of the FFT proportionally
-		uint16_t targFund = std::max(std::round(freqFund / 10), 12.0f);
+		uint16_t targFund = std::max(std::round(freqFund / 10), 8.0f);
 
 		// take the timer ARR, divide by fundamental to get new ARR setting tuned fundamental to target harmonic
 		if (std::abs(targFund - harmonic[0]) > 1)	newARR = targFund * TIM3->ARR / harmonic[0];
@@ -313,10 +322,8 @@ void FFT::displayFFT(volatile float candSin[]) {
 
 		// apply some hysteresis to avoid jumping around the target - the hysteresis needs to be scaled to the frequency
 		if (sampleAfter > sampleBefore + 2 * freqFund * targFund) {
-			diff = sampleAfter - sampleBefore;
 			newARR -= 1;
 		} else if (sampleBefore > sampleAfter + 2 * freqFund * targFund) {
-			diff = sampleBefore - sampleAfter;
 			newARR += 1;
 		}
 
@@ -324,11 +331,34 @@ void FFT::displayFFT(volatile float candSin[]) {
 			TIM3->ARR = newARR;
 		}
 	}
-
-
-
 }
 
 inline float FFT::harmonicFreq(uint16_t harmonicNumber) {
 	return ((float)SystemCoreClock * harmonicNumber) / (2 * FFTSAMPLES * (TIM3->PSC + 1) * (TIM3->ARR + 1));
+}
+
+
+void FFT::sampleCapture(bool clearBuffer) {
+	extern bool capturing;
+	extern uint16_t capturePos;
+
+	if (clearBuffer)
+		dataAvailable[drawBufferNumber] = false;
+
+	if (!capturing && (!dataAvailable[0] || !dataAvailable[1])) {
+		capturing = true;
+		capturePos = 0;
+		captureBufferNumber = dataAvailable[0] ? 1 : 0;
+	}
+
+}
+
+void FFT::FFTInfo(void) {
+
+	//std::string s = ui.intToString(std::round(harmonicFreq(1))) + " - " + ui.intToString(harmonicFreq(319)) + "Hz   ";
+	std::string s = ui.floatToString(harmonicFreq(1), true) + " - " + ui.floatToString(harmonicFreq(319), true) + "Hz  ";
+	if (s != CurrentHertz) {
+		lcd.DrawString(120, DRAWHEIGHT + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+		CurrentHertz = s;
+	}
 }

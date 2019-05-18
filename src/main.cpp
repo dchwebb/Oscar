@@ -15,9 +15,9 @@ volatile bool freqBelowZero, capturing = false, drawing = false, Encoder1Btn = f
 volatile uint8_t VertOffsetA = 0, VertOffsetB = 0, captureBufferNumber = 0, drawBufferNumber = 0;
 volatile int8_t encoderPendingL = 0, encoderPendingR = 0;
 volatile int16_t drawOffset[2] {0, 0};
-volatile bool dataAvailable[2] {false, false};
+//volatile bool dataAvailable[2] {false, false};
 volatile uint16_t capturedSamples[2] {0, 0};
-volatile uint32_t diff = 0, debugCount = 0, coverageTimer = 0, coverageTotal = 0;
+volatile uint32_t debugCount = 0, coverageTimer = 0, coverageTotal = 0, debugNoBuff = 0;
 volatile float freqFund;
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 volatile uint16_t freqCrossZero, FFTErrors = 0;
@@ -29,8 +29,6 @@ volatile int16_t vCalibOffset = -4190;
 volatile float vCalibScale = 1.24f;
 volatile int8_t voltScale = 8;
 
-encoderType lEncoderMode = HorizScaleCoarse;
-encoderType rEncoderMode = VoltScale;
 mode displayMode = Waterfall;
 
 LCD lcd;
@@ -55,7 +53,7 @@ extern "C"
 
 		if (displayMode == Fourier || displayMode == Waterfall) {
 			if (capturePos == fft.samples && capturing) {
-				dataAvailable[captureBufferNumber] = true;
+				fft.dataAvailable[captureBufferNumber] = true;
 				capturing = false;
 			}
 
@@ -148,14 +146,31 @@ extern "C"
 }
 
 
-void ResetSampleAcquisition() {
-	TIM3->CR1 &= ~TIM_CR1_CEN;			// Disable the sample acquisiton timer
+void ResetMode() {
+	TIM3->CR1 &= ~TIM_CR1_CEN;				// Disable the sample acquisiton timer
+
 	lcd.ScreenFill(LCD_BLACK);
+	switch (displayMode) {
+	case Oscilloscope :
+		ui.EncoderModeL = HorizScaleCoarse;
+		ui.EncoderModeR = VoltScale;
+		break;
+	case Fourier :
+		ui.EncoderModeL = HorizScaleCoarse;
+		ui.EncoderModeR = FFTAutoTune;
+		break;
+	case Waterfall :
+		ui.EncoderModeL = HorizScaleCoarse;
+		break;
+	}
 	ui.DrawUI();
+
 	capturing = drawing = false;
 	bufferSamples = capturePos = oldAdcA = 0;
+	fft.dataAvailable[0] = fft.dataAvailable[1] = false;
 	fft.samples = displayMode == Fourier ? FFTSAMPLES : WATERFALLSAMPLES;
-	TIM3->CR1 |= TIM_CR1_CEN;			// Reenable the sample acquisiton timer
+
+	TIM3->CR1 |= TIM_CR1_CEN;				// Reenable the sample acquisiton timer
 }
 
 inline uint16_t CalcVertOffset(volatile uint16_t& vPos, const uint16_t& vOffset) {
@@ -163,17 +178,17 @@ inline uint16_t CalcVertOffset(volatile uint16_t& vPos, const uint16_t& vOffset)
 }
 
 int main(void) {
-	SystemInit();				// Activates floating point coprocessor and resets clock
-//	SystemClock_Config();		// Configure the clock and PLL - NB Currently done in SystemInit but will need updating for production board
-	SystemCoreClockUpdate();	// Update SystemCoreClock (system clock frequency) derived from settings of oscillators, prescalers and PLL
-	InitCoverageTimer();		// Timer 4 only activated/deactivated when CP_ON/CP_CAP macros are used
+	SystemInit();							// Activates floating point coprocessor and resets clock
+//	SystemClock_Config();					// Configure the clock and PLL - NB Currently done in SystemInit but will need updating for production board
+	SystemCoreClockUpdate();				// Update SystemCoreClock (system clock frequency) derived from settings of oscillators, prescalers and PLL
+	InitCoverageTimer();					// Timer 4 only activated/deactivated when CP_ON/CP_CAP macros are used
 	InitLCDHardware();
 	InitADC();
 	InitEncoders();
 
-	lcd.Init();					// Initialize ILI9341 LCD
+	lcd.Init();								// Initialize ILI9341 LCD
 	InitSampleAcquisition();
-	ResetSampleAcquisition();
+	ResetMode();
 	ui.DrawUI();
 
 	while (1) {
@@ -183,28 +198,22 @@ int main(void) {
 
 		if (displayMode == Fourier || displayMode == Waterfall) {
 
-			if (!capturing && (!dataAvailable[0] || !dataAvailable[1])) {
-				capturing = true;
-				capturePos = 0;
-				captureBufferNumber = dataAvailable[0] ? 1 : 0;
-			} else {
-				// select correct draw buffer based on whether buffer 0 or 1 contains data
-				if (dataAvailable[0])		drawBufferNumber = 0;
-				else if (dataAvailable[1])	drawBufferNumber = 1;
-				else continue;
+			fft.sampleCapture(false);									// checks if ready to start new capture
 
-				if (displayMode == Fourier)
+			if (fft.dataAvailable[0] || fft.dataAvailable[1]) {
+
+				drawBufferNumber = fft.dataAvailable[0] ? 0 : 1;		// select correct draw buffer based on whether buffer 0 or 1 contains data
+				if (displayMode == Fourier) {
 					fft.runFFT(fft.FFTBuffer[drawBufferNumber]);
+				}
 				else
 					fft.waterfall(fft.FFTBuffer[drawBufferNumber]);
-
-				dataAvailable[drawBufferNumber] = false;
 			}
 
 
 		} else if (displayMode == Oscilloscope) {
 
-			if (!drawing && capturing) {					// check if we should start drawing
+			if (!drawing && capturing) {								// check if we should start drawing
 				drawBufferNumber = captureBufferNumber;
 				drawing = true;
 				drawPos = 0;
@@ -283,7 +292,7 @@ int main(void) {
 					lcd.DrawString(0, DRAWHEIGHT - 10, "-" + ui.intToString(voltScale) + "v ", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 
 					// Write frequency
-					lcd.DrawString(250, 1, ui.floatToString(oscFreq) + "Hz    ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+					lcd.DrawString(250, 1, ui.floatToString(oscFreq, false) + "Hz    ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 				}
 				CP_CAP
 			}

@@ -9,102 +9,59 @@ void UI::DrawUI() {
 	lcd.ColourFill(230, DRAWHEIGHT + 1, 230, 239, LCD_GREY);
 	lcd.ColourFill(319, DRAWHEIGHT + 1, 319, 239, LCD_GREY);
 
-	std::string label;
+	lcd.DrawString(10, DRAWHEIGHT + 8, EncoderLabel(EncoderModeL), &lcd.Font_Small, LCD_GREY, LCD_BLACK);
+	lcd.DrawString(240, DRAWHEIGHT + 8, EncoderLabel(EncoderModeR), &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 
-	//CP_ON
+	if (displayMode == Oscilloscope) {
+		std::string s = floatToString(640000.0f * (TIM3->PSC + 1) * (TIM3->ARR + 1) / SystemCoreClock, false) + "ms    ";
+		lcd.DrawString(140, DRAWHEIGHT + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+	}
+}
 
-	switch (lEncoderMode) {
+
+void UI::MenuAction(encoderType type, int8_t val) {
+	int16_t adj;
+	switch (type) {
 	case HorizScaleCoarse :
-		label = "Zoom Horiz";
+		adj = TIM3->ARR + 50 * val;
+		if (adj > 0 && adj < 6000)
+			TIM3->ARR = adj;
+		DrawUI();
 		break;
 	case HorizScaleFine :
-		label = "Zoom Horiz";
-	break;
-	case CalibVertScale :
-		label = "V Calib";
-		break;
-	case VoltScale :
-		label = "Zoom Vert";
-	default:
-	  break;
-	}
-	lcd.DrawString(10, DRAWHEIGHT + 8, label, &lcd.Font_Small, LCD_GREY, LCD_BLACK);
-
-	switch (rEncoderMode) {
-	case HorizScaleCoarse :
-		label = "Zoom Horiz";
+		TIM3->ARR += val;
+		DrawUI();
 		break;
 	case CalibVertOffset :
-		label = "Vert Offset";
+		vCalibOffset += 50 * val;
+		break;
+	case CalibVertScale :
+		vCalibScale += val * .01;
 		break;
 	case VoltScale :
-		label = "Zoom Vert";
+		voltScale += val;
+		voltScale = std::max(std::min((int)voltScale, 8), 1);
 		break;
+	case FFTAutoTune :
+		fft.autoTune = !fft.autoTune;
+		DrawUI();
+		break;
+
 	default:
 	  break;
 	}
-	lcd.DrawString(240, DRAWHEIGHT + 8, label, &lcd.Font_Small, LCD_GREY, LCD_BLACK);
-
-	std::string s = floatToString(640000.0f * (TIM3->PSC + 1) * (TIM3->ARR + 1) / SystemCoreClock) + "ms    ";
-	lcd.DrawString(140, DRAWHEIGHT + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
-
-	//CP_CAP
-}
-
-std::string UI::floatToString(float f) {
-	std::stringstream ss;
-	ss << (int16_t)std::round(f * 10);
-	std::string s = ss.str();
-	s.insert(s.length() - 1, ".");
-	return s;
-}
-
-std::string UI::intToString(uint16_t v) {
-	std::stringstream ss;
-	ss << v;
-	return ss.str();
 }
 
 void UI::handleEncoders() {
 	if (encoderPendingL && (GPIOE->IDR & GPIO_IDR_IDR_11) && (GPIOE->IDR & GPIO_IDR_IDR_10)) {
-		int16_t adj;
-		switch (lEncoderMode) {
-		case HorizScaleCoarse :
-			adj = TIM3->ARR + 50 * encoderPendingL;
-			if (adj > 0 && adj < 6000)	TIM3->ARR = adj;
-			encoderPendingL = 0;
-			DrawUI();
-			break;
-		case HorizScaleFine :
-			TIM3->ARR += encoderPendingL;
-			encoderPendingL = 0;
-			DrawUI();
-			break;
-		case CalibVertScale :
-			vCalibScale += encoderPendingL * .01;
-			encoderPendingL = 0;
-			break;
-		default:
-		  break;
-		}
+		MenuAction(EncoderModeL, encoderPendingL);
+		encoderPendingL = 0;
 	}
 
 	if (encoderPendingR && (GPIOE->IDR & GPIO_IDR_IDR_8) && (GPIOE->IDR & GPIO_IDR_IDR_9)) {
-		switch (rEncoderMode) {
-		case CalibVertOffset :
-			vCalibOffset += 50 * encoderPendingR;
-			encoderPendingR = 0;
-			break;
-		case VoltScale :
-			voltScale += encoderPendingR;
-			voltScale = std::max(std::min((int)voltScale, 8), 1);
-			encoderPendingR = 0;
-			break;
-		default:
-		  break;
-		}
+		MenuAction(EncoderModeR, encoderPendingR);
+		encoderPendingR = 0;
 	}
-
 
 	if (Encoder1Btn) {
 		Encoder1Btn = false;
@@ -119,7 +76,53 @@ void UI::handleEncoders() {
 			displayMode = Oscilloscope;
 			break;
 		}
-
-		ResetSampleAcquisition();
+		ResetMode();
 	}
+}
+
+std::string UI::EncoderLabel(encoderType type) {
+	switch (type) {
+	case HorizScaleCoarse :
+		return "Zoom Horiz";
+	case HorizScaleFine :
+		return "Zoom Horiz";
+	case CalibVertScale :
+		return "V Calib";
+	case CalibVertOffset :
+		return "Vert Offset";
+	case VoltScale :
+		return "Zoom Vert";
+	case FFTAutoTune :
+		return "Tune " + std::string(fft.autoTune ? "auto " : "off");
+	default:
+	  return "";
+	}
+}
+
+
+std::string UI::floatToString(float f, bool smartFormat) {
+	std::string s;
+	std::stringstream ss;
+
+	if (smartFormat && f > 10000) {
+		ss << (int16_t)std::round(f / 100);
+		s = ss.str();
+		s.insert(s.length() - 1, ".");
+		s+= "k";
+	} else if (smartFormat && f > 1000) {
+		ss << (int16_t)std::round(f);
+		s = ss.str();
+	} else	{
+		ss << (int16_t)std::round(f * 10);
+		s = ss.str();
+		s.insert(s.length() - 1, ".");
+	}
+	return s;
+}
+
+
+std::string UI::intToString(uint16_t v) {
+	std::stringstream ss;
+	ss << v;
+	return ss.str();
 }
