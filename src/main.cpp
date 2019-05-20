@@ -59,7 +59,10 @@ extern "C"
 
 			if (capturing) {
 				// For FFT Mode we want a value between +- 2047
-				fft.FFTBuffer[captureBufferNumber][capturePos] = 2047 - ((float)(ADC_array[0] + ADC_array[2] + ADC_array[4] + ADC_array[6]) / 4);
+				if (fft.channel == channelA)
+					fft.FFTBuffer[captureBufferNumber][capturePos] = 2047 - ((float)(ADC_array[0] + ADC_array[2] + ADC_array[4] + ADC_array[6]) / 4);
+				else
+					fft.FFTBuffer[captureBufferNumber][capturePos] = 2047 - ((float)(ADC_array[1] + ADC_array[3] + ADC_array[5] + ADC_array[7]) / 4);
 				capturePos ++;
 			}
 
@@ -161,6 +164,7 @@ void ResetMode() {
 		break;
 	case Waterfall :
 		ui.EncoderModeL = HorizScaleCoarse;
+		ui.EncoderModeR = FFTChannel;
 		break;
 	}
 	ui.DrawUI();

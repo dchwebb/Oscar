@@ -46,7 +46,10 @@ void UI::MenuAction(encoderType type, int8_t val) {
 		fft.autoTune = !fft.autoTune;
 		DrawUI();
 		break;
-
+	case FFTChannel :
+		fft.channel = fft.channel == channelA? channelB : channelA;
+		DrawUI();
+		break;
 	default:
 	  break;
 	}
@@ -93,7 +96,9 @@ std::string UI::EncoderLabel(encoderType type) {
 	case VoltScale :
 		return "Zoom Vert";
 	case FFTAutoTune :
-		return "Tune " + std::string(fft.autoTune ? "auto " : "off");
+		return "Tune: " + std::string(fft.autoTune ? "auto" : "off ");
+	case FFTChannel :
+		return "Channel " + std::string (fft.channel == channelA ? "A" : "B");
 	default:
 	  return "";
 	}

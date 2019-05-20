@@ -18,6 +18,8 @@
 #define WATERFALLSIZE 256
 #define WATERFALLBUFFERS 26
 
+enum fftChannel {channelA, channelB};
+
 class UI;		// forward reference to handle circular dependency
 extern UI ui;
 extern LCD lcd;
@@ -35,6 +37,7 @@ public:
 	bool autoTune = true;
 	std::array<uint16_t, FFTHARMONICCOLOURS> harmonic;
 	bool dataAvailable[2] {false, false};
+	fftChannel channel = channelA;
 
 	FFT();
 	void runFFT(volatile float candSin[]);
