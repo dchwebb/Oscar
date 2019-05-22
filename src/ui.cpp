@@ -76,10 +76,13 @@ void UI::handleEncoders() {
 			displayMode = Waterfall;
 			break;
 		case Waterfall :
+			displayMode = Circular;
+			break;
+		case Circular :
 			displayMode = Oscilloscope;
 			break;
 		}
-		ResetMode();
+	ResetMode();
 	}
 }
 

@@ -1,8 +1,9 @@
-#include <ui.h>
 #include "stm32f4xx.h"
 #include <cmath>
 #include <string>
+#include <vector>
 #include "initialisation.h"
+#include "ui.h"
 #include "lcd.h"
 #include "fft.h"
 
@@ -15,7 +16,7 @@ volatile bool freqBelowZero, capturing = false, drawing = false, Encoder1Btn = f
 volatile uint8_t VertOffsetA = 0, VertOffsetB = 0, captureBufferNumber = 0, drawBufferNumber = 0;
 volatile int8_t encoderPendingL = 0, encoderPendingR = 0;
 volatile int16_t drawOffset[2] {0, 0};
-//volatile bool dataAvailable[2] {false, false};
+volatile bool circDataAvailable[2] {false, false};
 volatile uint16_t capturedSamples[2] {0, 0};
 volatile uint32_t debugCount = 0, coverageTimer = 0, coverageTotal = 0, debugNoBuff = 0;
 volatile float freqFund;
@@ -29,7 +30,11 @@ volatile int16_t vCalibOffset = -4190;
 volatile float vCalibScale = 1.24f;
 volatile int8_t voltScale = 8;
 
-mode displayMode = Waterfall;
+std::vector<std::vector<int> > zeroCrossings(2, std::vector<int>(0)) ;
+//std::vector<std::vector<int> > zeroCrossings(2, std::vector<int>(OTHER_NUMBER, 4));
+
+volatile float circAngle;
+mode displayMode = Circular;
 
 LCD lcd;
 FFT fft;
@@ -66,6 +71,35 @@ extern "C"
 				capturePos ++;
 			}
 
+		} else if (displayMode == Circular) {
+			// Average the last four ADC readings to smooth noise
+			adcA = ADC_array[0] + ADC_array[2] + ADC_array[4] + ADC_array[6];
+
+			// check if we should start capturing - ie there is a buffer spare and a zero crossing has occured
+			if (!capturing && oldAdcA < 8192 && adcA >= 8192 && (!circDataAvailable[0] || !circDataAvailable[1])) {
+				capturing = true;
+				captureBufferNumber = circDataAvailable[0] ? 1 : 0;		// select correct capture buffer based on whether buffer 0 or 1 contains data
+				capturePos = 0;				// used to check if a sample is ready to be drawn
+				zeroCrossings[captureBufferNumber].clear();
+			}
+
+			// If capturing store current readings in buffer and increment counters
+			if (capturing) {
+				OscBufferA[captureBufferNumber][capturePos] = adcA;
+
+				// store array of zero crossing points
+				if (capturePos > 0 && oldAdcA < 8192 && adcA >= 8192) {
+					zeroCrossings[captureBufferNumber].push_back(capturePos);
+				}
+
+				if (capturePos == DRAWWIDTH - 1) {
+					capturing = false;
+					circDataAvailable[captureBufferNumber] = true;
+				} else {
+					capturePos++;
+				}
+			}
+			oldAdcA = adcA;
 
 		} else if (displayMode == Oscilloscope) {
 			// Average the last four ADC readings to smooth noise
@@ -214,6 +248,49 @@ int main(void) {
 					fft.waterfall(fft.FFTBuffer[drawBufferNumber]);
 			}
 
+		} else if (displayMode == Circular) {
+			if (!drawing && (circDataAvailable[0] || circDataAvailable[1])) {								// check if we should start drawing
+				drawBufferNumber = circDataAvailable[0] ? 0 : 1;
+				drawing = true;
+				drawPos = 0;
+				lcd.ScreenFill(LCD_BLACK);
+			}
+
+			if (drawing) {
+				// get first cycle
+				circAngle = (2 * M_PI * drawPos) / zeroCrossings[drawBufferNumber][0] - 0.45;
+
+				int z = zeroCrossings[drawBufferNumber][0];
+				int x = (float)cos(circAngle) * 70 + 160;
+				int pixelA = CalcVertOffset(OscBufferA[drawBufferNumber][drawPos], VertOffsetA);
+				if (drawPos == 0) {
+					prevPixelA = pixelA;
+					prevPixelB = x;
+				}
+
+				lcd.DrawLine(x, pixelA, x, prevPixelA, LCD_GREEN);
+
+				prevPixelA = pixelA;
+				prevPixelB = x;
+
+				drawPos ++;
+				if (drawPos == DRAWWIDTH){
+					drawing = false;
+					circDataAvailable[drawBufferNumber] = false;
+
+					// auto adjust sample time to try and optimise display
+					if (zeroCrossings[drawBufferNumber][0] == 0) {
+						TIM3->ARR += 50;
+					}
+					if (zeroCrossings[drawBufferNumber][0] < 100) {
+						TIM3->ARR -= 30;
+					} else if (zeroCrossings[drawBufferNumber][0] < 200) {
+						TIM3->ARR -= 10;
+					}
+					zeroCrossings[drawBufferNumber][0] = 0;
+				}
+
+			}
 
 		} else if (displayMode == Oscilloscope) {
 

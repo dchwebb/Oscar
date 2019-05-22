@@ -20,7 +20,7 @@
 
 extern volatile uint16_t ADC_array[];
 enum encoderType { HorizScaleCoarse, HorizScaleFine, CalibVertScale, CalibVertOffset, VoltScale, FFTAutoTune, FFTChannel };
-enum mode { Oscilloscope, Fourier, Waterfall };
+enum mode { Oscilloscope, Fourier, Waterfall, Circular };
 
 void SystemClock_Config(void);
 void InitSysTick();
