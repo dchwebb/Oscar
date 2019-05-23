@@ -30,9 +30,7 @@ volatile int16_t vCalibOffset = -4190;
 volatile float vCalibScale = 1.24f;
 volatile int8_t voltScale = 8;
 
-std::vector<std::vector<int> > zeroCrossings(2, std::vector<int>(0)) ;
-//std::vector<std::vector<int> > zeroCrossings(2, std::vector<int>(OTHER_NUMBER, 4));
-
+volatile uint16_t zeroCrossings[2] {0, 0};
 volatile float circAngle;
 mode displayMode = Circular;
 
@@ -80,7 +78,7 @@ extern "C"
 				capturing = true;
 				captureBufferNumber = circDataAvailable[0] ? 1 : 0;		// select correct capture buffer based on whether buffer 0 or 1 contains data
 				capturePos = 0;				// used to check if a sample is ready to be drawn
-				zeroCrossings[captureBufferNumber].clear();
+				zeroCrossings[captureBufferNumber] = 0;
 			}
 
 			// If capturing store current readings in buffer and increment counters
@@ -89,12 +87,15 @@ extern "C"
 
 				// store array of zero crossing points
 				if (capturePos > 0 && oldAdcA < 8192 && adcA >= 8192) {
-					zeroCrossings[captureBufferNumber].push_back(capturePos);
-				}
-
-				if (capturePos == DRAWWIDTH - 1) {
-					capturing = false;
+					zeroCrossings[captureBufferNumber] = capturePos;
 					circDataAvailable[captureBufferNumber] = true;
+					capturing = false;
+
+				// reached end  of buffer and zero crossing not found - increase timer size to get longer sample
+				} else if (capturePos == DRAWWIDTH - 1) {
+					capturing = false;
+					TIM3->ARR += 30;
+
 				} else {
 					capturePos++;
 				}
@@ -254,14 +255,19 @@ int main(void) {
 				drawing = true;
 				drawPos = 0;
 				lcd.ScreenFill(LCD_BLACK);
+				CP_ON
 			}
 
 			if (drawing) {
-				// get first cycle
-				circAngle = (2 * M_PI * drawPos) / zeroCrossings[drawBufferNumber][0] - 0.45;
 
-				int z = zeroCrossings[drawBufferNumber][0];
-				int x = (float)cos(circAngle) * 70 + 160;
+				//circAngle = (2 * M_PI * drawPos) / zeroCrossings[drawBufferNumber] - 0.45;
+				//int z = zeroCrossings[drawBufferNumber];
+				//int x = (float)cos(circAngle) * 70 + 160;
+
+				int b = (int)std::round(drawPos * LUTSIZE / zeroCrossings[drawBufferNumber] + LUTSIZE / 4 - 80) % LUTSIZE;
+				int x = (float)fft.SineLUT[b] * 70 + 160;
+
+
 				int pixelA = CalcVertOffset(OscBufferA[drawBufferNumber][drawPos], VertOffsetA);
 				if (drawPos == 0) {
 					prevPixelA = pixelA;
@@ -274,20 +280,18 @@ int main(void) {
 				prevPixelB = x;
 
 				drawPos ++;
-				if (drawPos == DRAWWIDTH){
+				if (drawPos == zeroCrossings[drawBufferNumber]){
 					drawing = false;
 					circDataAvailable[drawBufferNumber] = false;
 
 					// auto adjust sample time to try and optimise display
-					if (zeroCrossings[drawBufferNumber][0] == 0) {
-						TIM3->ARR += 50;
-					}
-					if (zeroCrossings[drawBufferNumber][0] < 100) {
+					if (zeroCrossings[drawBufferNumber] < 100 && TIM3->ARR > 30) {
 						TIM3->ARR -= 30;
-					} else if (zeroCrossings[drawBufferNumber][0] < 200) {
-						TIM3->ARR -= 10;
+					} else if (zeroCrossings[drawBufferNumber] < 200 && TIM3->ARR > 5) {
+						TIM3->ARR -= 5;
 					}
-					zeroCrossings[drawBufferNumber][0] = 0;
+					//zeroCrossings[drawBufferNumber] = 0;
+					CP_CAP
 				}
 
 			}
@@ -303,7 +307,7 @@ int main(void) {
 			// Check if drawing and that the sample capture is at or ahead of the draw position
 			if (drawing && (drawBufferNumber != captureBufferNumber || capturedSamples[captureBufferNumber] >= drawPos)) {
 
-				CP_ON
+
 				// Draw a black line over previous sample - except at beginning and end where we shouldn't clear the voltage and frequency markers
 				lcd.ColourFill(drawPos, (drawPos < 27 || drawPos > 250 ? 11 : 0), drawPos, DRAWHEIGHT - (drawPos < 27 ? 10: 0), LCD_BLACK);
 

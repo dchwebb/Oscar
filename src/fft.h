@@ -38,6 +38,7 @@ public:
 	std::array<uint16_t, FFTHARMONICCOLOURS> harmonic;
 	bool dataAvailable[2] {false, false};
 	fftChannel channel = channelA;
+	float SineLUT[LUTSIZE];
 
 	FFT();
 	void runFFT(volatile float candSin[]);
@@ -46,7 +47,7 @@ public:
 	void sampleCapture(bool clearBuffer);
 private:
 	float candCos[FFTSAMPLES];
-	float SineLUT[LUTSIZE];
+
 	uint16_t FFTDrawBuffer[2][(DRAWHEIGHT + 1) * FFTDRAWBUFFERWIDTH];
 	std::string CurrentHertz;
 	uint32_t maxHyp = 0;
