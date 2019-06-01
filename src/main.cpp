@@ -31,11 +31,15 @@ volatile float vCalibScale = 1.24f;
 volatile int8_t voltScale = 8;
 
 volatile uint16_t zeroCrossings[2] {0, 0};
+volatile bool circDrawing[2] {false, false};
 volatile uint16_t circDrawPos[2] {0, 0};
+volatile uint16_t circPrevPixel[2] {0, 0};
+volatile int16_t tmpNewArr;
+
 volatile float captureFreq[2] {0, 0};
 volatile float circAngle;
 mode displayMode = Circular;
-#define CIRCLENGTH 200
+#define CIRCLENGTH 160
 
 volatile int minGreen = 2016, maxGreen = 0;
 
@@ -100,8 +104,9 @@ extern "C"
 					capturing = false;
 
 					// auto adjust sample time to try and optimise display
-					if (zeroCrossings[captureBufferNumber] < 250) {
+					if (zeroCrossings[captureBufferNumber] < 270) {
 						int16_t newARR = std::max((int)3000 / zeroCrossings[captureBufferNumber], 1);
+						tmpNewArr = newARR;
 						if (newARR > (int16_t)TIM3->ARR - 5)
 							TIM3->ARR = 5;
 						else
@@ -271,70 +276,62 @@ int main(void) {
 			}
 
 		} else if (displayMode == Circular) {
-			if (!drawing && (circDataAvailable[0] || circDataAvailable[1])) {								// check if we should start drawing
-				drawBufferNumber = circDataAvailable[0] ? 0 : 1;
-				drawing = true;
-				drawPos = 0;
-				//lcd.ScreenFill(LCD_BLACK);
 
-				//oscFreq = 1 / (2.0f * zeroCrossings[drawBufferNumber] * (TIM3->PSC + 1) * (TIM3->ARR + 1) / SystemCoreClock);
-				lcd.DrawString(140, DRAWHEIGHT + 8, ui.floatToString(captureFreq[drawBufferNumber], true) + "   ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
-
-				CP_ON
+			if (!circDrawing[0] && circDataAvailable[0]) {								// check if we should start drawing
+				int susp = 1;
+				susp++;
 			}
 
-			if (drawing) {
+			if ((!circDrawing[0] && circDataAvailable[0] && (circDrawPos[1] >= zeroCrossings[1] || !circDrawing[1])) ||
+				(!circDrawing[1] && circDataAvailable[1] && (circDrawPos[0] >= zeroCrossings[0] || !circDrawing[0]))) {								// check if we should start drawing
 
-				//circAngle = (2 * M_PI * drawPos) / zeroCrossings[drawBufferNumber] - 0.45;
-				//int z = zeroCrossings[drawBufferNumber];
-				//int x = (float)cos(circAngle) * 70 + 160;
-
-				// draw a line getting fainter as it goes from current position backwards
-				for (int pos = std::max((int)drawPos - CIRCLENGTH, 0); pos <= drawPos && pos <= zeroCrossings[drawBufferNumber]; pos++) {
-
-					int slopeOffset = 0;			// make negative to slope top left to bottom right and positive for opposite slope
-					int b = (int)std::round(pos * LUTSIZE / zeroCrossings[drawBufferNumber] + LUTSIZE / 4 + slopeOffset) % LUTSIZE;
-					int x = fft.SineLUT[b] * 70 + 160;
+				drawBufferNumber = (!circDrawing[0] && circDataAvailable[0] && (circDrawPos[1] == zeroCrossings[1] || !circDrawing[1])) ? 0 : 1;
+				circDrawing[drawBufferNumber] = true;
+				circDrawPos[drawBufferNumber] = 0;
+				lcd.DrawString(140, DRAWHEIGHT + 8, ui.floatToString(captureFreq[drawBufferNumber], true) + "   ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+				//lcd.ScreenFill(LCD_BLACK);
+			}
 
 
-					int pixelA = CalcVertOffset(OscBufferA[drawBufferNumber][pos], VertOffsetA);
-					if (pos == std::max((int)drawPos - CIRCLENGTH, 0)) {
-						prevPixelA = pixelA;
-						prevPixelB = x;
+			for (drawBufferNumber = 0; drawBufferNumber < 2; drawBufferNumber++) {
+				if (circDrawing[drawBufferNumber]) {
+
+					// draw a line getting fainter as it goes from current position backwards
+					for (int pos = std::max((int)circDrawPos[drawBufferNumber] - CIRCLENGTH, 0); pos <= circDrawPos[drawBufferNumber] && pos <= zeroCrossings[drawBufferNumber]; pos++) {
+
+						int slopeOffset = 0;			// make negative to slope top left to bottom right and positive for opposite slope
+						int b = (int)std::round(pos * LUTSIZE / zeroCrossings[drawBufferNumber] + LUTSIZE / 4 + slopeOffset) % LUTSIZE;
+						int x = fft.SineLUT[b] * 70 + 160;
+
+
+						int pixelA = CalcVertOffset(OscBufferA[drawBufferNumber][pos], VertOffsetA);
+						if (pos == std::max((int)circDrawPos[drawBufferNumber] - CIRCLENGTH, 0)) {
+							circPrevPixel[drawBufferNumber] = pixelA;
+						}
+						uint16_t greenShade = (63 - (circDrawPos[drawBufferNumber] - pos) / 3) << 5;
+						uint16_t blueShade = (31 - (circDrawPos[drawBufferNumber] - pos) / 6);
+
+						if (pos < (int)circDrawPos[drawBufferNumber] - CIRCLENGTH + 2) {
+							greenShade = LCD_BLACK;
+							blueShade = LCD_BLACK;
+						}
+
+						// Draw 'circle'
+						lcd.DrawLine(x, pixelA, x, circPrevPixel[drawBufferNumber], greenShade);
+
+						// Draw normal osc
+						//unsigned int oscPos = pos * DRAWWIDTH / zeroCrossings[drawBufferNumber];
+						unsigned int oscPos = pos;
+						lcd.DrawLine(oscPos, pixelA, oscPos, circPrevPixel[drawBufferNumber], blueShade);
+
+						circPrevPixel[drawBufferNumber] = pixelA;
 					}
 
-					uint16_t greenShade = (63 - (drawPos - pos) / 3) << 5;
-					uint16_t blueShade = (31 - (drawPos - pos) / 6);
-
-					if (pos < (int)drawPos - CIRCLENGTH + 10) {
-						greenShade = LCD_BLACK;
-						blueShade = LCD_BLACK;
+					circDrawPos[drawBufferNumber] ++;
+					if (circDrawPos[drawBufferNumber] == zeroCrossings[drawBufferNumber] + CIRCLENGTH){
+						circDrawing[drawBufferNumber] = false;
+						circDataAvailable[drawBufferNumber] = false;
 					}
-
-					if (pixelA < 0 || prevPixelA < 0 || x < 0 || x > 319) {
-						int susp = true;
-					}
-
-					// Draw 'circle'
-					lcd.DrawLine(x, pixelA, x, prevPixelA, greenShade);
-
-					// Draw normal osc
-					unsigned int oscPos = pos * DRAWWIDTH / zeroCrossings[drawBufferNumber];
-					//unsigned int oscPos = pos;
-					lcd.DrawLine(oscPos, pixelA, oscPos, prevPixelA, blueShade);
-
-					prevPixelA = pixelA;
-					prevPixelB = x;
-				}
-
-				drawPos ++;
-				if (drawPos == zeroCrossings[drawBufferNumber] + CIRCLENGTH){
-					drawing = false;
-					circDataAvailable[drawBufferNumber] = false;
-
-
-
-					CP_CAP
 				}
 
 			}

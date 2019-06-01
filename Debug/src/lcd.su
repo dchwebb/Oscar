@@ -1,20 +1,68 @@
-lcd.cpp:9:1:LCD::LCD()	8	static
-lcd.cpp:67:6:void LCD::Delay(uint32_t)	8	static
-lcd.cpp:254:6:void LCD::DrawCharMem(uint16_t, uint16_t, uint16_t, uint16_t*, char, const FontData*, const uint32_t&, const uint32_t&)	36	static
-lcd.cpp:283:6:void LCD::DrawStringMem(uint16_t, uint16_t, uint16_t, uint16_t*, std::__cxx11::string, const FontData*, const uint32_t&, const uint32_t&)	72	static
-lcd.cpp:290:6:void LCD::SPISetDataSize(const SPIDataSize_t&)	0	static
-lcd.cpp:71:6:void LCD::Command(const uint8_t&)	24	static
-lcd.cpp:59:6:void LCD::CommandData(std::vector<unsigned char>)	48	static
-lcd.cpp:78:6:void LCD::Data(const uint8_t&)	24	static
+gthr-default.h:229:1:int __gthread_key_delete(__gthread_key_t)	16	static
+lcd.cpp:9:1:LCD::LCD()	16	static
+lcd.cpp:16:6:void LCD::Init()	504	static
+lcd.cpp:59:6:void LCD::CommandData(std::vector<unsigned char>)	32	static
+lcd.cpp:67:6:void LCD::Delay(uint32_t)	16	static
+lcd.cpp:71:6:void LCD::Command(const uint8_t&)	16	static
+lcd.cpp:78:6:void LCD::Data(const uint8_t&)	16	static
+lcd.cpp:83:6:void LCD::Data16b(const uint16_t&)	16	static
+lcd.cpp:90:6:void LCD::SetCursorPosition(uint16_t, uint16_t, uint16_t, uint16_t)	32	static
 lcd.cpp:101:6:void LCD::Rotate(LCD_Orientation_t)	24	static
-lcd.cpp:83:6:void LCD::Data16b(const uint16_t&)	24	static
-lcd.cpp:90:6:void LCD::SetCursorPosition(uint16_t, uint16_t, uint16_t, uint16_t)	24	static
+lcd.cpp:120:6:void LCD::ScreenFill(const uint16_t&)	24	static
+lcd.cpp:124:6:void LCD::ColourFill(uint16_t, uint16_t, uint16_t, uint16_t, const uint16_t&)	48	static
 lcd.cpp:142:6:void LCD::PatternFill(uint16_t, uint16_t, uint16_t, uint16_t, const uint16_t*)	40	static
+lcd.cpp:160:6:void LCD::DrawPixel(uint16_t, uint16_t, const uint16_t&)	40	static
+lcd.cpp:168:6:void LCD::DrawLine(uint16_t, uint16_t, uint16_t, uint16_t, const uint32_t&)	48	static
 lcd.cpp:220:6:void LCD::DrawChar(uint16_t, uint16_t, char, const FontData*, const uint32_t&, const uint32_t&)	48	static
+lcd.cpp:254:6:void LCD::DrawCharMem(uint16_t, uint16_t, uint16_t, uint16_t*, char, const FontData*, const uint32_t&, const uint32_t&)	32	static
 lcd.cpp:275:6:void LCD::DrawString(uint16_t, uint16_t, std::__cxx11::string, const FontData*, const uint32_t&, const uint32_t&)	56	static
-lcd.cpp:160:6:void LCD::DrawPixel(uint16_t, uint16_t, const uint16_t&)	32	static
-lcd.cpp:316:6:void LCD::SPI_DMA_SendHalfWord(const uint16_t&, const uint16_t&)	12	static
-lcd.cpp:124:6:void LCD::ColourFill(uint16_t, uint16_t, uint16_t, uint16_t, const uint16_t&)	40	static
-lcd.cpp:120:6:void LCD::ScreenFill(const uint16_t&)	16	static
-lcd.cpp:16:6:void LCD::Init()	280	static
-lcd.cpp:168:6:void LCD::DrawLine(uint16_t, uint16_t, uint16_t, uint16_t, const uint32_t&)	72	static
+lcd.cpp:283:6:void LCD::DrawStringMem(uint16_t, uint16_t, uint16_t, uint16_t*, std::__cxx11::string, const FontData*, const uint32_t&, const uint32_t&)	72	static
+lcd.cpp:290:6:void LCD::SPISetDataSize(const SPIDataSize_t&)	16	static
+lcd.cpp:303:13:void LCD::SPISendByte(uint8_t)	24	static
+lcd.cpp:316:6:void LCD::SPI_DMA_SendHalfWord(const uint16_t&, const uint16_t&)	24	static
+allocator.h:131:7:std::allocator< <template-parameter-1-1> >::allocator() [with _Tp = unsigned char]	16	static
+allocator.h:139:7:std::allocator< <template-parameter-1-1> >::~allocator() [with _Tp = unsigned char]	16	static
+initializer_list:75:7:constexpr const _E* std::initializer_list<_E>::begin() const [with _E = unsigned char]	16	static
+initializer_list:71:7:constexpr std::initializer_list<_E>::size_type std::initializer_list<_E>::size() const [with _E = unsigned char]	16	static
+initializer_list:79:7:constexpr const _E* std::initializer_list<_E>::end() const [with _E = unsigned char]	24	static
+stl_vector.h:375:7:std::vector<_Tp, _Alloc>::vector(std::initializer_list<_Tp>, const allocator_type&) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	40	static
+stl_vector.h:425:7:std::vector<_Tp, _Alloc>::~vector() [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	24	static
+stl_vector.h:780:7:std::vector<_Tp, _Alloc>::reference std::vector<_Tp, _Alloc>::operator[](std::vector<_Tp, _Alloc>::size_type) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
+stl_vector.h:655:7:std::vector<_Tp, _Alloc>::size_type std::vector<_Tp, _Alloc>::size() const [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
+stl_iterator.h:877:5:bool __gnu_cxx::operator!=(const __gnu_cxx::__normal_iterator<_Iterator, _Container>&, const __gnu_cxx::__normal_iterator<_Iterator, _Container>&) [with _Iterator = char*; _Container = std::__cxx11::basic_string<char>]	24	static
+stl_iterator.h:797:7:__gnu_cxx::__normal_iterator<_Iterator, _Container>& __gnu_cxx::__normal_iterator<_Iterator, _Container>::operator++() [with _Iterator = char*; _Container = std::__cxx11::basic_string<char>]	16	static
+stl_iterator.h:789:7:__gnu_cxx::__normal_iterator<_Iterator, _Container>::reference __gnu_cxx::__normal_iterator<_Iterator, _Container>::operator*() const [with _Iterator = char*; _Container = std::__cxx11::basic_string<char>]	16	static
+new_allocator.h:79:7:__gnu_cxx::new_allocator<_Tp>::new_allocator() [with _Tp = unsigned char]	16	static
+new_allocator.h:86:7:__gnu_cxx::new_allocator<_Tp>::~new_allocator() [with _Tp = unsigned char]	16	static
+stl_vector.h:79:14:std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_Vector_impl::~_Vector_impl()	16	static
+stl_vector.h:127:7:std::_Vector_base<_Tp, _Alloc>::_Vector_base(const allocator_type&) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
+stl_vector.h:159:7:std::_Vector_base<_Tp, _Alloc>::~_Vector_base() [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
+stl_vector.h:1281:9:void std::vector<_Tp, _Alloc>::_M_range_initialize(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const unsigned char*; _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	40	static
+stl_vector.h:113:7:std::_Vector_base<_Tp, _Alloc>::_Tp_alloc_type& std::_Vector_base<_Tp, _Alloc>::_M_get_Tp_allocator() [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
+stl_construct.h:148:5:void std::_Destroy(_ForwardIterator, _ForwardIterator, std::allocator<_T2>&) [with _ForwardIterator = unsigned char*; _Tp = unsigned char]	24	static
+stl_iterator.h:841:7:const _Iterator& __gnu_cxx::__normal_iterator<_Iterator, _Container>::base() const [with _Iterator = char*; _Container = std::__cxx11::basic_string<char>]	16	static
+stl_vector.h:90:2:std::_Vector_base<_Tp, _Alloc>::_Vector_impl::_Vector_impl(const _Tp_alloc_type&) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
+stl_vector.h:174:7:void std::_Vector_base<_Tp, _Alloc>::_M_deallocate(std::_Vector_base<_Tp, _Alloc>::pointer, std::size_t) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	24	static
+stl_iterator_base_funcs.h:135:5:typename std::iterator_traits<_Iterator>::difference_type std::distance(_InputIterator, _InputIterator) [with _InputIterator = const unsigned char*]	32	static
+stl_vector.h:167:7:std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
+stl_uninitialized.h:279:5:_ForwardIterator std::__uninitialized_copy_a(_InputIterator, _InputIterator, _ForwardIterator, std::allocator<_Tp>&) [with _InputIterator = const unsigned char*; _ForwardIterator = unsigned char*; _Tp = unsigned char]	24	static
+stl_construct.h:122:5:void std::_Destroy(_ForwardIterator, _ForwardIterator) [with _ForwardIterator = unsigned char*]	16	static
+allocator.h:133:7:std::allocator< <template-parameter-1-1> >::allocator(const std::allocator< <template-parameter-1-1> >&) [with _Tp = unsigned char]	16	static
+alloc_traits.h:461:7:static void std::allocator_traits<std::allocator<_Tp1> >::deallocate(std::allocator_traits<std::allocator<_Tp1> >::allocator_type&, std::allocator_traits<std::allocator<_Tp1> >::pointer, std::allocator_traits<std::allocator<_Tp1> >::size_type) [with _Tp = unsigned char]	24	static
+stl_iterator_base_types.h:204:5:typename std::iterator_traits<_Iterator>::iterator_category std::__iterator_category(const _Iter&) [with _Iter = const unsigned char*]	16	static
+stl_iterator_base_funcs.h:96:5:typename std::iterator_traits<_Iterator>::difference_type std::__distance(_RandomAccessIterator, _RandomAccessIterator, std::random_access_iterator_tag) [with _RandomAccessIterator = const unsigned char*]	24	static
+alloc_traits.h:435:7:static _Tp* std::allocator_traits<std::allocator<_Tp1> >::allocate(std::allocator_traits<std::allocator<_Tp1> >::allocator_type&, std::allocator_traits<std::allocator<_Tp1> >::size_type) [with _Tp = unsigned char]	16	static
+stl_uninitialized.h:107:5:_ForwardIterator std::uninitialized_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = const unsigned char*; _ForwardIterator = unsigned char*]	32	static
+stl_construct.h:112:9:static void std::_Destroy_aux<true>::__destroy(_ForwardIterator, _ForwardIterator) [with _ForwardIterator = unsigned char*]	16	static
+new_allocator.h:81:7:__gnu_cxx::new_allocator<_Tp>::new_allocator(const __gnu_cxx::new_allocator<_Tp>&) [with _Tp = unsigned char]	16	static
+new_allocator.h:109:7:void __gnu_cxx::new_allocator<_Tp>::deallocate(__gnu_cxx::new_allocator<_Tp>::pointer, __gnu_cxx::new_allocator<_Tp>::size_type) [with _Tp = unsigned char]	24	static
+new_allocator.h:99:7:_Tp* __gnu_cxx::new_allocator<_Tp>::allocate(__gnu_cxx::new_allocator<_Tp>::size_type, const void*) [with _Tp = unsigned char]	24	static
+stl_uninitialized.h:91:9:static _ForwardIterator std::__uninitialized_copy<true>::__uninit_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = const unsigned char*; _ForwardIterator = unsigned char*]	24	static
+new_allocator.h:113:7:__gnu_cxx::new_allocator<_Tp>::size_type __gnu_cxx::new_allocator<_Tp>::max_size() const [with _Tp = unsigned char]	16	static
+stl_algobase.h:446:5:_OI std::copy(_II, _II, _OI) [with _II = const unsigned char*; _OI = unsigned char*]	32	static
+cpp_type_traits.h:408:5:_Iterator std::__miter_base(_Iterator) [with _Iterator = const unsigned char*]	16	static
+stl_algobase.h:420:5:_OI std::__copy_move_a2(_II, _II, _OI) [with bool _IsMove = false; _II = const unsigned char*; _OI = unsigned char*]	32	static
+stl_algobase.h:277:5:_Iterator std::__niter_base(_Iterator) [with _Iterator = const unsigned char*]	16	static
+stl_algobase.h:277:5:_Iterator std::__niter_base(_Iterator) [with _Iterator = unsigned char*]	16	static
+stl_algobase.h:375:5:_OI std::__copy_move_a(_II, _II, _OI) [with bool _IsMove = false; _II = const unsigned char*; _OI = unsigned char*]	32	static
+stl_algobase.h:357:9:static _Tp* std::__copy_move<_IsMove, true, std::random_access_iterator_tag>::__copy_m(const _Tp*, const _Tp*, _Tp*) [with _Tp = unsigned char; bool _IsMove = false]	32	static
