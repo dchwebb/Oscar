@@ -31,8 +31,13 @@ volatile float vCalibScale = 1.24f;
 volatile int8_t voltScale = 8;
 
 volatile uint16_t zeroCrossings[2] {0, 0};
+volatile uint16_t circDrawPos[2] {0, 0};
+volatile float captureFreq[2] {0, 0};
 volatile float circAngle;
 mode displayMode = Circular;
+#define CIRCLENGTH 200
+
+volatile int minGreen = 2016, maxGreen = 0;
 
 LCD lcd;
 FFT fft;
@@ -74,7 +79,7 @@ extern "C"
 			adcA = ADC_array[0] + ADC_array[2] + ADC_array[4] + ADC_array[6];
 
 			// check if we should start capturing - ie there is a buffer spare and a zero crossing has occured
-			if (!capturing && oldAdcA < 8192 && adcA >= 8192 && (!circDataAvailable[0] || !circDataAvailable[1])) {
+			if (!capturing && oldAdcA < 9985 && adcA >= 9985 && (!circDataAvailable[0] || !circDataAvailable[1])) {
 				capturing = true;
 				captureBufferNumber = circDataAvailable[0] ? 1 : 0;		// select correct capture buffer based on whether buffer 0 or 1 contains data
 				capturePos = 0;				// used to check if a sample is ready to be drawn
@@ -86,10 +91,22 @@ extern "C"
 				OscBufferA[captureBufferNumber][capturePos] = adcA;
 
 				// store array of zero crossing points
-				if (capturePos > 0 && oldAdcA < 8192 && adcA >= 8192) {
+				if (capturePos > 0 && oldAdcA < 9985 && adcA >= 9985) {
 					zeroCrossings[captureBufferNumber] = capturePos;
 					circDataAvailable[captureBufferNumber] = true;
+
+					// get frequency here before potentially altering sampling speed
+					captureFreq[captureBufferNumber] = 1 / (2.0f * capturePos * (TIM3->PSC + 1) * (TIM3->ARR + 1) / SystemCoreClock);
 					capturing = false;
+
+					// auto adjust sample time to try and optimise display
+					if (zeroCrossings[captureBufferNumber] < 250) {
+						int16_t newARR = std::max((int)3000 / zeroCrossings[captureBufferNumber], 1);
+						if (newARR > (int16_t)TIM3->ARR - 5)
+							TIM3->ARR = 5;
+						else
+							TIM3->ARR -= newARR;
+					}
 
 				// reached end  of buffer and zero crossing not found - increase timer size to get longer sample
 				} else if (capturePos == DRAWWIDTH - 1) {
@@ -216,6 +233,10 @@ inline uint16_t CalcVertOffset(volatile uint16_t& vPos, const uint16_t& vOffset)
 	return std::max(std::min(((((float)(vPos * vCalibScale + vCalibOffset) / (4 * 4096) - 0.5f) * (8.0f / voltScale)) + 0.5f) * DRAWHEIGHT, (float)DRAWHEIGHT - 1), 1.0f);
 }
 
+inline uint16_t CalcZeroSize() {		// returns ADC size that corresponds to 0v
+	return (8192 - vCalibOffset) / vCalibScale;
+}
+
 int main(void) {
 	SystemInit();							// Activates floating point coprocessor and resets clock
 //	SystemClock_Config();					// Configure the clock and PLL - NB Currently done in SystemInit but will need updating for production board
@@ -254,7 +275,11 @@ int main(void) {
 				drawBufferNumber = circDataAvailable[0] ? 0 : 1;
 				drawing = true;
 				drawPos = 0;
-				lcd.ScreenFill(LCD_BLACK);
+				//lcd.ScreenFill(LCD_BLACK);
+
+				//oscFreq = 1 / (2.0f * zeroCrossings[drawBufferNumber] * (TIM3->PSC + 1) * (TIM3->ARR + 1) / SystemCoreClock);
+				lcd.DrawString(140, DRAWHEIGHT + 8, ui.floatToString(captureFreq[drawBufferNumber], true) + "   ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+
 				CP_ON
 			}
 
@@ -264,33 +289,51 @@ int main(void) {
 				//int z = zeroCrossings[drawBufferNumber];
 				//int x = (float)cos(circAngle) * 70 + 160;
 
-				int b = (int)std::round(drawPos * LUTSIZE / zeroCrossings[drawBufferNumber] + LUTSIZE / 4 - 80) % LUTSIZE;
-				int x = (float)fft.SineLUT[b] * 70 + 160;
+				// draw a line getting fainter as it goes from current position backwards
+				for (int pos = std::max((int)drawPos - CIRCLENGTH, 0); pos <= drawPos && pos <= zeroCrossings[drawBufferNumber]; pos++) {
+
+					int slopeOffset = 0;			// make negative to slope top left to bottom right and positive for opposite slope
+					int b = (int)std::round(pos * LUTSIZE / zeroCrossings[drawBufferNumber] + LUTSIZE / 4 + slopeOffset) % LUTSIZE;
+					int x = fft.SineLUT[b] * 70 + 160;
 
 
-				int pixelA = CalcVertOffset(OscBufferA[drawBufferNumber][drawPos], VertOffsetA);
-				if (drawPos == 0) {
+					int pixelA = CalcVertOffset(OscBufferA[drawBufferNumber][pos], VertOffsetA);
+					if (pos == std::max((int)drawPos - CIRCLENGTH, 0)) {
+						prevPixelA = pixelA;
+						prevPixelB = x;
+					}
+
+					uint16_t greenShade = (63 - (drawPos - pos) / 3) << 5;
+					uint16_t blueShade = (31 - (drawPos - pos) / 6);
+
+					if (pos < (int)drawPos - CIRCLENGTH + 10) {
+						greenShade = LCD_BLACK;
+						blueShade = LCD_BLACK;
+					}
+
+					if (pixelA < 0 || prevPixelA < 0 || x < 0 || x > 319) {
+						int susp = true;
+					}
+
+					// Draw 'circle'
+					lcd.DrawLine(x, pixelA, x, prevPixelA, greenShade);
+
+					// Draw normal osc
+					unsigned int oscPos = pos * DRAWWIDTH / zeroCrossings[drawBufferNumber];
+					//unsigned int oscPos = pos;
+					lcd.DrawLine(oscPos, pixelA, oscPos, prevPixelA, blueShade);
+
 					prevPixelA = pixelA;
 					prevPixelB = x;
 				}
 
-				lcd.DrawLine(x, pixelA, x, prevPixelA, LCD_GREEN);
-
-				prevPixelA = pixelA;
-				prevPixelB = x;
-
 				drawPos ++;
-				if (drawPos == zeroCrossings[drawBufferNumber]){
+				if (drawPos == zeroCrossings[drawBufferNumber] + CIRCLENGTH){
 					drawing = false;
 					circDataAvailable[drawBufferNumber] = false;
 
-					// auto adjust sample time to try and optimise display
-					if (zeroCrossings[drawBufferNumber] < 100 && TIM3->ARR > 30) {
-						TIM3->ARR -= 30;
-					} else if (zeroCrossings[drawBufferNumber] < 200 && TIM3->ARR > 5) {
-						TIM3->ARR -= 5;
-					}
-					//zeroCrossings[drawBufferNumber] = 0;
+
+
 					CP_CAP
 				}
 
