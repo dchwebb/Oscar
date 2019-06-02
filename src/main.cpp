@@ -100,17 +100,16 @@ extern "C"
 					circDataAvailable[captureBufferNumber] = true;
 
 					// get frequency here before potentially altering sampling speed
-					captureFreq[captureBufferNumber] = 1 / (2.0f * capturePos * (TIM3->PSC + 1) * (TIM3->ARR + 1) / SystemCoreClock);
+					captureFreq[captureBufferNumber] = (float)SystemCoreClock / (2.0f * capturePos * (TIM3->PSC + 1) * (TIM3->ARR + 1)) ;
 					capturing = false;
 
-					// auto adjust sample time to try and optimise display
-					if (zeroCrossings[captureBufferNumber] < 270) {
-						int16_t newARR = std::max((int)3000 / zeroCrossings[captureBufferNumber], 1);
-						tmpNewArr = newARR;
-						if (newARR > (int16_t)TIM3->ARR - 5)
-							TIM3->ARR = 5;
-						else
-							TIM3->ARR -= newARR;
+					// auto adjust sample time to try and get the longest sample for the display
+					if (capturePos < 280) {
+
+						//int16_t newARR = SystemCoreClock / (captureFreq[captureBufferNumber] * 2 * (TIM3->PSC + 1) * 200);
+						int16_t newARR = capturePos * (TIM3->ARR + 1) / 280;
+						if (newARR > 0)
+							TIM3->ARR = newARR;
 					}
 
 				// reached end  of buffer and zero crossing not found - increase timer size to get longer sample
@@ -292,7 +291,7 @@ int main(void) {
 				//lcd.ScreenFill(LCD_BLACK);
 			}
 
-
+			// to have a continuous display drawing next sample as old sample is finishing
 			for (drawBufferNumber = 0; drawBufferNumber < 2; drawBufferNumber++) {
 				if (circDrawing[drawBufferNumber]) {
 
@@ -306,7 +305,7 @@ int main(void) {
 
 						int pixelA = CalcVertOffset(OscBufferA[drawBufferNumber][pos], VertOffsetA);
 						if (pos == std::max((int)circDrawPos[drawBufferNumber] - CIRCLENGTH, 0)) {
-							circPrevPixel[drawBufferNumber] = pixelA;
+							prevPixelA = pixelA;
 						}
 						uint16_t greenShade = (63 - (circDrawPos[drawBufferNumber] - pos) / 3) << 5;
 						uint16_t blueShade = (31 - (circDrawPos[drawBufferNumber] - pos) / 6);
@@ -317,14 +316,14 @@ int main(void) {
 						}
 
 						// Draw 'circle'
-						lcd.DrawLine(x, pixelA, x, circPrevPixel[drawBufferNumber], greenShade);
+						lcd.DrawLine(x, pixelA, x, prevPixelA, greenShade);
 
 						// Draw normal osc
-						//unsigned int oscPos = pos * DRAWWIDTH / zeroCrossings[drawBufferNumber];
-						unsigned int oscPos = pos;
-						lcd.DrawLine(oscPos, pixelA, oscPos, circPrevPixel[drawBufferNumber], blueShade);
+						unsigned int oscPos = pos * DRAWWIDTH / zeroCrossings[drawBufferNumber];
+						//unsigned int oscPos = pos;
+						lcd.DrawLine(oscPos, pixelA, oscPos, prevPixelA, blueShade);
 
-						circPrevPixel[drawBufferNumber] = pixelA;
+						prevPixelA = pixelA;
 					}
 
 					circDrawPos[drawBufferNumber] ++;
