@@ -41,6 +41,10 @@ void UI::MenuAction(encoderType type, int8_t val) {
 	case VoltScale :
 		voltScale += val;
 		voltScale = std::max(std::min((int)voltScale, 8), 1);
+		if (displayMode == Circular) {
+			lcd.ScreenFill(LCD_BLACK);
+			DrawUI();
+		}
 		break;
 	case FFTAutoTune :
 		fft.autoTune = !fft.autoTune;

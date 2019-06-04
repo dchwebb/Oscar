@@ -80,7 +80,10 @@ extern "C"
 
 		} else if (displayMode == Circular) {
 			// Average the last four ADC readings to smooth noise
-			adcA = ADC_array[0] + ADC_array[2] + ADC_array[4] + ADC_array[6];
+			if (fft.channel == channelA)
+				adcA = ADC_array[0] + ADC_array[2] + ADC_array[4] + ADC_array[6];
+			else
+				adcA = ADC_array[1] + ADC_array[3] + ADC_array[5] + ADC_array[7];
 
 			// check if we should start capturing - ie there is a buffer spare and a zero crossing has occured
 			if (!capturing && oldAdcA < 9985 && adcA >= 9985 && (!circDataAvailable[0] || !circDataAvailable[1])) {
@@ -105,8 +108,6 @@ extern "C"
 
 					// auto adjust sample time to try and get the longest sample for the display
 					if (capturePos < 280) {
-
-						//int16_t newARR = SystemCoreClock / (captureFreq[captureBufferNumber] * 2 * (TIM3->PSC + 1) * 200);
 						int16_t newARR = capturePos * (TIM3->ARR + 1) / 280;
 						if (newARR > 0)
 							TIM3->ARR = newARR;
@@ -222,6 +223,10 @@ void ResetMode() {
 		ui.EncoderModeL = HorizScaleCoarse;
 		ui.EncoderModeR = FFTChannel;
 		break;
+	case Circular :
+		ui.EncoderModeL = FFTChannel;
+		ui.EncoderModeR = VoltScale;
+		break;
 	}
 	ui.DrawUI();
 
@@ -287,7 +292,7 @@ int main(void) {
 				drawBufferNumber = (!circDrawing[0] && circDataAvailable[0] && (circDrawPos[1] == zeroCrossings[1] || !circDrawing[1])) ? 0 : 1;
 				circDrawing[drawBufferNumber] = true;
 				circDrawPos[drawBufferNumber] = 0;
-				lcd.DrawString(140, DRAWHEIGHT + 8, ui.floatToString(captureFreq[drawBufferNumber], true) + "   ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+				lcd.DrawString(140, DRAWHEIGHT + 8, ui.floatToString(captureFreq[drawBufferNumber], true) + "Hz  ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 				//lcd.ScreenFill(LCD_BLACK);
 			}
 
