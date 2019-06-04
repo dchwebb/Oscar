@@ -11,6 +11,7 @@ FFT::FFT() {
 			drawWaterfall[w][i] = WATERFALLDRAWHEIGHT;
 		}
 	}
+
 }
 
 // Carry out Fast fourier transform
@@ -20,6 +21,7 @@ void FFT::runFFT(volatile float candSin[]) {
 	CP_ON
 	calcFFT(candSin);
 	displayFFT(candSin);
+
 
 }
 

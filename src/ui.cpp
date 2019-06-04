@@ -23,7 +23,7 @@ void UI::MenuAction(encoderType type, int8_t val) {
 	int16_t adj;
 	switch (type) {
 	case HorizScaleCoarse :
-		adj = TIM3->ARR + 50 * val;
+		adj = TIM3->ARR + 10 * val;
 		if (adj > 0 && adj < 6000)
 			TIM3->ARR = adj;
 		DrawUI();

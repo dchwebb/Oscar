@@ -39,6 +39,7 @@ public:
 	bool dataAvailable[2] {false, false};
 	fftChannel channel = channelA;
 	float SineLUT[LUTSIZE];
+	uint16_t* testRef = nullptr;
 
 	FFT();
 	void runFFT(volatile float candSin[]);
@@ -60,7 +61,6 @@ private:
 	void calcFFT(volatile float candSin[]);
 	void displayFFT(volatile float candSin[]);
 	void displayWaterfall(volatile float candSin[]);
-//	float hypotenuse(volatile float sinArray[], uint16_t& pos);
 	void FFTInfo(void);
 
 };

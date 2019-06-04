@@ -18,7 +18,7 @@ volatile int8_t encoderPendingL = 0, encoderPendingR = 0;
 volatile int16_t drawOffset[2] {0, 0};
 volatile bool circDataAvailable[2] {false, false};
 volatile uint16_t capturedSamples[2] {0, 0};
-volatile uint32_t debugCount = 0, coverageTimer = 0, coverageTotal = 0, debugNoBuff = 0;
+volatile uint32_t debugCount = 0, coverageTimer = 0, coverageTotal = 0;
 volatile float freqFund;
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 volatile uint16_t freqCrossZero, FFTErrors = 0;
@@ -29,6 +29,7 @@ volatile int16_t oldencoderUp = 0, oldencoderDown = 0, encoderUp = 0, encoderDow
 volatile int16_t vCalibOffset = -4190;
 volatile float vCalibScale = 1.24f;
 volatile int8_t voltScale = 8;
+volatile uint16_t CalibZeroPos = 9985;
 
 volatile uint16_t zeroCrossings[2] {0, 0};
 volatile bool circDrawing[2] {false, false};
@@ -41,7 +42,6 @@ volatile float circAngle;
 mode displayMode = Circular;
 #define CIRCLENGTH 160
 
-volatile int minGreen = 2016, maxGreen = 0;
 
 LCD lcd;
 FFT fft;
@@ -54,6 +54,17 @@ struct  {
 	uint16_t y = 9000;
 } trigger;
 
+inline uint16_t CalcVertOffset(volatile const uint16_t& vPos, const uint16_t& vOffset) {
+	return std::max(std::min(((((float)(vPos * vCalibScale + vCalibOffset) / (4 * 4096) - 0.5f) * (8.0f / voltScale)) + 0.5f) * DRAWHEIGHT, (float)DRAWHEIGHT - 1), 1.0f);
+}
+
+inline uint16_t CalcZeroSize() {					// returns ADC size that corresponds to 0v
+	return (8192 - vCalibOffset) / vCalibScale;
+}
+
+inline float FreqFromPos(const uint16_t pos) {		// returns frequency of signal based on number of samples wide the signal is in the screen
+	return (float)SystemCoreClock / (2.0f * pos * (TIM3->PSC + 1) * (TIM3->ARR + 1));
+}
 
 //	Interrupts: Use extern C to allow linker to find ISR
 extern "C"
@@ -86,7 +97,7 @@ extern "C"
 				adcA = ADC_array[1] + ADC_array[3] + ADC_array[5] + ADC_array[7];
 
 			// check if we should start capturing - ie there is a buffer spare and a zero crossing has occured
-			if (!capturing && oldAdcA < 9985 && adcA >= 9985 && (!circDataAvailable[0] || !circDataAvailable[1])) {
+			if (!capturing && oldAdcA < CalibZeroPos && adcA >= CalibZeroPos && (!circDataAvailable[0] || !circDataAvailable[1])) {
 				capturing = true;
 				captureBufferNumber = circDataAvailable[0] ? 1 : 0;		// select correct capture buffer based on whether buffer 0 or 1 contains data
 				capturePos = 0;				// used to check if a sample is ready to be drawn
@@ -98,15 +109,14 @@ extern "C"
 				OscBufferA[captureBufferNumber][capturePos] = adcA;
 
 				// store array of zero crossing points
-				if (capturePos > 0 && oldAdcA < 9985 && adcA >= 9985) {
+				if (capturePos > 0 && oldAdcA < CalibZeroPos && adcA >= CalibZeroPos) {
 					zeroCrossings[captureBufferNumber] = capturePos;
 					circDataAvailable[captureBufferNumber] = true;
 
-					// get frequency here before potentially altering sampling speed
-					captureFreq[captureBufferNumber] = (float)SystemCoreClock / (2.0f * capturePos * (TIM3->PSC + 1) * (TIM3->ARR + 1)) ;
+					captureFreq[captureBufferNumber] = FreqFromPos(capturePos);		// get frequency here before potentially altering sampling speed
 					capturing = false;
 
-					// auto adjust sample time to try and get the longest sample for the display
+					// auto adjust sample time to try and get the longest sample for the display (280 is number of pixels wide we ideally want the captured wave to be)
 					if (capturePos < 280) {
 						int16_t newARR = capturePos * (TIM3->ARR + 1) / 280;
 						if (newARR > 0)
@@ -238,14 +248,6 @@ void ResetMode() {
 	TIM3->CR1 |= TIM_CR1_CEN;				// Reenable the sample acquisiton timer
 }
 
-inline uint16_t CalcVertOffset(volatile uint16_t& vPos, const uint16_t& vOffset) {
-	return std::max(std::min(((((float)(vPos * vCalibScale + vCalibOffset) / (4 * 4096) - 0.5f) * (8.0f / voltScale)) + 0.5f) * DRAWHEIGHT, (float)DRAWHEIGHT - 1), 1.0f);
-}
-
-inline uint16_t CalcZeroSize() {		// returns ADC size that corresponds to 0v
-	return (8192 - vCalibOffset) / vCalibScale;
-}
-
 int main(void) {
 	SystemInit();							// Activates floating point coprocessor and resets clock
 //	SystemClock_Config();					// Configure the clock and PLL - NB Currently done in SystemInit but will need updating for production board
@@ -259,6 +261,8 @@ int main(void) {
 	InitSampleAcquisition();
 	ResetMode();
 	ui.DrawUI();
+
+	CalibZeroPos = CalcZeroSize();
 
 	while (1) {
 		fundHarm = fft.harmonic[0];			// for debugging
@@ -370,13 +374,13 @@ int main(void) {
 				}
 
 				//	frequency calculation - detect upwards zero crossings
-				if (!freqBelowZero && OscBufferA[drawBufferNumber][calculatedOffset] < 8192) {		// first time reading goes below zero
+				if (!freqBelowZero && OscBufferA[drawBufferNumber][calculatedOffset] < CalibZeroPos) {		// first time reading goes below zero
 					freqBelowZero = true;
 				}
-				if (freqBelowZero && OscBufferA[drawBufferNumber][calculatedOffset] >= 8192) {		// zero crossing
-					//	second zero crossing - calculate frequency averaged over two passes to smooth
+				if (freqBelowZero && OscBufferA[drawBufferNumber][calculatedOffset] >= CalibZeroPos) {		// zero crossing
+					//	second zero crossing - calculate frequency averaged over a number passes to smooth
 					if (freqCrossZero > 0) {
-						oscFreq = (15 * oscFreq + (1 / (2.0f * (drawPos - freqCrossZero) * (TIM3->PSC + 1) * (TIM3->ARR + 1) / SystemCoreClock))) / 16;
+						oscFreq = (3 * oscFreq + FreqFromPos(drawPos - freqCrossZero)) / 4;
 					}
 					freqCrossZero = drawPos;
 					freqBelowZero = false;
