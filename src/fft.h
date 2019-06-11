@@ -39,17 +39,18 @@ public:
 	bool dataAvailable[2] {false, false};
 	fftChannel channel = channelA;
 	float SineLUT[LUTSIZE];
-	uint16_t* testRef = nullptr;
 
 	FFT();
 	void runFFT(volatile float candSin[]);
 	void waterfall(volatile float candSin[]);
 	float harmonicFreq(uint16_t harmonicNumber);
 	void sampleCapture(bool clearBuffer);
+	void setDrawBuffer(uint16_t* buff1, uint16_t* buff2);
 private:
 	float candCos[FFTSAMPLES];
 
-	uint16_t FFTDrawBuffer[2][(DRAWHEIGHT + 1) * FFTDRAWBUFFERWIDTH];
+	//uint16_t FFTDrawBuffer[2][(DRAWHEIGHT + 1) * FFTDRAWBUFFERWIDTH];
+	uint16_t* FFTDrawBuffer[2];
 	std::string CurrentHertz;
 	uint32_t maxHyp = 0;
 	uint16_t newARR = 0;
@@ -64,5 +65,6 @@ private:
 	void FFTInfo(void);
 
 };
+
 
 

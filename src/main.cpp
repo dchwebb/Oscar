@@ -1,11 +1,12 @@
 #include "stm32f4xx.h"
 #include <cmath>
 #include <string>
-#include <vector>
+#include <queue>
 #include "initialisation.h"
 #include "ui.h"
 #include "lcd.h"
 #include "fft.h"
+#include "midi.h"
 
 
 extern uint32_t SystemCoreClock;
@@ -39,13 +40,20 @@ volatile int16_t tmpNewArr;
 
 volatile float captureFreq[2] {0, 0};
 volatile float circAngle;
-mode displayMode = Circular;
+mode displayMode = MIDI;
 #define CIRCLENGTH 160
 
+/*
+volatile uint8_t MIDIBuffer[32];
+volatile uint8_t MIDIRxCounter = 0;
+std::queue<uint8_t> MIDIQueue;
+volatile uint8_t MIDIPos = 0;
+*/
 
 LCD lcd;
 FFT fft;
 UI ui;
+MIDIHandler midi;
 
 volatile uint16_t fundHarm;
 
@@ -213,6 +221,13 @@ extern "C"
 		TIM4->SR &= ~TIM_SR_UIF;							// clear UIF flag
 		coverageTimer ++;
 	}
+
+	// MIDI Decoder
+	void UART4_IRQHandler(void) {
+		if (UART4->SR | USART_SR_RXNE) {
+			midi.MIDIQueue.push(UART4->DR);		// accessing DR automatically resets the receive flag
+		}
+	}
 }
 
 
@@ -256,11 +271,17 @@ int main(void) {
 	InitLCDHardware();
 	InitADC();
 	InitEncoders();
+	InitUART();
 
 	lcd.Init();								// Initialize ILI9341 LCD
 	InitSampleAcquisition();
 	ResetMode();
 	ui.DrawUI();
+
+	// The FFT draw buffers are declared here and passed to the FFT Class as points to keep the size of the executable down
+	uint16_t FFTDrawBuff0[(DRAWHEIGHT + 1) * FFTDRAWBUFFERWIDTH];
+	uint16_t FFTDrawBuff1[(DRAWHEIGHT + 1) * FFTDRAWBUFFERWIDTH];
+	fft.setDrawBuffer(FFTDrawBuff0, FFTDrawBuff1);
 
 	CalibZeroPos = CalcZeroSize();
 
@@ -269,7 +290,21 @@ int main(void) {
 
 		ui.handleEncoders();
 
-		if (displayMode == Fourier || displayMode == Waterfall) {
+		if (displayMode == MIDI) {
+			//lcd.DrawString(10, 10, "MIDI Mode", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+			midi.ProcessMidi();
+			/*if (MIDIQueue.size() > 0) {
+				uint8_t val = MIDIQueue.front();
+				MIDIQueue.pop();
+				lcd.DrawString(10, 14 * MIDIPos, ui.intToString(val), &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
+				MIDIPos += 1;
+				if (MIDIPos > 12) {
+					lcd.ScreenFill(LCD_BLACK);
+					MIDIPos = 0;
+				}
+			}*/
+
+		} else if (displayMode == Fourier || displayMode == Waterfall) {
 
 			fft.sampleCapture(false);									// checks if ready to start new capture
 

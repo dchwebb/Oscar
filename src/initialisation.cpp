@@ -244,3 +244,49 @@ void InitEncoders() {
 	NVIC_SetPriority(EXTI15_10_IRQn, 3);
 	NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
+
+void InitUART() {
+	// PA0  UART4_TX 23 (AF8)
+	// PA1  UART4_RX 24 (AF8) ** NB Dev board seems to have something pulling this pin to ground so can't use
+	// PC10 UART4_TX 78
+	// PC11 UART4_RX 79
+	RCC->APB1ENR |= RCC_APB1ENR_UART4EN;			// UART4 clock enable
+
+/*
+	//	Set UART TX for testing
+	GPIOA->MODER |= GPIO_MODER_MODER0_1;			// Set alternate function on PA0
+	GPIOA->AFR[0] |= 0b1000;						// Alternate function UART4_TX is 1000: AF8
+	GPIOA->PUPDR |= GPIO_PUPDR_PUPDR0_0;
+	UART4->CR1 |= USART_CR1_TE;						// Transmit enable
+*/
+
+/*
+	GPIOA->MODER |= GPIO_MODER_MODER1_1;			// Set alternate function on PA1
+	GPIOA->AFR[0] |= 0b1000 << 4;					// Alternate function on PA1 for UART4_RX is 1000: AF8
+	GPIOA->PUPDR |= GPIO_PUPDR_PUPDR1_0;			// Pull up test for PA1
+*/
+	GPIOC->MODER |= GPIO_MODER_MODER11_1;			// Set alternate function on PC11
+	GPIOC->AFR[1] |= 0b1000 << 12;					// Alternate function on PC11 for UART4_RX is 1000: AF8
+	//GPIOC->PUPDR |= GPIO_PUPDR_PUPDR11_0;			// Pull up test for PC11
+
+	UART4->BRR |= 90 << 4;							// Baud Rate (called USART_BRR_DIV_Mantissa) = APB1 clock (45MHz) / (16 * 31250) = 90
+	UART4->CR1 &= ~USART_CR1_M;						// Clear bit to set 8 bit word length
+	UART4->CR1 |= USART_CR1_RE;						// Receive enable
+
+	// Set up interrupts
+	UART4->CR1 |= USART_CR1_RXNEIE;
+	NVIC_SetPriority(UART4_IRQn, 3);
+	NVIC_EnableIRQ(UART4_IRQn);
+
+
+	UART4->CR1 |= USART_CR1_UE;						// USART Enable
+
+	/*
+	//	Test send
+	for (int x = 0; x < 10; ++x) {
+		UART4->DR = (uint8_t)0xAA;
+	}
+
+*/
+
+}

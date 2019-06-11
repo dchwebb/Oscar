@@ -83,6 +83,9 @@ void UI::handleEncoders() {
 			displayMode = Circular;
 			break;
 		case Circular :
+			displayMode = MIDI;
+			break;
+		case MIDI :
 			displayMode = Oscilloscope;
 			break;
 		}

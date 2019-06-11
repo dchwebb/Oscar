@@ -12,6 +12,8 @@ FFT::FFT() {
 		}
 	}
 
+
+
 }
 
 // Carry out Fast fourier transform
@@ -22,7 +24,11 @@ void FFT::runFFT(volatile float candSin[]) {
 	calcFFT(candSin);
 	displayFFT(candSin);
 
+/*	FFTDrawBufferA[0][0] = 2;
+	FFTDrawBufferA[0][1] = 10;
 
+	FFTDrawBufferA[1][2] = 3;
+	FFTDrawBufferA[1][3] = 13;*/
 }
 
 // Carry out Fast fourier transform
@@ -363,4 +369,9 @@ void FFT::FFTInfo(void) {
 		lcd.DrawString(120, DRAWHEIGHT + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 		CurrentHertz = s;
 	}
+}
+
+void FFT::setDrawBuffer(uint16_t* buff1, uint16_t* buff2) {
+	FFTDrawBuffer[0] = buff1;
+	FFTDrawBuffer[1] = buff2;
 }

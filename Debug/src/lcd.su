@@ -1,4 +1,4 @@
-lcd.cpp:9:1:LCD::LCD()	4	static
+lcd.cpp:9:1:LCD::LCD()	8	static
 lcd.cpp:67:6:void LCD::Delay(uint32_t)	8	static
 lcd.cpp:254:6:void LCD::DrawCharMem(uint16_t, uint16_t, uint16_t, uint16_t*, char, const FontData*, const uint32_t&, const uint32_t&)	36	static
 lcd.cpp:283:6:void LCD::DrawStringMem(uint16_t, uint16_t, uint16_t, uint16_t*, std::__cxx11::string, const FontData*, const uint32_t&, const uint32_t&)	72	static
