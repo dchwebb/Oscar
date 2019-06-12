@@ -21,7 +21,20 @@ void MIDIHandler::ProcessMidi() {
 			MIDIQueue.pop();
 			lcd.DrawString(10, 15 * MIDIPos, "Pitch Bend  ch " + ui.intToString(channel + 1) + " " + ui.intToString(pb), &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
 			MIDIPos += 1;
-
+		} else if (msg == 0xB && MIDIQueue.size() > 2) {		// Control change
+			MIDIQueue.pop();
+			uint16_t controller = MIDIQueue.front();
+			MIDIQueue.pop();
+			uint16_t val = MIDIQueue.front();
+			MIDIQueue.pop();
+			lcd.DrawString(10, 15 * MIDIPos, "Controller  ch " + ui.intToString(channel + 1) + " c " + ui.intToString(controller) + " v " + ui.intToString(val), &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
+			MIDIPos += 1;
+		} else if (msg == 0xD && MIDIQueue.size() > 1) {		// Channel Pressure/Aftertouch
+			MIDIQueue.pop();
+			uint16_t amt = MIDIQueue.front();
+			MIDIQueue.pop();
+			lcd.DrawString(10, 15 * MIDIPos, "Aftertouch  ch " + ui.intToString(channel + 1) + " " + ui.intToString(amt), &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
+			MIDIPos += 1;
 		}
 
 		//	handle unknown data in queue
@@ -29,7 +42,7 @@ void MIDIHandler::ProcessMidi() {
 			MIDIQueue.pop();
 		}
 
-		if (MIDIPos > 12) {
+		if (MIDIPos > 13) {
 			lcd.ScreenFill(LCD_BLACK);
 			MIDIPos = 0;
 		}
