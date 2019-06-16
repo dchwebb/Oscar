@@ -291,18 +291,8 @@ int main(void) {
 		ui.handleEncoders();
 
 		if (displayMode == MIDI) {
-			//lcd.DrawString(10, 10, "MIDI Mode", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+
 			midi.ProcessMidi();
-			/*if (MIDIQueue.size() > 0) {
-				uint8_t val = MIDIQueue.front();
-				MIDIQueue.pop();
-				lcd.DrawString(10, 14 * MIDIPos, ui.intToString(val), &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
-				MIDIPos += 1;
-				if (MIDIPos > 12) {
-					lcd.ScreenFill(LCD_BLACK);
-					MIDIPos = 0;
-				}
-			}*/
 
 		} else if (displayMode == Fourier || displayMode == Waterfall) {
 
@@ -320,10 +310,6 @@ int main(void) {
 
 		} else if (displayMode == Circular) {
 
-			if (!circDrawing[0] && circDataAvailable[0]) {								// check if we should start drawing
-				int susp = 1;
-				susp++;
-			}
 
 			if ((!circDrawing[0] && circDataAvailable[0] && (circDrawPos[1] >= zeroCrossings[1] || !circDrawing[1])) ||
 				(!circDrawing[1] && circDataAvailable[1] && (circDrawPos[0] >= zeroCrossings[0] || !circDrawing[0]))) {								// check if we should start drawing
@@ -332,7 +318,6 @@ int main(void) {
 				circDrawing[drawBufferNumber] = true;
 				circDrawPos[drawBufferNumber] = 0;
 				lcd.DrawString(140, DRAWHEIGHT + 8, ui.floatToString(captureFreq[drawBufferNumber], true) + "Hz  ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
-				//lcd.ScreenFill(LCD_BLACK);
 			}
 
 			// to have a continuous display drawing next sample as old sample is finishing

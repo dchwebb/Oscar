@@ -217,6 +217,35 @@ void LCD::DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uin
 }
 
 
+void LCD::DrawRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint32_t& colour) {
+
+	int16_t dx, dy, err;
+	uint16_t tmp;
+
+	// Check lines are not too long
+	if (x0 >= width)	x0 = width - 1;
+	if (x1 >= width)	x1 = width - 1;
+	if (y0 >= height)	y0 = height - 1;
+	if (y1 >= height)	y1 = height - 1;
+	if (y0 < 0)			y0 = 0;
+	if (y1 < 0)			y1 = 0;
+
+
+	// Flip co-ordinates if wrong way round
+	if (x0 > x1) {
+		tmp = x0; x0 = x1; x1 = tmp;
+	}
+	if (y0 > y1) {
+		tmp = y0; y0 = y1; y1 = tmp;
+	}
+
+	ColourFill(x0, y0, x1, y0, colour);
+	ColourFill(x0, y0, x0, y1, colour);
+	ColourFill(x0, y1, x1, y1, colour);
+	ColourFill(x1, y0, x1, y1, colour);
+}
+
+
 void LCD::DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
 
 	// If at the end of a line of display, go to new line and set x to 0 position
