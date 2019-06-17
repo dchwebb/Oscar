@@ -19,7 +19,7 @@
 #define ADC_BUFFER_LENGTH 8
 
 extern volatile uint16_t ADC_array[];
-enum encoderType { HorizScaleCoarse, HorizScaleFine, CalibVertScale, CalibVertOffset, VoltScale, FFTAutoTune, FFTChannel };
+enum encoderType { HorizScaleCoarse, HorizScaleFine, CalibVertScale, CalibVertOffset, VoltScale, TriggerChannel, TriggerY, FFTAutoTune, FFTChannel };
 enum mode { Oscilloscope, Fourier, Waterfall, Circular, MIDI };
 
 void SystemClock_Config(void);

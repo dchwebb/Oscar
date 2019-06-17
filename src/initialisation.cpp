@@ -202,13 +202,14 @@ void InitCoverageTimer() {
 }
 
 void InitEncoders() {
-	// Encoder 1: Button on PA7, up/down on PE8 and PE9; Encoder 2: up/down on PE10 and PE11
+	// Encoder 1: Button on PA7, up/down on PE8 and PE9; Encoder 2: button on PE4, up/down on PE10 and PE11
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;			// reset and clock control - advanced high performance bus - GPIO port C
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN;			// reset and clock control - advanced high performance bus - GPIO port E
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;			// Enable system configuration clock: used to manage external interrupt line connection to GPIOs
 
 	// encoder connections to pull up
 	GPIOA->PUPDR |= GPIO_PUPDR_PUPDR7_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
+	GPIOE->PUPDR |= GPIO_PUPDR_PUPDR4_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
 	GPIOE->PUPDR |= GPIO_PUPDR_PUPDR8_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
 	GPIOE->PUPDR |= GPIO_PUPDR_PUPDR9_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
 	GPIOE->PUPDR |= GPIO_PUPDR_PUPDR10_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
@@ -220,6 +221,11 @@ void InitEncoders() {
 //	EXTI->RTSR |= EXTI_RTSR_TR7;					// Enable rising edge trigger
 	EXTI->FTSR |= EXTI_FTSR_TR7;					// Enable falling edge trigger
 	EXTI->IMR |= EXTI_IMR_MR7;						// Activate interrupt using mask register
+
+	// configure PE4 button to fire on an interrupt
+	SYSCFG->EXTICR[1] |= SYSCFG_EXTICR2_EXTI4_PE;	// Select Pin PA0 which uses External interrupt 2
+	EXTI->FTSR |= EXTI_FTSR_TR4;					// Enable falling edge trigger
+	EXTI->IMR |= EXTI_IMR_MR4;						// Activate interrupt using mask register
 
 	SYSCFG->EXTICR[2] |= SYSCFG_EXTICR3_EXTI8_PE;	// Select Pin PE8 which uses External interrupt 3
 	EXTI->FTSR |= EXTI_FTSR_TR8;					// Enable falling edge trigger
@@ -239,6 +245,8 @@ void InitEncoders() {
 	EXTI->FTSR |= EXTI_FTSR_TR11;					// Enable falling edge trigger
 	EXTI->IMR |= EXTI_IMR_MR11;						// Activate interrupt using mask register
 
+	NVIC_SetPriority(EXTI4_IRQn, 3);
+	NVIC_EnableIRQ(EXTI4_IRQn);
 	NVIC_SetPriority(EXTI9_5_IRQn, 3);
 	NVIC_EnableIRQ(EXTI9_5_IRQn);
 	NVIC_SetPriority(EXTI15_10_IRQn, 3);
@@ -252,22 +260,8 @@ void InitUART() {
 	// PC11 UART4_RX 79
 	RCC->APB1ENR |= RCC_APB1ENR_UART4EN;			// UART4 clock enable
 
-/*
-	//	Set UART TX for testing
-	GPIOA->MODER |= GPIO_MODER_MODER0_1;			// Set alternate function on PA0
-	GPIOA->AFR[0] |= 0b1000;						// Alternate function UART4_TX is 1000: AF8
-	GPIOA->PUPDR |= GPIO_PUPDR_PUPDR0_0;
-	UART4->CR1 |= USART_CR1_TE;						// Transmit enable
-*/
-
-/*
-	GPIOA->MODER |= GPIO_MODER_MODER1_1;			// Set alternate function on PA1
-	GPIOA->AFR[0] |= 0b1000 << 4;					// Alternate function on PA1 for UART4_RX is 1000: AF8
-	GPIOA->PUPDR |= GPIO_PUPDR_PUPDR1_0;			// Pull up test for PA1
-*/
 	GPIOC->MODER |= GPIO_MODER_MODER11_1;			// Set alternate function on PC11
 	GPIOC->AFR[1] |= 0b1000 << 12;					// Alternate function on PC11 for UART4_RX is 1000: AF8
-	//GPIOC->PUPDR |= GPIO_PUPDR_PUPDR11_0;			// Pull up test for PC11
 
 	UART4->BRR |= 90 << 4;							// Baud Rate (called USART_BRR_DIV_Mantissa) = APB1 clock (45MHz) / (16 * 31250) = 90
 	UART4->CR1 &= ~USART_CR1_M;						// Clear bit to set 8 bit word length
@@ -278,15 +272,6 @@ void InitUART() {
 	NVIC_SetPriority(UART4_IRQn, 3);
 	NVIC_EnableIRQ(UART4_IRQn);
 
-
 	UART4->CR1 |= USART_CR1_UE;						// USART Enable
-
-	/*
-	//	Test send
-	for (int x = 0; x < 10; ++x) {
-		UART4->DR = (uint8_t)0xAA;
-	}
-
-*/
 
 }

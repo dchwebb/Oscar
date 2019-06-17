@@ -24,11 +24,6 @@ void FFT::runFFT(volatile float candSin[]) {
 	calcFFT(candSin);
 	displayFFT(candSin);
 
-/*	FFTDrawBufferA[0][0] = 2;
-	FFTDrawBufferA[0][1] = 10;
-
-	FFTDrawBufferA[1][2] = 3;
-	FFTDrawBufferA[1][3] = 13;*/
 }
 
 // Carry out Fast fourier transform
@@ -347,8 +342,8 @@ inline float FFT::harmonicFreq(uint16_t harmonicNumber) {
 
 
 void FFT::sampleCapture(bool clearBuffer) {
-	extern bool capturing;
-	extern uint16_t capturePos;
+	//extern bool capturing;
+	//extern uint16_t capturePos;
 
 	if (clearBuffer)
 		dataAvailable[drawBufferNumber] = false;

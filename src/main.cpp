@@ -7,13 +7,13 @@
 #include "lcd.h"
 #include "fft.h"
 #include "midi.h"
-
+#include "osc.h"
 
 extern uint32_t SystemCoreClock;
 
 volatile uint16_t OscBufferA[2][DRAWWIDTH], OscBufferB[2][DRAWWIDTH];
-volatile uint16_t prevPixelA = 0, prevPixelB = 0, adcA, oldAdcA, adcB, capturePos = 0, drawPos = 0, bufferSamples = 0;
-volatile bool freqBelowZero, capturing = false, drawing = false, Encoder1Btn = false, oscFree = false;
+volatile uint16_t prevPixelA = 0, prevPixelB = 0, adcA, oldAdc, adcB, capturePos = 0, drawPos = 0, bufferSamples = 0;
+volatile bool freqBelowZero, capturing = false, drawing = false, Encoder1Btn = false, Encoder2Btn = false, oscFree = false, menuMode = false;
 volatile uint8_t VertOffsetA = 0, VertOffsetB = 0, captureBufferNumber = 0, drawBufferNumber = 0;
 volatile int8_t encoderPendingL = 0, encoderPendingR = 0;
 volatile int16_t drawOffset[2] {0, 0};
@@ -40,27 +40,22 @@ volatile int16_t tmpNewArr;
 
 volatile float captureFreq[2] {0, 0};
 volatile float circAngle;
-mode displayMode = MIDI;
+mode displayMode = Oscilloscope;
 #define CIRCLENGTH 160
 
-/*
-volatile uint8_t MIDIBuffer[32];
-volatile uint8_t MIDIRxCounter = 0;
-std::queue<uint8_t> MIDIQueue;
-volatile uint8_t MIDIPos = 0;
-*/
 
 LCD lcd;
 FFT fft;
 UI ui;
 MIDIHandler midi;
+Osc osc;
 
-volatile uint16_t fundHarm;
-
+/*
 struct  {
 	uint16_t x = 10;
 	uint16_t y = 9000;
 } trigger;
+*/
 
 inline uint16_t CalcVertOffset(volatile const uint16_t& vPos, const uint16_t& vOffset) {
 	return std::max(std::min(((((float)(vPos * vCalibScale + vCalibOffset) / (4 * 4096) - 0.5f) * (8.0f / voltScale)) + 0.5f) * DRAWHEIGHT, (float)DRAWHEIGHT - 1), 1.0f);
@@ -105,7 +100,7 @@ extern "C"
 				adcA = ADC_array[1] + ADC_array[3] + ADC_array[5] + ADC_array[7];
 
 			// check if we should start capturing - ie there is a buffer spare and a zero crossing has occured
-			if (!capturing && oldAdcA < CalibZeroPos && adcA >= CalibZeroPos && (!circDataAvailable[0] || !circDataAvailable[1])) {
+			if (!capturing && oldAdc < CalibZeroPos && adcA >= CalibZeroPos && (!circDataAvailable[0] || !circDataAvailable[1])) {
 				capturing = true;
 				captureBufferNumber = circDataAvailable[0] ? 1 : 0;		// select correct capture buffer based on whether buffer 0 or 1 contains data
 				capturePos = 0;				// used to check if a sample is ready to be drawn
@@ -117,7 +112,7 @@ extern "C"
 				OscBufferA[captureBufferNumber][capturePos] = adcA;
 
 				// store array of zero crossing points
-				if (capturePos > 0 && oldAdcA < CalibZeroPos && adcA >= CalibZeroPos) {
+				if (capturePos > 0 && oldAdc < CalibZeroPos && adcA >= CalibZeroPos) {
 					zeroCrossings[captureBufferNumber] = capturePos;
 					circDataAvailable[captureBufferNumber] = true;
 
@@ -140,7 +135,7 @@ extern "C"
 					capturePos++;
 				}
 			}
-			oldAdcA = adcA;
+			oldAdc = adcA;
 
 		} else if (displayMode == Oscilloscope) {
 			// Average the last four ADC readings to smooth noise
@@ -148,7 +143,7 @@ extern "C"
 			adcB = ADC_array[1] + ADC_array[3] + ADC_array[5] + ADC_array[7];
 
 			// check if we should start capturing - ie not drawing from the capture buffer and crossed over the trigger threshold (or in free mode)
-			if (!capturing && (!drawing || captureBufferNumber != drawBufferNumber) && (oscFree || (bufferSamples > trigger.x && oldAdcA < trigger.y && adcA >= trigger.y))) {
+			if (!capturing && (!drawing || captureBufferNumber != drawBufferNumber) && (oscFree || (bufferSamples > osc.TriggerX && oldAdc < osc.TriggerY && adcA >= osc.TriggerY))) {
 				capturing = true;
 
 				if (oscFree) {										// free running mode
@@ -157,10 +152,10 @@ extern "C"
 					capturedSamples[captureBufferNumber] = -1;
 				} else {
 					// calculate the drawing offset based on the current capture position minus the horizontal trigger position
-					drawOffset[captureBufferNumber] = capturePos - trigger.x;
+					drawOffset[captureBufferNumber] = capturePos - osc.TriggerX;
 					if (drawOffset[captureBufferNumber] < 0)	drawOffset[captureBufferNumber] += DRAWWIDTH;
 
-					capturedSamples[captureBufferNumber] = trigger.x - 1;	// used to check if a sample is ready to be drawn
+					capturedSamples[captureBufferNumber] = osc.TriggerX - 1;	// used to check if a sample is ready to be drawn
 				}
 			}
 
@@ -175,7 +170,7 @@ extern "C"
 			if (capturing || !drawing || captureBufferNumber != drawBufferNumber) {
 				OscBufferA[captureBufferNumber][capturePos] = adcA;
 				OscBufferB[captureBufferNumber][capturePos] = adcB;
-				oldAdcA = adcA;
+				oldAdc = adcA;
 
 				if (capturePos == DRAWWIDTH - 1)	capturePos = 0;
 				else								capturePos++;
@@ -185,6 +180,14 @@ extern "C"
 
 			}
 		}
+	}
+
+	// Left Encoder Button
+	void EXTI4_IRQHandler(void) {
+		if (!(GPIOE->IDR & GPIO_IDR_IDR_4))				// Read Encoder button PA0
+			Encoder2Btn = true;
+
+		EXTI->PR |= EXTI_PR_PR4;						// Clear interrupt pending
 	}
 
 	// Right Encoder
@@ -231,37 +234,6 @@ extern "C"
 }
 
 
-void ResetMode() {
-	TIM3->CR1 &= ~TIM_CR1_CEN;				// Disable the sample acquisiton timer
-
-	lcd.ScreenFill(LCD_BLACK);
-	switch (displayMode) {
-	case Oscilloscope :
-		ui.EncoderModeL = HorizScaleCoarse;
-		ui.EncoderModeR = VoltScale;
-		break;
-	case Fourier :
-		ui.EncoderModeL = HorizScaleCoarse;
-		ui.EncoderModeR = FFTAutoTune;
-		break;
-	case Waterfall :
-		ui.EncoderModeL = HorizScaleCoarse;
-		ui.EncoderModeR = FFTChannel;
-		break;
-	case Circular :
-		ui.EncoderModeL = FFTChannel;
-		ui.EncoderModeR = VoltScale;
-		break;
-	}
-	ui.DrawUI();
-
-	capturing = drawing = false;
-	bufferSamples = capturePos = oldAdcA = 0;
-	fft.dataAvailable[0] = fft.dataAvailable[1] = false;
-	fft.samples = displayMode == Fourier ? FFTSAMPLES : WATERFALLSAMPLES;
-
-	TIM3->CR1 |= TIM_CR1_CEN;				// Reenable the sample acquisiton timer
-}
 
 int main(void) {
 	SystemInit();							// Activates floating point coprocessor and resets clock
@@ -275,7 +247,7 @@ int main(void) {
 
 	lcd.Init();								// Initialize ILI9341 LCD
 	InitSampleAcquisition();
-	ResetMode();
+	ui.ResetMode();
 	ui.DrawUI();
 
 	// The FFT draw buffers are declared here and passed to the FFT Class as points to keep the size of the executable down
@@ -286,11 +258,12 @@ int main(void) {
 	CalibZeroPos = CalcZeroSize();
 
 	while (1) {
-		fundHarm = fft.harmonic[0];			// for debugging
 
 		ui.handleEncoders();
 
-		if (displayMode == MIDI) {
+		if (menuMode) {
+
+		} else if (displayMode == MIDI) {
 
 			midi.ProcessMidi();
 
@@ -430,11 +403,11 @@ int main(void) {
 				}
 
 				// Draw trigger as a yellow cross
-				if (drawPos == trigger.x + 4) {
-					uint16_t vo = CalcVertOffset(trigger.y, VertOffsetA);
+				if (drawPos == osc.TriggerX + 4) {
+					uint16_t vo = CalcVertOffset(osc.TriggerY, VertOffsetA);
 					if (vo > 4 && vo < DRAWHEIGHT - 4) {
-						lcd.DrawLine(trigger.x, vo - 4, trigger.x, vo + 4, LCD_YELLOW);
-						lcd.DrawLine(std::max(trigger.x - 4, 0), vo, trigger.x + 4, vo, LCD_YELLOW);
+						lcd.DrawLine(osc.TriggerX, vo - 4, osc.TriggerX, vo + 4, LCD_YELLOW);
+						lcd.DrawLine(std::max(osc.TriggerX - 4, 0), vo, osc.TriggerX + 4, vo, LCD_YELLOW);
 					}
 				}
 

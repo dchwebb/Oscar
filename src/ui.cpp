@@ -19,7 +19,23 @@ void UI::DrawUI() {
 }
 
 
-void UI::MenuAction(encoderType type, int8_t val) {
+void UI::MenuAction(encoderType* et, volatile const int8_t& val) {
+
+	encoderType newVal;
+	for (auto m : OscMenu) {
+		if (m.selected == *et) {
+			if (val > 0 && m.pos + 1 < OscMenu.size()) {
+				*et = OscMenu[m.pos + 1].selected;
+			} else if (val < 0 && m.pos > 0) {
+				*et = OscMenu[m.pos - 1].selected;
+			}
+			break;
+		}
+	}
+	DrawMenu();
+}
+
+void UI::EncoderAction(encoderType type, int8_t val) {
 	int16_t adj;
 	switch (type) {
 	case HorizScaleCoarse :
@@ -46,6 +62,12 @@ void UI::MenuAction(encoderType type, int8_t val) {
 			DrawUI();
 		}
 		break;
+	case TriggerChannel :
+
+		break;
+	case TriggerY :
+		osc.TriggerY += 100 * val;
+		break;
 	case FFTAutoTune :
 		fft.autoTune = !fft.autoTune;
 		DrawUI();
@@ -58,20 +80,56 @@ void UI::MenuAction(encoderType type, int8_t val) {
 	  break;
 	}
 }
+void UI::DrawMenu() {
+	lcd.ScreenFill(LCD_BLACK);
+	lcd.DrawString(10, 5, "Left Dial", &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
+	lcd.DrawString(170, 5, "Right Dial", &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
+	for (uint8_t m = 0; m < OscMenu.size(); ++m) {
+		lcd.DrawString(10, 25 + m * 20, OscMenu[m].name, &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
+		lcd.DrawString(170, 25 + m * 20, OscMenu[m].name, &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
+
+		if (OscMenu[m].selected == EncoderModeL) 	lcd.DrawString(0, 25 + m * 20, "*", &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
+		if (OscMenu[m].selected == EncoderModeR) 	lcd.DrawString(160, 25 + m * 20, "*", &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
+	}
+}
 
 void UI::handleEncoders() {
 	if (encoderPendingL && (GPIOE->IDR & GPIO_IDR_IDR_11) && (GPIOE->IDR & GPIO_IDR_IDR_10)) {
-		MenuAction(EncoderModeL, encoderPendingL);
+		if (menuMode)	MenuAction(&EncoderModeL, encoderPendingL);
+		else			EncoderAction(EncoderModeL, encoderPendingL);
 		encoderPendingL = 0;
 	}
 
 	if (encoderPendingR && (GPIOE->IDR & GPIO_IDR_IDR_8) && (GPIOE->IDR & GPIO_IDR_IDR_9)) {
-		MenuAction(EncoderModeR, encoderPendingR);
+		if (menuMode)	MenuAction(&EncoderModeR, encoderPendingR);
+		else			EncoderAction(EncoderModeR, encoderPendingR);
+
+		//MenuAction(EncoderModeR, encoderPendingR);
 		encoderPendingR = 0;
 	}
 
+
+	// Menu mode
+	if (Encoder2Btn) {
+		Encoder2Btn = false;
+		menuMode = !menuMode;
+		if (!menuMode) {
+			DrawUI();
+		} else {
+			DrawMenu();
+		}
+	}
+
+	// Change display mode
 	if (Encoder1Btn) {
 		Encoder1Btn = false;
+
+		if (menuMode) {
+			menuMode = false;
+			DrawUI();
+			return;
+		}
+
 		switch (displayMode) {
 		case Oscilloscope :
 			displayMode = Fourier;
@@ -89,9 +147,49 @@ void UI::handleEncoders() {
 			displayMode = Oscilloscope;
 			break;
 		}
-	ResetMode();
+		ResetMode();
 	}
 }
+
+void UI::ResetMode() {
+	TIM3->CR1 &= ~TIM_CR1_CEN;				// Disable the sample acquisiton timer
+	UART4->CR1 &= ~USART_CR1_UE;			// Disable MIDI capture on UART4
+
+	lcd.ScreenFill(LCD_BLACK);
+	switch (displayMode) {
+	case Oscilloscope :
+		EncoderModeL = HorizScaleFine;
+		EncoderModeR = VoltScale;
+		break;
+	case Fourier :
+		EncoderModeL = HorizScaleCoarse;
+		EncoderModeR = FFTAutoTune;
+		break;
+	case Waterfall :
+		EncoderModeL = HorizScaleCoarse;
+		EncoderModeR = FFTChannel;
+		break;
+	case Circular :
+		EncoderModeL = FFTChannel;
+		EncoderModeR = VoltScale;
+		break;
+	case MIDI :
+		break;
+	}
+	ui.DrawUI();
+
+	capturing = drawing = false;
+	bufferSamples = capturePos = oldAdc = 0;
+	fft.dataAvailable[0] = fft.dataAvailable[1] = false;
+	fft.samples = displayMode == Fourier ? FFTSAMPLES : WATERFALLSAMPLES;
+
+	if (displayMode == MIDI) {
+		UART4->CR1 |= USART_CR1_UE;			// Enable MIDI capture
+	} else {
+		TIM3->CR1 |= TIM_CR1_CEN;				// Reenable the sample acquisiton timer
+	}
+}
+
 
 std::string UI::EncoderLabel(encoderType type) {
 	switch (type) {
@@ -105,6 +203,10 @@ std::string UI::EncoderLabel(encoderType type) {
 		return "Vert Offset";
 	case VoltScale :
 		return "Zoom Vert";
+	case TriggerY :
+		return "Trigger Y";
+	case TriggerChannel :
+		return "Channel "; // + std::string (osc.TriggerChannel == channelA ? "A" : "B");
 	case FFTAutoTune :
 		return "Tune: " + std::string(fft.autoTune ? "auto" : "off ");
 	case FFTChannel :
