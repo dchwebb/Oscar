@@ -12,10 +12,10 @@
 extern uint32_t SystemCoreClock;
 
 volatile uint16_t OscBufferA[2][DRAWWIDTH], OscBufferB[2][DRAWWIDTH];
-volatile uint16_t prevPixelA = 0, prevPixelB = 0, adcA, oldAdc, adcB, capturePos = 0, drawPos = 0, bufferSamples = 0;
-volatile bool freqBelowZero, capturing = false, drawing = false, Encoder1Btn = false, Encoder2Btn = false, oscFree = false, menuMode = false;
+volatile uint16_t prevPixelA = 0, prevPixelB = 0, adcA, adcB, oldAdc, capturePos = 0, drawPos = 0, bufferSamples = 0;
+volatile bool freqBelowZero, capturing = false, drawing = false, encoderBtnL = false, encoderBtnR = false, oscFree = false, menuMode = false;
 volatile uint8_t VertOffsetA = 0, VertOffsetB = 0, captureBufferNumber = 0, drawBufferNumber = 0;
-volatile int8_t encoderPendingL = 0, encoderPendingR = 0;
+volatile int8_t encoderPendingL = 0, encoderStateL = 0, encoderPendingR = 0, encoderStateR = 0;
 volatile int16_t drawOffset[2] {0, 0};
 volatile bool circDataAvailable[2] {false, false};
 volatile uint16_t capturedSamples[2] {0, 0};
@@ -36,7 +36,6 @@ volatile uint16_t zeroCrossings[2] {0, 0};
 volatile bool circDrawing[2] {false, false};
 volatile uint16_t circDrawPos[2] {0, 0};
 volatile uint16_t circPrevPixel[2] {0, 0};
-volatile int16_t tmpNewArr;
 
 volatile float captureFreq[2] {0, 0};
 volatile float circAngle;
@@ -50,12 +49,7 @@ UI ui;
 MIDIHandler midi;
 Osc osc;
 
-/*
-struct  {
-	uint16_t x = 10;
-	uint16_t y = 9000;
-} trigger;
-*/
+
 
 inline uint16_t CalcVertOffset(volatile const uint16_t& vPos, const uint16_t& vOffset) {
 	return std::max(std::min(((((float)(vPos * vCalibScale + vCalibOffset) / (4 * 4096) - 0.5f) * (8.0f / voltScale)) + 0.5f) * DRAWHEIGHT, (float)DRAWHEIGHT - 1), 1.0f);
@@ -184,51 +178,60 @@ extern "C"
 
 	// Left Encoder Button
 	void EXTI4_IRQHandler(void) {
-		if (!(GPIOE->IDR & GPIO_IDR_IDR_4))				// Read Encoder button PA0
-			Encoder2Btn = true;
 
-		EXTI->PR |= EXTI_PR_PR4;						// Clear interrupt pending
+		if (!(GPIOE->IDR & GPIO_IDR_IDR_4)) 						// Encoder button PE4 pressed
+			DB_ON													// Enable debounce timer
+		if (GPIOE->IDR & GPIO_IDR_IDR_4 && TIM5->CNT > 100) {		// Encoder button released - check enough time has elapsed to ensure not a bounce. A quick press if around 300, a long one around 8000+
+			encoderBtnR = true;
+			DB_OFF													// Disable debounce timer
+		}
+		EXTI->PR |= EXTI_PR_PR4;									// Clear interrupt pending
 	}
 
 	// Right Encoder
 	void EXTI9_5_IRQHandler(void) {
-		if (!(GPIOA->IDR & GPIO_IDR_IDR_7))				// Read Encoder button PA7
-			Encoder1Btn = true;
 
-		// Encoder sequence is one goes down then the other (and v bouncy) - set pending based on first action then let main loop check both are up before actioning
-		if (!encoderPendingR && !(GPIOE->IDR & GPIO_IDR_IDR_8) && (GPIOE->IDR & GPIO_IDR_IDR_9))
-			encoderPendingR = 1;
+		if (EXTI->PR & EXTI_PR_PR7) {
+			if (!(GPIOA->IDR & GPIO_IDR_IDR_7)) 					// Encoder button PA7 pressed
+				DB_ON												// Enable debounce timer
+			if (GPIOA->IDR & GPIO_IDR_IDR_7 && TIM5->CNT > 200) {	// Encoder button released - check enough time has elapsed to ensure not a bounce. A quick press if around 300, a long one around 8000+
+				encoderBtnL = true;
+				DB_OFF												// Disable debounce timer
+			}
+		} else {
+			// read encoder pins using state table to debounce
+			uint8_t pinState = (!(GPIOE->IDR & GPIO_IDR_IDR_8) << 1) | !(GPIOE->IDR & GPIO_IDR_IDR_9);		// Store position of each pin
+			encoderStateR = encTable[encoderStateR & 0xF][pinState];	// Determine new state from the pins and state table.
+			if (encoderStateR & 0x30) {
+				encoderPendingR = (encoderStateR & 0x30) == DIR_CW ? 1 : -1;
+			}
+		}
 
-		if (!encoderPendingR && !(GPIOE->IDR & GPIO_IDR_IDR_9) && (GPIOE->IDR & GPIO_IDR_IDR_8))
-			encoderPendingR = -1;
-
-
-		EXTI->PR |= EXTI_PR_PR7 | EXTI_PR_PR8 | EXTI_PR_PR9;	// Clear interrupt pending
+		EXTI->PR |= EXTI_PR_PR7 | EXTI_PR_PR8 | EXTI_PR_PR9;		// Clear interrupt pending
 	}
 
 	// Left Encoder
 	void EXTI15_10_IRQHandler(void) {
 
-		// Encoder sequence is one goes down then the other (and v bouncy) - set pending based on first action then let main loop check both are up before actioning
-		if (!encoderPendingL && !(GPIOE->IDR & GPIO_IDR_IDR_10) && (GPIOE->IDR & GPIO_IDR_IDR_11))
-			encoderPendingL = 1;
+		uint8_t pinState = (!(GPIOE->IDR & GPIO_IDR_IDR_10) << 1) | !(GPIOE->IDR & GPIO_IDR_IDR_11);	// Store position of each pin
+		encoderStateL = encTable[encoderStateL & 0xF][pinState];	// Determine new state from the pins and state table.
+		if (encoderStateL & 0x30) {
+			encoderPendingL = (encoderStateL & 0x30) == DIR_CW ? 1 : -1;
+		}
 
-		if (!encoderPendingL && !(GPIOE->IDR & GPIO_IDR_IDR_11) && (GPIOE->IDR & GPIO_IDR_IDR_10))
-			encoderPendingL = -1;
-
-		EXTI->PR |= EXTI_PR_PR10 | EXTI_PR_PR11;			// Clear interrupt pending
+		EXTI->PR |= EXTI_PR_PR10 | EXTI_PR_PR11;					// Clear interrupt pending
 	}
 
 	//	Coverage timer
 	void TIM4_IRQHandler(void) {
-		TIM4->SR &= ~TIM_SR_UIF;							// clear UIF flag
+		TIM4->SR &= ~TIM_SR_UIF;									// clear UIF flag
 		coverageTimer ++;
 	}
 
 	// MIDI Decoder
 	void UART4_IRQHandler(void) {
 		if (UART4->SR | USART_SR_RXNE) {
-			midi.MIDIQueue.push(UART4->DR);		// accessing DR automatically resets the receive flag
+			midi.MIDIQueue.push(UART4->DR);							// accessing DR automatically resets the receive flag
 		}
 	}
 }
@@ -240,6 +243,7 @@ int main(void) {
 //	SystemClock_Config();					// Configure the clock and PLL - NB Currently done in SystemInit but will need updating for production board
 	SystemCoreClockUpdate();				// Update SystemCoreClock (system clock frequency) derived from settings of oscillators, prescalers and PLL
 	InitCoverageTimer();					// Timer 4 only activated/deactivated when CP_ON/CP_CAP macros are used
+	InitDebounceTimer();					// Timer 5 used to count button press bounces
 	InitLCDHardware();
 	InitADC();
 	InitEncoders();
@@ -321,8 +325,7 @@ int main(void) {
 						lcd.DrawLine(x, pixelA, x, prevPixelA, greenShade);
 
 						// Draw normal osc
-						unsigned int oscPos = pos * DRAWWIDTH / zeroCrossings[drawBufferNumber];
-						//unsigned int oscPos = pos;
+						uint16_t oscPos = pos * DRAWWIDTH / zeroCrossings[drawBufferNumber];
 						lcd.DrawLine(oscPos, pixelA, oscPos, prevPixelA, blueShade);
 
 						prevPixelA = pixelA;

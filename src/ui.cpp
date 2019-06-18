@@ -24,7 +24,7 @@ void UI::MenuAction(encoderType* et, volatile const int8_t& val) {
 	encoderType newVal;
 	for (auto m : OscMenu) {
 		if (m.selected == *et) {
-			if (val > 0 && m.pos + 1 < OscMenu.size()) {
+			if (val > 0 && m.pos + 1 < (uint8_t)OscMenu.size()) {
 				*et = OscMenu[m.pos + 1].selected;
 			} else if (val < 0 && m.pos > 0) {
 				*et = OscMenu[m.pos - 1].selected;
@@ -63,7 +63,7 @@ void UI::EncoderAction(encoderType type, int8_t val) {
 		}
 		break;
 	case TriggerChannel :
-
+		osc.TriggerChannel = (osc.TriggerChannel == channelA) ? channelB : (osc.TriggerChannel == channelB) ? channelNone: channelA;
 		break;
 	case TriggerY :
 		osc.TriggerY += 100 * val;
@@ -81,71 +81,65 @@ void UI::EncoderAction(encoderType type, int8_t val) {
 	}
 }
 void UI::DrawMenu() {
-	lcd.ScreenFill(LCD_BLACK);
-	lcd.DrawString(10, 5, "Left Dial", &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
-	lcd.DrawString(170, 5, "Right Dial", &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
-	for (uint8_t m = 0; m < OscMenu.size(); ++m) {
-		lcd.DrawString(10, 25 + m * 20, OscMenu[m].name, &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
-		lcd.DrawString(170, 25 + m * 20, OscMenu[m].name, &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
 
-		if (OscMenu[m].selected == EncoderModeL) 	lcd.DrawString(0, 25 + m * 20, "*", &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
-		if (OscMenu[m].selected == EncoderModeR) 	lcd.DrawString(160, 25 + m * 20, "*", &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
+	lcd.DrawString(10, 6, "L", &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
+	lcd.DrawString(80, 6, "Encoder Action", &lcd.Font_Large, LCD_ORANGE, LCD_BLACK);
+	lcd.DrawString(303, 6, "R", &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
+	lcd.DrawRect(0, 1, 319, 239, LCD_WHITE);
+	lcd.DrawLine(0, 27, 319, 27, LCD_WHITE);
+	lcd.DrawLine(26, 1, 26, 27, LCD_WHITE);
+	lcd.DrawLine(294, 1, 294, 27, LCD_WHITE);
+	lcd.DrawLine(159, 27, 159, 239, LCD_WHITE);
+
+	for (uint8_t m = 0; m < OscMenu.size(); ++m) {
+		lcd.DrawString(10, 32 + m * 20, OscMenu[m].name, &lcd.Font_Large, (OscMenu[m].selected == EncoderModeL) ? LCD_BLACK : LCD_WHITE, (OscMenu[m].selected == EncoderModeL) ? LCD_WHITE : LCD_BLACK);
+		lcd.DrawString(170, 32 + m * 20, OscMenu[m].name, &lcd.Font_Large, (OscMenu[m].selected == EncoderModeR) ? LCD_BLACK : LCD_WHITE, (OscMenu[m].selected == EncoderModeR) ? LCD_WHITE : LCD_BLACK);
+
+		//if (OscMenu[m].selected == EncoderModeL) 	lcd.DrawString(0, 25 + m * 20, "*", &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
+		//if (OscMenu[m].selected == EncoderModeR) 	lcd.DrawString(160, 25 + m * 20, "*", &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
 	}
 }
 
 void UI::handleEncoders() {
-	if (encoderPendingL && (GPIOE->IDR & GPIO_IDR_IDR_11) && (GPIOE->IDR & GPIO_IDR_IDR_10)) {
+	if (encoderPendingL) {
 		if (menuMode)	MenuAction(&EncoderModeL, encoderPendingL);
 		else			EncoderAction(EncoderModeL, encoderPendingL);
+
 		encoderPendingL = 0;
+
 	}
 
-	if (encoderPendingR && (GPIOE->IDR & GPIO_IDR_IDR_8) && (GPIOE->IDR & GPIO_IDR_IDR_9)) {
+	if (encoderPendingR) {
 		if (menuMode)	MenuAction(&EncoderModeR, encoderPendingR);
 		else			EncoderAction(EncoderModeR, encoderPendingR);
 
-		//MenuAction(EncoderModeR, encoderPendingR);
 		encoderPendingR = 0;
 	}
 
+	if ((encoderBtnL || encoderBtnR) && menuMode) {
+		encoderBtnL = encoderBtnR = menuMode = false;
+		DrawUI();
+		return;
+	}
 
 	// Menu mode
-	if (Encoder2Btn) {
-		Encoder2Btn = false;
-		menuMode = !menuMode;
-		if (!menuMode) {
-			DrawUI();
-		} else {
-			DrawMenu();
-		}
+	if (encoderBtnL) {
+		encoderBtnL = false;
+		menuMode = true;
+		lcd.ScreenFill(LCD_BLACK);
+		DrawMenu();
 	}
 
 	// Change display mode
-	if (Encoder1Btn) {
-		Encoder1Btn = false;
-
-		if (menuMode) {
-			menuMode = false;
-			DrawUI();
-			return;
-		}
+	if (encoderBtnR) {
+		encoderBtnR = false;
 
 		switch (displayMode) {
-		case Oscilloscope :
-			displayMode = Fourier;
-			break;
-		case Fourier :
-			displayMode = Waterfall;
-			break;
-		case Waterfall :
-			displayMode = Circular;
-			break;
-		case Circular :
-			displayMode = MIDI;
-			break;
-		case MIDI :
-			displayMode = Oscilloscope;
-			break;
+		case Oscilloscope :	displayMode = Fourier;			break;
+		case Fourier :		displayMode = Waterfall;		break;
+		case Waterfall :	displayMode = Circular;			break;
+		case Circular :		displayMode = MIDI;				break;
+		case MIDI :			displayMode = Oscilloscope;		break;
 		}
 		ResetMode();
 	}
@@ -198,9 +192,9 @@ std::string UI::EncoderLabel(encoderType type) {
 	case HorizScaleFine :
 		return "Zoom Horiz";
 	case CalibVertScale :
-		return "V Calib";
+		return "Calib Scale";
 	case CalibVertOffset :
-		return "Vert Offset";
+		return "Calib Offset";
 	case VoltScale :
 		return "Zoom Vert";
 	case TriggerY :

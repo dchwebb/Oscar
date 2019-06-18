@@ -49,7 +49,6 @@ void SystemClock_Config(void) {
 
 void InitSysTick()
 {
-	// using as a simple debounce counter
 
 	// Register macros found in core_cm4.h
 	SysTick->CTRL = 0;									// Disable SysTick
@@ -201,6 +200,13 @@ void InitCoverageTimer() {
 
 }
 
+//	Setup Timer 5 to count time between bounces
+void InitDebounceTimer() {
+	RCC->APB1ENR |= RCC_APB1ENR_TIM5EN;				// Enable Timer
+	TIM5->PSC = 10000;
+	TIM5->ARR = 65535;
+}
+
 void InitEncoders() {
 	// Encoder 1: Button on PA7, up/down on PE8 and PE9; Encoder 2: button on PE4, up/down on PE10 and PE11
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;			// reset and clock control - advanced high performance bus - GPIO port C
@@ -218,30 +224,33 @@ void InitEncoders() {
 
 	// configure PA7 button to fire on an interrupt
 	SYSCFG->EXTICR[1] |= SYSCFG_EXTICR2_EXTI7_PA;	// Select Pin PA7 which uses External interrupt 2
-//	EXTI->RTSR |= EXTI_RTSR_TR7;					// Enable rising edge trigger
+	EXTI->RTSR |= EXTI_RTSR_TR7;					// Enable rising edge trigger
 	EXTI->FTSR |= EXTI_FTSR_TR7;					// Enable falling edge trigger
 	EXTI->IMR |= EXTI_IMR_MR7;						// Activate interrupt using mask register
 
 	// configure PE4 button to fire on an interrupt
 	SYSCFG->EXTICR[1] |= SYSCFG_EXTICR2_EXTI4_PE;	// Select Pin PA0 which uses External interrupt 2
+	EXTI->RTSR |= EXTI_RTSR_TR4;					// Enable rising edge trigger
 	EXTI->FTSR |= EXTI_FTSR_TR4;					// Enable falling edge trigger
 	EXTI->IMR |= EXTI_IMR_MR4;						// Activate interrupt using mask register
 
 	SYSCFG->EXTICR[2] |= SYSCFG_EXTICR3_EXTI8_PE;	// Select Pin PE8 which uses External interrupt 3
+	EXTI->RTSR |= EXTI_FTSR_TR8;					// Enable rising edge trigger
 	EXTI->FTSR |= EXTI_FTSR_TR8;					// Enable falling edge trigger
 	EXTI->IMR |= EXTI_IMR_MR8;						// Activate interrupt using mask register
 
 	SYSCFG->EXTICR[2] |= SYSCFG_EXTICR3_EXTI9_PE;	// Select Pin PE9 which uses External interrupt 3
+	EXTI->RTSR |= EXTI_FTSR_TR9;					// Enable rising edge trigger
 	EXTI->FTSR |= EXTI_FTSR_TR9;					// Enable falling edge trigger
 	EXTI->IMR |= EXTI_IMR_MR9;						// Activate interrupt using mask register
 
 	SYSCFG->EXTICR[2] |= SYSCFG_EXTICR3_EXTI10_PE;	// Select Pin PE10 which uses External interrupt 3
-	//EXTI->RTSR |= EXTI_RTSR_TR10;					// Enable rising edge trigger
+	EXTI->RTSR |= EXTI_RTSR_TR10;					// Enable rising edge trigger
 	EXTI->FTSR |= EXTI_FTSR_TR10;					// Enable falling edge trigger
 	EXTI->IMR |= EXTI_IMR_MR10;						// Activate interrupt using mask register
 
 	SYSCFG->EXTICR[2] |= SYSCFG_EXTICR3_EXTI11_PE;	// Select Pin PE11 which uses External interrupt 3
-	//EXTI->RTSR |= EXTI_RTSR_TR11;					// Enable rising edge trigger
+	EXTI->RTSR |= EXTI_RTSR_TR11;					// Enable rising edge trigger
 	EXTI->FTSR |= EXTI_FTSR_TR11;					// Enable falling edge trigger
 	EXTI->IMR |= EXTI_IMR_MR11;						// Activate interrupt using mask register
 
