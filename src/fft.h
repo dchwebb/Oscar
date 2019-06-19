@@ -37,6 +37,8 @@ public:
 	bool dataAvailable[2] {false, false};
 	oscChannel channel = channelA;
 	float SineLUT[LUTSIZE];
+	encoderType EncModeL = FFTChannel;
+	encoderType EncModeR = FFTAutoTune;
 
 	FFT();
 	void runFFT(volatile float candSin[]);

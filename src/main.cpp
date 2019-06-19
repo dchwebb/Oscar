@@ -13,7 +13,7 @@ extern uint32_t SystemCoreClock;
 
 volatile uint16_t OscBufferA[2][DRAWWIDTH], OscBufferB[2][DRAWWIDTH];
 volatile uint16_t prevPixelA = 0, prevPixelB = 0, adcA, adcB, oldAdc, capturePos = 0, drawPos = 0, bufferSamples = 0;
-volatile bool freqBelowZero, capturing = false, drawing = false, encoderBtnL = false, encoderBtnR = false, oscFree = false, menuMode = false;
+volatile bool freqBelowZero, capturing = false, drawing = false, encoderBtnL = false, encoderBtnR = false, menuMode = false;
 volatile uint8_t VertOffsetA = 0, VertOffsetB = 0, captureBufferNumber = 0, drawBufferNumber = 0;
 volatile int8_t encoderPendingL = 0, encoderStateL = 0, encoderPendingR = 0, encoderStateR = 0;
 volatile int16_t drawOffset[2] {0, 0};
@@ -137,10 +137,10 @@ extern "C"
 			adcB = ADC_array[1] + ADC_array[3] + ADC_array[5] + ADC_array[7];
 
 			// check if we should start capturing - ie not drawing from the capture buffer and crossed over the trigger threshold (or in free mode)
-			if (!capturing && (!drawing || captureBufferNumber != drawBufferNumber) && (oscFree || (bufferSamples > osc.TriggerX && oldAdc < osc.TriggerY && adcA >= osc.TriggerY))) {
+			if (!capturing && (!drawing || captureBufferNumber != drawBufferNumber) && (osc.TriggerChannel == channelNone || (bufferSamples > osc.TriggerX && oldAdc < osc.TriggerY && *osc.TriggerTest >= osc.TriggerY))) {
 				capturing = true;
 
-				if (oscFree) {										// free running mode
+				if (osc.TriggerChannel == channelNone) {										// free running mode
 					capturePos = 0;
 					drawOffset[captureBufferNumber] = 0;
 					capturedSamples[captureBufferNumber] = -1;
@@ -164,7 +164,7 @@ extern "C"
 			if (capturing || !drawing || captureBufferNumber != drawBufferNumber) {
 				OscBufferA[captureBufferNumber][capturePos] = adcA;
 				OscBufferB[captureBufferNumber][capturePos] = adcB;
-				oldAdc = adcA;
+				oldAdc = *osc.TriggerTest;
 
 				if (capturePos == DRAWWIDTH - 1)	capturePos = 0;
 				else								capturePos++;

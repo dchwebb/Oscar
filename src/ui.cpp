@@ -8,6 +8,7 @@ void UI::DrawUI() {
 	lcd.ColourFill(90, DRAWHEIGHT + 1, 90, 239, LCD_GREY);
 	lcd.ColourFill(230, DRAWHEIGHT + 1, 230, 239, LCD_GREY);
 	lcd.ColourFill(319, DRAWHEIGHT + 1, 319, 239, LCD_GREY);
+	lcd.ColourFill(91, DRAWHEIGHT + 2, 229, 238, LCD_BLACK);
 
 	lcd.DrawString(10, DRAWHEIGHT + 8, EncoderLabel(EncoderModeL), &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 	lcd.DrawString(240, DRAWHEIGHT + 8, EncoderLabel(EncoderModeR), &lcd.Font_Small, LCD_GREY, LCD_BLACK);
@@ -21,17 +22,32 @@ void UI::DrawUI() {
 
 void UI::MenuAction(encoderType* et, volatile const int8_t& val) {
 
-	encoderType newVal;
-	for (auto m : OscMenu) {
+	std::vector<MenuItem>* currentMenu;
+	if (displayMode == Oscilloscope)
+		currentMenu = &OscMenu;
+	else if (displayMode == Fourier || displayMode == Waterfall)
+		currentMenu = &FftMenu;
+	else if (displayMode == Circular) {}
+	else if (displayMode == MIDI) {}
+
+	for (auto m : *currentMenu) {
 		if (m.selected == *et) {
-			if (val > 0 && m.pos + 1 < (uint8_t)OscMenu.size()) {
-				*et = OscMenu[m.pos + 1].selected;
+			if (val > 0 && m.pos + 1 < (uint8_t)currentMenu->size()) {
+				*et = (*currentMenu)[m.pos + 1].selected;
 			} else if (val < 0 && m.pos > 0) {
-				*et = OscMenu[m.pos - 1].selected;
+				*et = (*currentMenu)[m.pos - 1].selected;
 			}
 			break;
 		}
 	}
+	if (displayMode == Oscilloscope) {
+		osc.EncModeL = EncoderModeL;
+		osc.EncModeR = EncoderModeR;
+	} else if (displayMode == Fourier) {
+		fft.EncModeL = EncoderModeL;
+		fft.EncModeR = EncoderModeR;
+	}
+
 	DrawMenu();
 }
 
@@ -64,6 +80,17 @@ void UI::EncoderAction(encoderType type, int8_t val) {
 		break;
 	case TriggerChannel :
 		osc.TriggerChannel = (osc.TriggerChannel == channelA) ? channelB : (osc.TriggerChannel == channelB) ? channelNone: channelA;
+		switch (osc.TriggerChannel) {
+		case channelA :
+			osc.TriggerTest = &adcA;
+			break;
+		case channelB :
+			osc.TriggerTest = &adcB;
+			break;
+		default :
+			break;
+		}
+		DrawUI();
 		break;
 	case TriggerY :
 		osc.TriggerY += 100 * val;
@@ -91,6 +118,19 @@ void UI::DrawMenu() {
 	lcd.DrawLine(294, 1, 294, 27, LCD_WHITE);
 	lcd.DrawLine(159, 27, 159, 239, LCD_WHITE);
 
+	std::vector<MenuItem>* currentMenu;
+	if (displayMode == Oscilloscope)
+		currentMenu = &OscMenu;
+	else if (displayMode == Fourier || displayMode == Waterfall)
+		currentMenu = &FftMenu;
+
+	uint8_t pos = 0;
+	for (auto m = currentMenu->cbegin(); m != currentMenu->cend(); m++, pos++) {
+		lcd.DrawString(10, 32 + pos * 20, m->name, &lcd.Font_Large, (m->selected == EncoderModeL) ? LCD_BLACK : LCD_WHITE, (m->selected == EncoderModeL) ? LCD_WHITE : LCD_BLACK);
+		lcd.DrawString(170, 32 + pos * 20, m->name, &lcd.Font_Large, (m->selected == EncoderModeR) ? LCD_BLACK : LCD_WHITE, (m->selected == EncoderModeR) ? LCD_WHITE : LCD_BLACK);
+	}
+
+/*
 	for (uint8_t m = 0; m < OscMenu.size(); ++m) {
 		lcd.DrawString(10, 32 + m * 20, OscMenu[m].name, &lcd.Font_Large, (OscMenu[m].selected == EncoderModeL) ? LCD_BLACK : LCD_WHITE, (OscMenu[m].selected == EncoderModeL) ? LCD_WHITE : LCD_BLACK);
 		lcd.DrawString(170, 32 + m * 20, OscMenu[m].name, &lcd.Font_Large, (OscMenu[m].selected == EncoderModeR) ? LCD_BLACK : LCD_WHITE, (OscMenu[m].selected == EncoderModeR) ? LCD_WHITE : LCD_BLACK);
@@ -98,6 +138,7 @@ void UI::DrawMenu() {
 		//if (OscMenu[m].selected == EncoderModeL) 	lcd.DrawString(0, 25 + m * 20, "*", &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
 		//if (OscMenu[m].selected == EncoderModeR) 	lcd.DrawString(160, 25 + m * 20, "*", &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
 	}
+*/
 }
 
 void UI::handleEncoders() {
@@ -152,12 +193,12 @@ void UI::ResetMode() {
 	lcd.ScreenFill(LCD_BLACK);
 	switch (displayMode) {
 	case Oscilloscope :
-		EncoderModeL = HorizScaleFine;
-		EncoderModeR = VoltScale;
+		EncoderModeL = osc.EncModeL;
+		EncoderModeR = osc.EncModeR;
 		break;
 	case Fourier :
-		EncoderModeL = HorizScaleCoarse;
-		EncoderModeR = FFTAutoTune;
+		EncoderModeL = fft.EncModeL;
+		EncoderModeR = fft.EncModeR;
 		break;
 	case Waterfall :
 		EncoderModeL = HorizScaleCoarse;
@@ -180,7 +221,7 @@ void UI::ResetMode() {
 	if (displayMode == MIDI) {
 		UART4->CR1 |= USART_CR1_UE;			// Enable MIDI capture
 	} else {
-		TIM3->CR1 |= TIM_CR1_CEN;				// Reenable the sample acquisiton timer
+		TIM3->CR1 |= TIM_CR1_CEN;			// Reenable the sample acquisiton timer
 	}
 }
 
@@ -200,11 +241,11 @@ std::string UI::EncoderLabel(encoderType type) {
 	case TriggerY :
 		return "Trigger Y";
 	case TriggerChannel :
-		return "Channel "; // + std::string (osc.TriggerChannel == channelA ? "A" : "B");
+		return std::string(osc.TriggerChannel == channelA ? "Trigger A " : osc.TriggerChannel == channelB ? "Trigger B " : "No Trigger");
 	case FFTAutoTune :
 		return "Tune: " + std::string(fft.autoTune ? "auto" : "off ");
 	case FFTChannel :
-		return "Channel " + std::string (fft.channel == channelA ? "A" : "B");
+		return "Channel " + std::string(fft.channel == channelA ? "A" : "B");
 	default:
 	  return "";
 	}

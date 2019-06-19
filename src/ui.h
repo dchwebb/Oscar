@@ -18,7 +18,7 @@ extern Osc osc;
 
 extern volatile int8_t voltScale, encoderPendingL, encoderPendingR, encoderStateL;
 extern volatile int16_t vCalibOffset;
-extern volatile uint16_t oldAdc, capturePos, bufferSamples;
+extern volatile uint16_t oldAdc, capturePos, bufferSamples, adcA, adcB;
 extern volatile bool encoderBtnL, encoderBtnR, FFTMode, capturing, drawing, menuMode;
 extern volatile float vCalibScale;
 extern volatile uint32_t debugCount, coverageTotal, coverageTimer;
@@ -45,7 +45,9 @@ public:
 	encoderType EncoderModeL, EncoderModeR;
 
 	std::vector<MenuItem> OscMenu{  { 0, "Horiz Coarse", HorizScaleCoarse },{ 1, "Horiz Fine", HorizScaleFine },{ 2, "Vert scale", VoltScale},{ 3, "Trigger Y", TriggerY},
-		{ 4, "Trigger Ch", TriggerChannel},{ 5, "Calib Scale", CalibVertScale },{ 5, "Calib Fffset", CalibVertOffset } };
+		{ 4, "Trigger Ch", TriggerChannel},{ 5, "Calib Scale", CalibVertScale },{ 5, "Calib Offset", CalibVertOffset } };
+	std::vector<MenuItem> FftMenu{  { 0, "Horiz Coarse", HorizScaleCoarse },{ 1, "Horiz Fine", HorizScaleFine },{ 2, "AutoTune", FFTAutoTune},{ 3, "Channel", FFTChannel} };
+
 
 };
 

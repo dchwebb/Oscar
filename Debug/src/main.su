@@ -2,10 +2,9 @@ new:146:14:void* operator new(std::size_t, void*)	16	static
 gthr-default.h:229:1:int __gthread_key_delete(__gthread_key_t)	16	static
 stl_deque.h:89:3:constexpr std::size_t std::__deque_buf_size(std::size_t)	16	static
 ui.h:27:8:MenuItem::~MenuItem()	16	static
-ui.h:34:7:UI::UI()	456	static
+ui.h:34:7:UI::UI()	712	static
 stl_queue.h:96:11:std::queue<unsigned char>::~queue()	16	static
 midi.h:21:7:MIDIHandler::MIDIHandler()	64	static
-osc.h:5:7:Osc::Osc()	16	static
 main.cpp:54:17:uint16_t CalcVertOffset(const volatile uint16_t&, const uint16_t&)	40	static
 main.cpp:58:17:uint16_t CalcZeroSize()	16	static
 main.cpp:62:14:float FreqFromPos(uint16_t)	16	static

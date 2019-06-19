@@ -11,9 +11,6 @@ FFT::FFT() {
 			drawWaterfall[w][i] = WATERFALLDRAWHEIGHT;
 		}
 	}
-
-
-
 }
 
 // Carry out Fast fourier transform
@@ -361,7 +358,7 @@ void FFT::FFTInfo(void) {
 	//std::string s = ui.intToString(std::round(harmonicFreq(1))) + " - " + ui.intToString(harmonicFreq(319)) + "Hz   ";
 	std::string s = ui.floatToString(harmonicFreq(1), true) + " - " + ui.floatToString(harmonicFreq(319), true) + "Hz  ";
 	if (s != CurrentHertz) {
-		lcd.DrawString(120, DRAWHEIGHT + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+		lcd.DrawString(115, DRAWHEIGHT + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 		CurrentHertz = s;
 	}
 }
