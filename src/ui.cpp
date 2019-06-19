@@ -30,16 +30,14 @@ void UI::MenuAction(encoderType* et, volatile const int8_t& val) {
 	else if (displayMode == Circular) {}
 	else if (displayMode == MIDI) {}
 
-	for (auto m : *currentMenu) {
-		if (m.selected == *et) {
-			if (val > 0 && m.pos + 1 < (uint8_t)currentMenu->size()) {
-				*et = (*currentMenu)[m.pos + 1].selected;
-			} else if (val < 0 && m.pos > 0) {
-				*et = (*currentMenu)[m.pos - 1].selected;
-			}
-			break;
-		}
+	//	Move the selected menu item one forwards or one back based on value of encoder
+	auto mi = std::find_if(currentMenu->cbegin(), currentMenu->cend(), [=] (MenuItem m) { return m.selected == *et; } );
+	if ((mi != currentMenu->cbegin() && val < 0) || (mi != currentMenu->cend() - 1 && val > 0)) {
+		mi += val;
+		*et = mi->selected;
 	}
+
+
 	if (displayMode == Oscilloscope) {
 		osc.EncModeL = EncoderModeL;
 		osc.EncModeR = EncoderModeR;

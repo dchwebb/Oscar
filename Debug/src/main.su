@@ -1,8 +1,8 @@
 new:146:14:void* operator new(std::size_t, void*)	16	static
 gthr-default.h:229:1:int __gthread_key_delete(__gthread_key_t)	16	static
 stl_deque.h:89:3:constexpr std::size_t std::__deque_buf_size(std::size_t)	16	static
-ui.h:27:8:MenuItem::~MenuItem()	16	static
-ui.h:34:7:UI::UI()	712	static
+ui.h:28:8:MenuItem::~MenuItem()	16	static
+ui.h:35:7:UI::UI()	712	static
 stl_queue.h:96:11:std::queue<unsigned char>::~queue()	16	static
 midi.h:21:7:MIDIHandler::MIDIHandler()	64	static
 main.cpp:54:17:uint16_t CalcVertOffset(const volatile uint16_t&, const uint16_t&)	40	static
@@ -145,7 +145,7 @@ new_allocator.h:119:9:) [with _Up = unsigned char; _Args = {unsigned char}; _Tp 
 stl_deque.h:2112:7:void std::deque<_Tp, _Alloc>::_M_reserve_map_at_back(std::deque<_Tp, _Alloc>::size_type) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
 new_allocator.h:113:7:__gnu_cxx::new_allocator<_Tp>::size_type __gnu_cxx::new_allocator<_Tp>::max_size() const [with _Tp = MenuItem]	16	static
 move.h:76:5:constexpr _Tp&& std::forward(typename std::remove_reference<_From>::type&) [with _Tp = const MenuItem&]	16	static
-ui.h:27:8:MenuItem::MenuItem(const MenuItem&)	16	static
+ui.h:28:8:MenuItem::MenuItem(const MenuItem&)	16	static
 stl_construct.h:74:5:) [with _T1 = MenuItem; _Args = {const MenuItem&}]	24	static
 new_allocator.h:99:7:_Tp* __gnu_cxx::new_allocator<_Tp>::allocate(__gnu_cxx::new_allocator<_Tp>::size_type, const void*) [with _Tp = unsigned char*]	24	static
 alloc_traits.h:435:7:static _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(std::allocator_traits<std::allocator<_CharT> >::allocator_type&, std::allocator_traits<std::allocator<_CharT> >::size_type) [with _Tp = unsigned char]	16	static
@@ -181,7 +181,7 @@ stl_algobase.h:577:5:_BI2 std::__copy_move_backward_a(_BI1, _BI1, _BI2) [with bo
 stl_algobase.h:357:9:static _Tp* std::__copy_move<_IsMove, true, std::random_access_iterator_tag>::__copy_m(const _Tp*, const _Tp*, _Tp*) [with _Tp = unsigned char*; bool _IsMove = false]	32	static
 stl_algobase.h:559:9:static _Tp* std::__copy_move_backward<_IsMove, true, std::random_access_iterator_tag>::__copy_move_b(const _Tp*, const _Tp*, _Tp*) [with _Tp = unsigned char*; bool _IsMove = false]	32	static
 fft.h:31:7:FFT::~FFT()	16	static
-ui.h:34:7:UI::~UI()	16	static
+ui.h:35:7:UI::~UI()	16	static
 midi.h:21:7:MIDIHandler::~MIDIHandler()	16	static
 main.cpp:430:1:void __static_initialization_and_destruction_0(int, int)	16	static
 main.cpp:430:1:cpp)	8	static

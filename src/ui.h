@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <cmath>
+#include <algorithm>
 #include "lcd.h"
 #include "fft.h"
 #include "osc.h"
