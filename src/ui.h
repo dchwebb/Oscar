@@ -44,6 +44,7 @@ public:
 	std::string floatToString(float f, bool smartFormat);
 	std::string intToString(uint16_t v);
 	encoderType EncoderModeL, EncoderModeR;
+	bool menuMode = false;
 
 	std::vector<MenuItem> OscMenu{  { 0, "Horiz Coarse", HorizScaleCoarse },{ 1, "Horiz Fine", HorizScaleFine },{ 2, "Vert scale", VoltScale},{ 3, "Trigger Y", TriggerY},
 		{ 4, "Trigger Ch", TriggerChannel},{ 5, "Calib Scale", CalibVertScale },{ 5, "Calib Offset", CalibVertOffset } };

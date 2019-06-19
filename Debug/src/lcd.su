@@ -12,15 +12,15 @@ lcd.cpp:120:6:void LCD::ScreenFill(const uint16_t&)	24	static
 lcd.cpp:124:6:void LCD::ColourFill(uint16_t, uint16_t, uint16_t, uint16_t, const uint16_t&)	48	static
 lcd.cpp:142:6:void LCD::PatternFill(uint16_t, uint16_t, uint16_t, uint16_t, const uint16_t*)	40	static
 lcd.cpp:160:6:void LCD::DrawPixel(uint16_t, uint16_t, const uint16_t&)	40	static
-lcd.cpp:168:6:void LCD::DrawLine(uint16_t, uint16_t, uint16_t, uint16_t, const uint32_t&)	48	static
-lcd.cpp:220:6:void LCD::DrawRect(uint16_t, uint16_t, uint16_t, uint16_t, const uint32_t&)	48	static
-lcd.cpp:249:6:void LCD::DrawChar(uint16_t, uint16_t, char, const FontData*, const uint32_t&, const uint32_t&)	48	static
-lcd.cpp:283:6:void LCD::DrawCharMem(uint16_t, uint16_t, uint16_t, uint16_t*, char, const FontData*, const uint32_t&, const uint32_t&)	32	static
-lcd.cpp:304:6:void LCD::DrawString(uint16_t, uint16_t, std::__cxx11::string, const FontData*, const uint32_t&, const uint32_t&)	56	static
-lcd.cpp:312:6:void LCD::DrawStringMem(uint16_t, uint16_t, uint16_t, uint16_t*, std::__cxx11::string, const FontData*, const uint32_t&, const uint32_t&)	72	static
-lcd.cpp:319:6:void LCD::SPISetDataSize(const SPIDataSize_t&)	16	static
-lcd.cpp:332:13:void LCD::SPISendByte(uint8_t)	24	static
-lcd.cpp:345:6:void LCD::SPI_DMA_SendHalfWord(const uint16_t&, const uint16_t&)	24	static
+lcd.cpp:168:6:void LCD::DrawLine(uint16_t, uint16_t, uint16_t, uint16_t, const uint32_t&)	56	static
+lcd.cpp:215:6:void LCD::DrawRect(uint16_t, uint16_t, uint16_t, uint16_t, const uint32_t&)	48	static
+lcd.cpp:239:6:void LCD::DrawChar(uint16_t, uint16_t, char, const FontData*, const uint32_t&, const uint32_t&)	48	static
+lcd.cpp:273:6:void LCD::DrawCharMem(uint16_t, uint16_t, uint16_t, uint16_t*, char, const FontData*, const uint32_t&, const uint32_t&)	32	static
+lcd.cpp:294:6:void LCD::DrawString(uint16_t, uint16_t, std::__cxx11::string, const FontData*, const uint32_t&, const uint32_t&)	56	static
+lcd.cpp:302:6:void LCD::DrawStringMem(uint16_t, uint16_t, uint16_t, uint16_t*, std::__cxx11::string, const FontData*, const uint32_t&, const uint32_t&)	72	static
+lcd.cpp:309:6:void LCD::SPISetDataSize(const SPIDataSize_t&)	16	static
+lcd.cpp:322:13:void LCD::SPISendByte(uint8_t)	24	static
+lcd.cpp:335:6:void LCD::SPI_DMA_SendHalfWord(const uint16_t&, const uint16_t&)	24	static
 allocator.h:131:7:std::allocator< <template-parameter-1-1> >::allocator() [with _Tp = unsigned char]	16	static
 allocator.h:139:7:std::allocator< <template-parameter-1-1> >::~allocator() [with _Tp = unsigned char]	16	static
 initializer_list:75:7:constexpr const _E* std::initializer_list<_E>::begin() const [with _E = unsigned char]	16	static
@@ -30,6 +30,8 @@ stl_vector.h:375:7:std::vector<_Tp, _Alloc>::vector(std::initializer_list<_Tp>, 
 stl_vector.h:425:7:std::vector<_Tp, _Alloc>::~vector() [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	24	static
 stl_vector.h:780:7:std::vector<_Tp, _Alloc>::reference std::vector<_Tp, _Alloc>::operator[](std::vector<_Tp, _Alloc>::size_type) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
 stl_vector.h:655:7:std::vector<_Tp, _Alloc>::size_type std::vector<_Tp, _Alloc>::size() const [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
+move.h:101:5:constexpr typename std::remove_reference< <template-parameter-1-1> >::type&& std::move(_Tp&&) [with _Tp = short unsigned int&]	16	static
+move.h:179:5:typename std::enable_if<std::__and_<std::is_move_constructible<_Tp>, std::is_move_assignable<_Tp> >::value>::type std::swap(_Tp&, _Tp&) [with _Tp = short unsigned int]	24	static
 stl_iterator.h:877:5:bool __gnu_cxx::operator!=(const __gnu_cxx::__normal_iterator<_Iterator, _Container>&, const __gnu_cxx::__normal_iterator<_Iterator, _Container>&) [with _Iterator = char*; _Container = std::__cxx11::basic_string<char>]	24	static
 stl_iterator.h:797:7:__gnu_cxx::__normal_iterator<_Iterator, _Container>& __gnu_cxx::__normal_iterator<_Iterator, _Container>::operator++() [with _Iterator = char*; _Container = std::__cxx11::basic_string<char>]	16	static
 stl_iterator.h:789:7:__gnu_cxx::__normal_iterator<_Iterator, _Container>::reference __gnu_cxx::__normal_iterator<_Iterator, _Container>::operator*() const [with _Iterator = char*; _Container = std::__cxx11::basic_string<char>]	16	static

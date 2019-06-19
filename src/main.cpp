@@ -13,18 +13,16 @@ extern uint32_t SystemCoreClock;
 
 volatile uint16_t OscBufferA[2][DRAWWIDTH], OscBufferB[2][DRAWWIDTH];
 volatile uint16_t prevPixelA = 0, prevPixelB = 0, adcA, adcB, oldAdc, capturePos = 0, drawPos = 0, bufferSamples = 0;
-volatile bool freqBelowZero, capturing = false, drawing = false, encoderBtnL = false, encoderBtnR = false, menuMode = false;
+volatile bool freqBelowZero, capturing = false, drawing = false, encoderBtnL = false, encoderBtnR = false;
 volatile uint8_t VertOffsetA = 0, VertOffsetB = 0, captureBufferNumber = 0, drawBufferNumber = 0;
 volatile int8_t encoderPendingL = 0, encoderStateL = 0, encoderPendingR = 0, encoderStateR = 0;
 volatile int16_t drawOffset[2] {0, 0};
-volatile bool circDataAvailable[2] {false, false};
 volatile uint16_t capturedSamples[2] {0, 0};
 volatile uint32_t debugCount = 0, coverageTimer = 0, coverageTotal = 0;
 volatile float freqFund;
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 volatile uint16_t freqCrossZero, FFTErrors = 0;
-volatile float oscFreq;
-volatile int16_t oldencoderUp = 0, oldencoderDown = 0, encoderUp = 0, encoderDown = 0, encoderVal = 0, encoderState = 0;
+
 
 //	default calibration values for 15k and 100k resistors on input opamp scaling to a maximum of 8v (slightly less for negative signals)
 volatile int16_t vCalibOffset = -4190;
@@ -37,6 +35,7 @@ volatile bool circDrawing[2] {false, false};
 volatile uint16_t circDrawPos[2] {0, 0};
 volatile uint16_t circPrevPixel[2] {0, 0};
 
+volatile bool circDataAvailable[2] {false, false};
 volatile float captureFreq[2] {0, 0};
 volatile float circAngle;
 mode displayMode = Oscilloscope;
@@ -137,10 +136,10 @@ extern "C"
 			adcB = ADC_array[1] + ADC_array[3] + ADC_array[5] + ADC_array[7];
 
 			// check if we should start capturing - ie not drawing from the capture buffer and crossed over the trigger threshold (or in free mode)
-			if (!capturing && (!drawing || captureBufferNumber != drawBufferNumber) && (osc.TriggerChannel == channelNone || (bufferSamples > osc.TriggerX && oldAdc < osc.TriggerY && *osc.TriggerTest >= osc.TriggerY))) {
+			if (!capturing && (!drawing || captureBufferNumber != drawBufferNumber) && (osc.TriggerTest == nullptr || (bufferSamples > osc.TriggerX && oldAdc < osc.TriggerY && *osc.TriggerTest >= osc.TriggerY))) {
 				capturing = true;
 
-				if (osc.TriggerChannel == channelNone) {										// free running mode
+				if (osc.TriggerTest == nullptr) {										// free running mode
 					capturePos = 0;
 					drawOffset[captureBufferNumber] = 0;
 					capturedSamples[captureBufferNumber] = -1;
@@ -265,7 +264,7 @@ int main(void) {
 
 		ui.handleEncoders();
 
-		if (menuMode) {
+		if (ui.menuMode) {
 
 		} else if (displayMode == MIDI) {
 
@@ -376,7 +375,7 @@ int main(void) {
 				if (freqBelowZero && OscBufferA[drawBufferNumber][calculatedOffset] >= CalibZeroPos) {		// zero crossing
 					//	second zero crossing - calculate frequency averaged over a number passes to smooth
 					if (freqCrossZero > 0) {
-						oscFreq = (3 * oscFreq + FreqFromPos(drawPos - freqCrossZero)) / 4;
+						osc.Freq = (3 * osc.Freq + FreqFromPos(drawPos - freqCrossZero)) / 4;
 					}
 					freqCrossZero = drawPos;
 					freqBelowZero = false;
@@ -421,7 +420,7 @@ int main(void) {
 					lcd.DrawString(0, DRAWHEIGHT - 10, "-" + ui.intToString(voltScale) + "v ", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 
 					// Write frequency
-					lcd.DrawString(250, 1, ui.floatToString(oscFreq, false) + "Hz    ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+					lcd.DrawString(250, 1, ui.floatToString(osc.Freq, false) + "Hz    ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 				}
 				CP_CAP
 			}

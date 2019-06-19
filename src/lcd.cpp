@@ -178,14 +178,9 @@ void LCD::DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uin
 	if (y0 < 0)			y0 = 0;
 	if (y1 < 0)			y1 = 0;
 
-
 	// Flip co-ordinates if wrong way round
-	if (x0 > x1) {
-		tmp = x0; x0 = x1; x1 = tmp;
-	}
-	if (y0 > y1) {
-		tmp = y0; y0 = y1; y1 = tmp;
-	}
+	if (x0 > x1) 		std::swap(x0, x1);
+	if (y0 > y1) 		std::swap(y0, y1);
 
 	dx = x1 - x0;
 	dy = y1 - y0;
@@ -230,14 +225,9 @@ void LCD::DrawRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uin
 	if (y0 < 0)			y0 = 0;
 	if (y1 < 0)			y1 = 0;
 
-
 	// Flip co-ordinates if wrong way round
-	if (x0 > x1) {
-		tmp = x0; x0 = x1; x1 = tmp;
-	}
-	if (y0 > y1) {
-		tmp = y0; y0 = y1; y1 = tmp;
-	}
+	if (x0 > x1) 		std::swap(x0, x1);
+	if (y0 > y1) 		std::swap(y0, y1);
 
 	ColourFill(x0, y0, x1, y0, colour);
 	ColourFill(x0, y0, x0, y1, colour);
