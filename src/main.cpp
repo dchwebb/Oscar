@@ -11,8 +11,8 @@
 
 extern uint32_t SystemCoreClock;
 
-volatile uint16_t OscBufferA[2][DRAWWIDTH], OscBufferB[2][DRAWWIDTH];
-volatile uint16_t prevPixelA = 0, prevPixelB = 0, adcA, adcB, oldAdc, capturePos = 0, drawPos = 0, bufferSamples = 0;
+volatile uint16_t OscBufferA[2][DRAWWIDTH], OscBufferB[2][DRAWWIDTH], OscBufferC[2][DRAWWIDTH];
+volatile uint16_t prevPixelA = 0, prevPixelB = 0, prevPixelC = 0, adcA, adcB, adcC, oldAdc, capturePos = 0, drawPos = 0, bufferSamples = 0;
 volatile bool freqBelowZero, capturing = false, drawing = false, encoderBtnL = false, encoderBtnR = false;
 volatile uint8_t VertOffsetA = 0, VertOffsetB = 0, captureBufferNumber = 0, drawBufferNumber = 0;
 volatile int8_t encoderPendingL = 0, encoderStateL = 0, encoderPendingR = 0, encoderStateR = 0;
@@ -50,7 +50,7 @@ Osc osc;
 
 
 
-inline uint16_t CalcVertOffset(volatile const uint16_t& vPos, const uint16_t& vOffset) {
+inline uint16_t CalcVertOffset(volatile const uint16_t& vPos) {
 	return std::max(std::min(((((float)(vPos * vCalibScale + vCalibOffset) / (4 * 4096) - 0.5f) * (8.0f / voltScale)) + 0.5f) * DRAWHEIGHT, (float)DRAWHEIGHT - 1), 1.0f);
 }
 
@@ -79,18 +79,23 @@ extern "C"
 			if (capturing) {
 				// For FFT Mode we want a value between +- 2047
 				if (fft.channel == channelA)
-					fft.FFTBuffer[captureBufferNumber][capturePos] = 2047 - ((float)(ADC_array[0] + ADC_array[2] + ADC_array[4] + ADC_array[6]) / 4);
-				else
-					fft.FFTBuffer[captureBufferNumber][capturePos] = 2047 - ((float)(ADC_array[1] + ADC_array[3] + ADC_array[5] + ADC_array[7]) / 4);
+					fft.FFTBuffer[captureBufferNumber][capturePos] = 2047 - ((float)(ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9]) / 4);
+				else if (fft.channel == channelB)
+					fft.FFTBuffer[captureBufferNumber][capturePos] = 2047 - ((float)(ADC_array[1] + ADC_array[4] + ADC_array[7] + ADC_array[10]) / 4);
+				else if (fft.channel == channelC)
+					fft.FFTBuffer[captureBufferNumber][capturePos] = 2047 - ((float)(ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11]) / 4);
 				capturePos ++;
 			}
 
 		} else if (displayMode == Circular) {
 			// Average the last four ADC readings to smooth noise
 			if (fft.channel == channelA)
-				adcA = ADC_array[0] + ADC_array[2] + ADC_array[4] + ADC_array[6];
+				adcA = ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9];
+			else if (fft.channel == channelB)
+				adcA = ADC_array[1] + ADC_array[4] + ADC_array[7] + ADC_array[10];
 			else
-				adcA = ADC_array[1] + ADC_array[3] + ADC_array[5] + ADC_array[7];
+				adcA = ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11];
+
 
 			// check if we should start capturing - ie there is a buffer spare and a zero crossing has occured
 			if (!capturing && oldAdc < CalibZeroPos && adcA >= CalibZeroPos && (!circDataAvailable[0] || !circDataAvailable[1])) {
@@ -132,8 +137,12 @@ extern "C"
 
 		} else if (displayMode == Oscilloscope) {
 			// Average the last four ADC readings to smooth noise
-			adcA = ADC_array[0] + ADC_array[2] + ADC_array[4] + ADC_array[6];
+			/*adcA = ADC_array[0] + ADC_array[2] + ADC_array[4] + ADC_array[6];
 			adcB = ADC_array[1] + ADC_array[3] + ADC_array[5] + ADC_array[7];
+*/
+			adcA = ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9];
+			adcB = ADC_array[1] + ADC_array[4] + ADC_array[7] + ADC_array[10];
+			adcC = ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11];
 
 			// check if we should start capturing - ie not drawing from the capture buffer and crossed over the trigger threshold (or in free mode)
 			if (!capturing && (!drawing || captureBufferNumber != drawBufferNumber) && (osc.TriggerTest == nullptr || (bufferSamples > osc.TriggerX && oldAdc < osc.TriggerY && *osc.TriggerTest >= osc.TriggerY))) {
@@ -163,6 +172,7 @@ extern "C"
 			if (capturing || !drawing || captureBufferNumber != drawBufferNumber) {
 				OscBufferA[captureBufferNumber][capturePos] = adcA;
 				OscBufferB[captureBufferNumber][capturePos] = adcB;
+				OscBufferC[captureBufferNumber][capturePos] = adcC;
 				oldAdc = *osc.TriggerTest;
 
 				if (capturePos == DRAWWIDTH - 1)	capturePos = 0;
@@ -181,7 +191,7 @@ extern "C"
 		if (!(GPIOE->IDR & GPIO_IDR_IDR_4)) 						// Encoder button PE4 pressed
 			DB_ON													// Enable debounce timer
 		if (GPIOE->IDR & GPIO_IDR_IDR_4 && TIM5->CNT > 100) {		// Encoder button released - check enough time has elapsed to ensure not a bounce. A quick press if around 300, a long one around 8000+
-			encoderBtnR = true;
+			encoderBtnL = true;
 			DB_OFF													// Disable debounce timer
 		}
 		EXTI->PR |= EXTI_PR_PR4;									// Clear interrupt pending
@@ -194,7 +204,7 @@ extern "C"
 			if (!(GPIOA->IDR & GPIO_IDR_IDR_7)) 					// Encoder button PA7 pressed
 				DB_ON												// Enable debounce timer
 			if (GPIOA->IDR & GPIO_IDR_IDR_7 && TIM5->CNT > 200) {	// Encoder button released - check enough time has elapsed to ensure not a bounce. A quick press if around 300, a long one around 8000+
-				encoderBtnL = true;
+				encoderBtnR = true;
 				DB_OFF												// Disable debounce timer
 			}
 		} else {
@@ -238,8 +248,9 @@ extern "C"
 
 
 int main(void) {
-	SystemInit();							// Activates floating point coprocessor and resets clock
-//	SystemClock_Config();					// Configure the clock and PLL - NB Currently done in SystemInit but will need updating for production board
+	SystemClock_Config();					// Configure the clock and PLL - NB Currently done in SystemInit but will need updating for production board
+
+	//	SystemInit();							// Activates floating point coprocessor and resets clock
 	SystemCoreClockUpdate();				// Update SystemCoreClock (system clock frequency) derived from settings of oscillators, prescalers and PLL
 	InitCoverageTimer();					// Timer 4 only activated/deactivated when CP_ON/CP_CAP macros are used
 	InitDebounceTimer();					// Timer 5 used to count button press bounces
@@ -251,7 +262,6 @@ int main(void) {
 	lcd.Init();								// Initialize ILI9341 LCD
 	InitSampleAcquisition();
 	ui.ResetMode();
-	ui.DrawUI();
 
 	// The FFT draw buffers are declared here and passed to the FFT Class as points to keep the size of the executable down
 	uint16_t FFTDrawBuff0[(DRAWHEIGHT + 1) * FFTDRAWBUFFERWIDTH];
@@ -308,7 +318,7 @@ int main(void) {
 						int x = fft.SineLUT[b] * 70 + 160;
 
 
-						int pixelA = CalcVertOffset(OscBufferA[drawBufferNumber][pos], VertOffsetA);
+						int pixelA = CalcVertOffset(OscBufferA[drawBufferNumber][pos]);
 						if (pos == std::max((int)circDrawPos[drawBufferNumber] - CIRCLENGTH, 0)) {
 							prevPixelA = pixelA;
 						}
@@ -350,20 +360,21 @@ int main(void) {
 			// Check if drawing and that the sample capture is at or ahead of the draw position
 			if (drawing && (drawBufferNumber != captureBufferNumber || capturedSamples[captureBufferNumber] >= drawPos)) {
 
-
 				// Draw a black line over previous sample - except at beginning and end where we shouldn't clear the voltage and frequency markers
 				lcd.ColourFill(drawPos, (drawPos < 27 || drawPos > 250 ? 11 : 0), drawPos, DRAWHEIGHT - (drawPos < 27 ? 10: 0), LCD_BLACK);
 
 				// Calculate offset between capture and drawing positions to display correct sample
 				uint16_t calculatedOffset = (drawOffset[drawBufferNumber] + drawPos) % DRAWWIDTH;
 
-				uint16_t pixelA = CalcVertOffset(OscBufferA[drawBufferNumber][calculatedOffset], VertOffsetA);
-				uint16_t pixelB = CalcVertOffset(OscBufferB[drawBufferNumber][calculatedOffset], VertOffsetB);
+				uint16_t pixelA = CalcVertOffset(OscBufferA[drawBufferNumber][calculatedOffset]);
+				uint16_t pixelB = CalcVertOffset(OscBufferB[drawBufferNumber][calculatedOffset]);
+				uint16_t pixelC = CalcVertOffset(OscBufferC[drawBufferNumber][calculatedOffset]);
 
 				// Starting a new screen: Set previous pixel to current pixel and clear frequency calculations
 				if (drawPos == 0) {
 					prevPixelA = pixelA;
 					prevPixelB = pixelB;
+					prevPixelC = pixelC;
 					freqBelowZero = false;
 					freqCrossZero = 0;
 				}
@@ -381,6 +392,7 @@ int main(void) {
 					freqBelowZero = false;
 				}
 
+
 				// draw center line and voltage markers
 				if (drawPos % 4 == 0) {
 					lcd.DrawPixel(drawPos, DRAWHEIGHT / 2, LCD_GREY);
@@ -391,13 +403,16 @@ int main(void) {
 					}
 				}
 
+
 				// Draw current samples as lines from previous pixel position to current sample position
 				lcd.DrawLine(drawPos, pixelA, drawPos, prevPixelA, LCD_GREEN);
 				lcd.DrawLine(drawPos, pixelB, drawPos, prevPixelB, LCD_LIGHTBLUE);
+				lcd.DrawLine(drawPos, pixelC, drawPos, prevPixelC, LCD_ORANGE);
 
 				// Store previous sample so next sample can be drawn as a line from old to new
 				prevPixelA = pixelA;
 				prevPixelB = pixelB;
+				prevPixelC = pixelC;
 
 				drawPos ++;
 				if (drawPos == DRAWWIDTH){
@@ -406,7 +421,7 @@ int main(void) {
 
 				// Draw trigger as a yellow cross
 				if (drawPos == osc.TriggerX + 4) {
-					uint16_t vo = CalcVertOffset(osc.TriggerY, VertOffsetA);
+					uint16_t vo = CalcVertOffset(osc.TriggerY);
 					if (vo > 4 && vo < DRAWHEIGHT - 4) {
 						lcd.DrawLine(osc.TriggerX, vo - 4, osc.TriggerX, vo + 4, LCD_YELLOW);
 						lcd.DrawLine(std::max(osc.TriggerX - 4, 0), vo, osc.TriggerX + 4, vo, LCD_YELLOW);

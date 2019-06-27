@@ -91,9 +91,9 @@ void FFT::displayWaterfall(volatile float candSin[]) {
 	int16_t h0, h1;
 
 	// Cycle through each column in the display and draw
-	for (uint16_t i = 1; i <= DRAWWIDTH; i++) {
-		uint8_t FFTDrawBufferNumber = (((i - 1) / FFTDRAWBUFFERWIDTH) % 2 == 0) ? 0 : 1;
-		uint16_t vPos = DRAWHEIGHT;		// track the vertical position to apply blanking or skip drawing rows as required
+	for (uint16_t col = 1; col <= DRAWWIDTH; ++col) {
+		uint8_t FFTDrawBufferNumber = (((col - 1) / FFTDRAWBUFFERWIDTH) % 2 == 0) ? 0 : 1;
+		int16_t vPos = DRAWHEIGHT;		// track the vertical position to apply blanking or skip drawing rows as required
 
 		// work forwards through the buffers so the oldest buffer is drawn first at the front, newer buffers move forward
 		for (uint16_t w = 0; w < WATERFALLBUFFERS; ++w) {
@@ -105,15 +105,15 @@ void FFT::displayWaterfall(volatile float candSin[]) {
 			int yOffset = (WATERFALLBUFFERS - w) * 5 - 12;
 
 			// check that buffer is visible after applying offset
-			if (i > xOffset && i < WATERFALLSIZE + xOffset) {
+			if (col > xOffset && col < WATERFALLSIZE + xOffset) {
 
-				h1 = drawWaterfall[buff][i - xOffset] + yOffset;
-				h0 = drawWaterfall[buff][i - xOffset - 1] + yOffset;
+				h1 = drawWaterfall[buff][col - xOffset] + yOffset;
+				h0 = drawWaterfall[buff][col - xOffset - 1] + yOffset;
 
 				while (vPos > 0 && (vPos >= h1 || vPos >= h0)) {
 
 					// draw column into memory buffer
-					uint16_t buffPos = vPos * FFTDRAWBUFFERWIDTH + ((i - 1) % FFTDRAWBUFFERWIDTH);
+					uint16_t buffPos = vPos * FFTDRAWBUFFERWIDTH + ((col - 1) % FFTDRAWBUFFERWIDTH);
 
 					// depending on harmonic height draw either green or black, using darker shades of green at the back
 					if (vPos > h1 && vPos > h0) {
@@ -122,21 +122,23 @@ void FFT::displayWaterfall(volatile float candSin[]) {
 						FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = greenShade;
 					}
 					vPos--;
-
 				}
 			}
 		}
 
+			int susp = 1;
+
 		// black out any remaining pixels
-		for (; vPos > 0; vPos--) {
-			uint16_t buffPos = vPos * FFTDRAWBUFFERWIDTH + ((i - 1) % FFTDRAWBUFFERWIDTH);
+		for (; vPos >= 0; --vPos) {
+
+			uint16_t buffPos = vPos * FFTDRAWBUFFERWIDTH + ((col - 1) % FFTDRAWBUFFERWIDTH);
 			FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = LCD_BLACK;
 		}
 
 		// check if ready to draw next buffer
-		if ((i % FFTDRAWBUFFERWIDTH) == 0) {
+		if ((col % FFTDRAWBUFFERWIDTH) == 0) {
 			debugCount = DMA2_Stream6->NDTR;			// tracks how many items left in DMA draw buffer
-			lcd.PatternFill(i - FFTDRAWBUFFERWIDTH, 0, i - 1, DRAWHEIGHT, FFTDrawBuffer[FFTDrawBufferNumber]);
+			lcd.PatternFill(col - FFTDRAWBUFFERWIDTH, 0, col - 1, DRAWHEIGHT, FFTDrawBuffer[FFTDrawBufferNumber]);
 		}
 	}
 }
@@ -150,7 +152,7 @@ void FFT::calcFFT(volatile float candSin[]) {
 
 
 	// Bit reverse samples
-	for (int i = 0; i < samples; i++) {
+	for (int i = 0; i < samples; ++i) {
 		// assembly bit reverses i and then rotates right to correct bit length
 		asm("rbit %[result], %[value]\n\t"
 			"ror %[result], %[shift]"

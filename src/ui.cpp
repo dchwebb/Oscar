@@ -80,11 +80,13 @@ void UI::EncoderAction(encoderType type, int8_t val) {
 		}
 		break;
 	case TriggerChannel :
-		if (osc.TriggerTest == nullptr)
+		if ((osc.TriggerTest == nullptr && val > 0) || (osc.TriggerTest == &adcB && val < 0))
 			osc.TriggerTest = &adcA;
-		else if (osc.TriggerTest == &adcA)
+		else if ((osc.TriggerTest == &adcA && val > 0) || (osc.TriggerTest == &adcC && val < 0))
 			osc.TriggerTest = &adcB;
-		else if (osc.TriggerTest == &adcB)
+		else if ((osc.TriggerTest == &adcB && val > 0) || (osc.TriggerTest == nullptr && val < 0))
+			osc.TriggerTest = &adcC;
+		else if ((osc.TriggerTest == &adcC && val > 0) || (osc.TriggerTest == &adcA && val < 0))
 			osc.TriggerTest = nullptr;
 
 		DrawUI();
@@ -97,13 +99,14 @@ void UI::EncoderAction(encoderType type, int8_t val) {
 		DrawUI();
 		break;
 	case FFTChannel :
-		fft.channel = fft.channel == channelA? channelB : channelA;
+		fft.channel = (fft.channel == channelA) ? channelB : (fft.channel == channelB) ? channelC : channelA;
 		DrawUI();
 		break;
 	default:
 	  break;
 	}
 }
+
 void UI::DrawMenu() {
 
 	lcd.DrawString(10, 6, "L", &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
@@ -126,16 +129,6 @@ void UI::DrawMenu() {
 		lcd.DrawString(10, 32 + pos * 20, m->name, &lcd.Font_Large, (m->selected == EncoderModeL) ? LCD_BLACK : LCD_WHITE, (m->selected == EncoderModeL) ? LCD_WHITE : LCD_BLACK);
 		lcd.DrawString(170, 32 + pos * 20, m->name, &lcd.Font_Large, (m->selected == EncoderModeR) ? LCD_BLACK : LCD_WHITE, (m->selected == EncoderModeR) ? LCD_WHITE : LCD_BLACK);
 	}
-
-/*
-	for (uint8_t m = 0; m < OscMenu.size(); ++m) {
-		lcd.DrawString(10, 32 + m * 20, OscMenu[m].name, &lcd.Font_Large, (OscMenu[m].selected == EncoderModeL) ? LCD_BLACK : LCD_WHITE, (OscMenu[m].selected == EncoderModeL) ? LCD_WHITE : LCD_BLACK);
-		lcd.DrawString(170, 32 + m * 20, OscMenu[m].name, &lcd.Font_Large, (OscMenu[m].selected == EncoderModeR) ? LCD_BLACK : LCD_WHITE, (OscMenu[m].selected == EncoderModeR) ? LCD_WHITE : LCD_BLACK);
-
-		//if (OscMenu[m].selected == EncoderModeL) 	lcd.DrawString(0, 25 + m * 20, "*", &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
-		//if (OscMenu[m].selected == EncoderModeR) 	lcd.DrawString(160, 25 + m * 20, "*", &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
-	}
-*/
 }
 
 void UI::handleEncoders() {
@@ -144,7 +137,6 @@ void UI::handleEncoders() {
 		else			EncoderAction(EncoderModeL, encoderPendingL);
 
 		encoderPendingL = 0;
-
 	}
 
 	if (encoderPendingR) {
@@ -161,17 +153,14 @@ void UI::handleEncoders() {
 	}
 
 	// Menu mode
-	if (encoderBtnL) {
-		encoderBtnL = false;
+	if (encoderBtnR && (displayMode == Oscilloscope || displayMode == Fourier)) {
 		menuMode = true;
 		lcd.ScreenFill(LCD_BLACK);
 		DrawMenu();
 	}
 
 	// Change display mode
-	if (encoderBtnR) {
-		encoderBtnR = false;
-
+	if (encoderBtnL) {
 		switch (displayMode) {
 		case Oscilloscope :	displayMode = Fourier;			break;
 		case Fourier :		displayMode = Waterfall;		break;
@@ -181,6 +170,9 @@ void UI::handleEncoders() {
 		}
 		ResetMode();
 	}
+
+	encoderBtnL = false;
+	encoderBtnR = false;
 }
 
 void UI::ResetMode() {
@@ -238,11 +230,11 @@ std::string UI::EncoderLabel(encoderType type) {
 	case TriggerY :
 		return "Trigger Y";
 	case TriggerChannel :
-		return std::string(osc.TriggerTest == &adcA ? "Trigger A " : osc.TriggerTest == &adcB ? "Trigger B " : "No Trigger");
+		return std::string(osc.TriggerTest == &adcA ? "Trigger A " : osc.TriggerTest == &adcB ? "Trigger B " : osc.TriggerTest == &adcC ? "Trigger C " : "No Trigger");
 	case FFTAutoTune :
 		return "Tune: " + std::string(fft.autoTune ? "auto" : "off ");
 	case FFTChannel :
-		return "Channel " + std::string(fft.channel == channelA ? "A" : "B");
+		return "Channel " + std::string(fft.channel == channelA ? "A" : fft.channel == channelB ? "B" : "C");
 	default:
 	  return "";
 	}

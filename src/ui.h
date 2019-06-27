@@ -19,7 +19,7 @@ extern Osc osc;
 
 extern volatile int8_t voltScale, encoderPendingL, encoderPendingR, encoderStateL;
 extern volatile int16_t vCalibOffset;
-extern volatile uint16_t oldAdc, capturePos, bufferSamples, adcA, adcB;
+extern volatile uint16_t oldAdc, capturePos, bufferSamples, adcA, adcB, adcC;
 extern volatile bool encoderBtnL, encoderBtnR, FFTMode, capturing, drawing, menuMode;
 extern volatile float vCalibScale;
 extern volatile uint32_t debugCount, coverageTotal, coverageTimer;

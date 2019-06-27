@@ -75,7 +75,7 @@
 #define SPI_DMA_Working	DMA2_Stream5->NDTR || DMA2_Stream6->NDTR || ((SPI5->SR & (SPI_SR_TXE | SPI_SR_RXNE)) == 0 || (SPI5->SR & SPI_SR_BSY))
 //#define SPI_Working			(SPI5->SR & (SPI_SR_TXE | SPI_SR_RXNE)) == 0 || (SPI5->SR & SPI_SR_BSY)
 //#define SPI_DMA_Working		DMA2_Stream6->NDTR || (SPI5->SR & SPI_SR_TXE) == 0
-#define SPI_Working			(SPI5->SR & SPI_SR_TXE) == 0 || (SPI5->SR & SPI_SR_BSY)
+//#define SPI_Working			(SPI5->SR & SPI_SR_TXE) == 0 || (SPI5->SR & SPI_SR_BSY)
 
 typedef enum {
 	LCD_Portrait, 			// Portrait

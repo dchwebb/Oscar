@@ -1,50 +1,47 @@
 #include "initialisation.h"
 
+#define USE_HSE
+#define PLL_M 8
+#define PLL_N 360
+#define PLL_P 2		//  Main PLL (PLL) division factor for main system clock can be 2 (PLL_P = 0), 4 (PLL_P = 1), 6 (PLL_P = 2), 8 (PLL_P = 3)
+#define PLL_Q 7
+
 void SystemClock_Config(void) {
 	uint32_t temp = 0x00000000;
 
 	RCC->APB1ENR |= RCC_APB1ENR_PWREN;			// Enable Power Control clock
 	PWR->CR |= PWR_CR_VOS_0;					// Enable VOS voltage scaling - allows maximum clock speed
 
+	SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));// CPACR register: set full access privileges for coprocessors
+
 #ifdef USE_HSE
 	RCC->CR |= RCC_CR_HSEON;					// HSE ON
 	while ((RCC->CR & RCC_CR_HSERDY) == 0);		// Wait till HSE is ready
-	temp = RCC_PLLCFGR_PLLSRC_HSE;				// PLL source is HSE
+	RCC->PLLCFGR = PLL_M | (PLL_N << 6) | (((PLL_P >> 1) -1) << 16) | (RCC_PLLCFGR_PLLSRC_HSE) | (PLL_Q << 24);
 #endif
 
 #ifdef USE_HSI
 	RCC->CR |= RCC_CR_HSION;					// HSI ON
 	while((RCC->CR & RCC_CR_HSIRDY) == 0);		// Wait till HSI is ready
+    RCC->PLLCFGR = PLL_M | (PLL_N << 6) | (((PLL_P >> 1) -1) << 16) | (RCC_PLLCFGR_PLLSRC_HSI) | (PLL_Q << 24);
 #endif
 
-	//	Set the clock multipliers and dividers
-	temp |= (uint32_t)PLL_M;
-	temp |= ((uint32_t)PLL_N << 6);
-	temp |= ((uint32_t)PLL_P << 16);
-	temp |= ((uint32_t)PLL_Q << 24);
-	RCC->PLLCFGR = temp;
+	RCC->CFGR |= RCC_CFGR_HPRE_DIV1;			// HCLK = SYSCLK / 1
+	RCC->CFGR |= RCC_CFGR_PPRE2_DIV2;			// PCLK2 = HCLK / 2
+	RCC->CFGR |= RCC_CFGR_PPRE1_DIV4;			// PCLK1 = HCLK / 4
+	RCC->CR |= RCC_CR_PLLON;					// Enable the main PLL
+	while((RCC->CR & RCC_CR_PLLRDY) == 0);		// Wait till the main PLL is ready
 
-	//	Set AHB, APB1 and APB2 prescalars
-	temp = RCC->CFGR;
-	temp |= ((uint32_t)AHB_PRESCALAR << 4);
-	temp |= ((uint32_t)APB1_PRESCALAR << 10);
-	temp |= ((uint32_t)APB2_PRESCALAR << 13);
-	temp |= RCC_CFGR_SW_1;						// Select PLL as SYSCLK
-	RCC->CFGR = temp;
+	// Configure Flash prefetch, Instruction cache, Data cache and wait state
+	FLASH->ACR = FLASH_ACR_PRFTEN | FLASH_ACR_ICEN | FLASH_ACR_DCEN | FLASH_ACR_LATENCY_5WS;
 
-	FLASH->ACR |= FLASH_ACR_LATENCY_5WS;		// Clock faster than 150MHz requires 5 Wait States for Flash memory access time
+	// Select the main PLL as system clock source
+	RCC->CFGR &= ~RCC_CFGR_SW;
+	RCC->CFGR |= RCC_CFGR_SW_PLL;
 
-	RCC->CR |= RCC_CR_PLLON;					// Switch ON the PLL
-	while ((RCC->CR & RCC_CR_PLLRDY) == 0);		// Wait till PLL is ready
-	while ((RCC->CFGR & RCC_CFGR_SWS_PLL) == 0); // System clock switch status SWS = 0b10 = PLL is really selected
+	// Wait till the main PLL is used as system clock source
+	while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL);
 
-	// STM32F405x/407x/415x/417x Revision Z (0x1001) devices: prefetch is supported DW - assume revision Y (0x100F) is OK
-	volatile uint32_t idNumber = DBGMCU->IDCODE;
-	idNumber = idNumber >> 16;
-	if (idNumber == 0x1001 || idNumber == 0x100F)
-		FLASH->ACR |= FLASH_ACR_PRFTEN;			// Enable the Flash prefetch
-
-	// See page 83 of manual for other possible performance boost options: instruction cache enable (ICEN) and data cache enable (DCEN)
 }
 
 void InitSysTick()
@@ -112,6 +109,7 @@ void InitLCDHardware(void) {
 	DMA2_Stream6->CR |= DMA_SxCR_MSIZE_0;			// Memory size: 8 bit; 01 = 16 bit; 10 = 32 bit
 	DMA2_Stream6->CR |= DMA_SxCR_PSIZE_0;			// Peripheral size: 8 bit; 01 = 16 bit; 10 = 32 bit
 	DMA2_Stream6->CR |= DMA_SxCR_DIR_0;				// data transfer direction: 00: peripheral-to-memory; 01: memory-to-peripheral; 10: memory-to-memory
+	DMA2_Stream6->CR |= DMA_SxCR_PL_1;				// Set to high priority
 	DMA2_Stream6->PAR = (uint32_t) &(SPI5->DR);		// Configure the peripheral data register address
 }
 
@@ -131,22 +129,24 @@ void InitADC(void) {
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
 	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
 
-	// Enable ADC - PC3: ADC123_IN13; PA5: ADC12_IN5;
+	// Enable ADC - PC3: ADC123_IN13; PA5: ADC12_IN5; PC1: ADC123_IN11
 	GPIOC->MODER |= GPIO_MODER_MODER3;				// Set PC3 to Analog mode (0b11)
 	GPIOA->MODER |= GPIO_MODER_MODER5;				// Set PA5 to Analog mode (0b11)
+	GPIOA->MODER |= GPIO_MODER_MODER0;				// Set PA0 to Analog mode (0b11)
 
 	ADC1->CR1 |= ADC_CR1_SCAN;						// Activate scan mode
-	//ADC1->SQR1 = (ADC_BUFFER_LENGTH - 1) << 20;	// Number of conversions in sequence
-	ADC1->SQR1 = (2 - 1) << 20;						// Number of conversions in sequence (limit to two for now as we are getting multiple samples to average)
-	ADC1->SQR3 |= 13 << 0;							// Set IN13  1st conversion in sequence
+	ADC1->SQR1 = (3 - 1) << 20;						// Number of conversions in sequence (set to 3, getting multiple samples for each channel to average)
+	ADC1->SQR3 |= 13 << 0;							// Set IN13 1st conversion in sequence
 	ADC1->SQR3 |= 5 << 5;							// Set IN5  2nd conversion in sequence
+	ADC1->SQR3 |= 0 << 10;							// Set IN0 3rd conversion in sequence
 
 	// Set to 56 cycles (0b11) sampling speed (SMPR2 Left shift speed 3 x ADC_INx up to input 9; use SMPR1 from 0 for ADC_IN10+)
 	// 000: 3 cycles; 001: 15 cycles; 010: 28 cycles; 011: 56 cycles; 100: 84 cycles; 101: 112 cycles; 110: 144 cycles; 111: 480 cycles
 	ADC1->SMPR1 |= 0b110 << 9;						// Set speed of IN13
 	ADC1->SMPR2 |= 0b110 << 15;						// Set speed of IN5
+	ADC1->SMPR1 |= 0b110 << 0;						// Set speed of IN0
 
-	ADC1->CR2 |= ADC_CR2_EOCS;						// Trigger interrupt on end of each individual conversion
+	ADC1->CR2 |= ADC_CR2_EOCS;						// The EOC bit is set at the end of each regular conversion. Overrun detection is enabled.
 	ADC1->CR2 |= ADC_CR2_EXTEN_0;					// ADC hardware trigger 00: Trigger detection disabled; 01: Trigger detection on the rising edge; 10: Trigger detection on the falling edge; 11: Trigger detection on both the rising and falling edges
 	ADC1->CR2 |= ADC_CR2_EXTSEL_1 | ADC_CR2_EXTSEL_2;	// ADC External trigger: 0110 = TIM2_TRGO event
 
@@ -155,21 +155,21 @@ void InitADC(void) {
 	ADC1->CR2 |= ADC_CR2_DDS;						// DMA requests are issued as long as data are converted and DMA=1
 	RCC->AHB1ENR|= RCC_AHB1ENR_DMA2EN;
 
-	DMA2_Stream0->CR &= ~DMA_SxCR_DIR;				// 00 = Peripheral-to-memory
-	DMA2_Stream0->CR |= DMA_SxCR_PL_1;				// Priority: 00 = low; 01 = Medium; 10 = High; 11 = Very High
-	DMA2_Stream0->CR |= DMA_SxCR_PSIZE_0;			// Peripheral size: 8 bit; 01 = 16 bit; 10 = 32 bit
-	DMA2_Stream0->CR |= DMA_SxCR_MSIZE_0;			// Memory size: 8 bit; 01 = 16 bit; 10 = 32 bit
-	DMA2_Stream0->CR &= ~DMA_SxCR_PINC;				// Peripheral not in increment mode
-	DMA2_Stream0->CR |= DMA_SxCR_MINC;				// Memory in increment mode
-	DMA2_Stream0->CR |= DMA_SxCR_CIRC;				// circular mode to keep refilling buffer
-	DMA2_Stream0->CR &= ~DMA_SxCR_DIR;				// data transfer direction: 00: peripheral-to-memory; 01: memory-to-peripheral; 10: memory-to-memory
+	DMA2_Stream4->CR &= ~DMA_SxCR_DIR;				// 00 = Peripheral-to-memory
+	//DMA2_Stream4->CR |= DMA_SxCR_PL_1;				// Priority: 00 = low; 01 = Medium; 10 = High; 11 = Very High
+	DMA2_Stream4->CR |= DMA_SxCR_PSIZE_0;			// Peripheral size: 8 bit; 01 = 16 bit; 10 = 32 bit
+	DMA2_Stream4->CR |= DMA_SxCR_MSIZE_0;			// Memory size: 8 bit; 01 = 16 bit; 10 = 32 bit
+	DMA2_Stream4->CR &= ~DMA_SxCR_PINC;				// Peripheral not in increment mode
+	DMA2_Stream4->CR |= DMA_SxCR_MINC;				// Memory in increment mode
+	DMA2_Stream4->CR |= DMA_SxCR_CIRC;				// circular mode to keep refilling buffer
+	DMA2_Stream4->CR &= ~DMA_SxCR_DIR;				// data transfer direction: 00: peripheral-to-memory; 01: memory-to-peripheral; 10: memory-to-memory
 
-	DMA2_Stream0->NDTR |= ADC_BUFFER_LENGTH;		// Number of data items to transfer (ie size of ADC buffer)
-	DMA2_Stream0->PAR = (uint32_t)(&(ADC1->DR));	// Configure the peripheral data register address
-	DMA2_Stream0->M0AR = (uint32_t)(ADC_array);		// Configure the memory address (note that M1AR is used for double-buffer mode)
-	DMA2_Stream0->CR &= ~DMA_SxCR_CHSEL;			// channel select to 0 for ADC1
+	DMA2_Stream4->NDTR |= ADC_BUFFER_LENGTH;		// Number of data items to transfer (ie size of ADC buffer)
+	DMA2_Stream4->PAR = (uint32_t)(&(ADC1->DR));	// Configure the peripheral data register address
+	DMA2_Stream4->M0AR = (uint32_t)(ADC_array);		// Configure the memory address (note that M1AR is used for double-buffer mode)
+	DMA2_Stream4->CR &= ~DMA_SxCR_CHSEL;			// channel select to 0 for ADC1
 
-	DMA2_Stream0->CR |= DMA_SxCR_EN;				// Enable DMA2
+	DMA2_Stream4->CR |= DMA_SxCR_EN;				// Enable DMA2
 	ADC1->CR2 |= ADC_CR2_ADON;						// Activate ADC
 
 }
@@ -180,9 +180,9 @@ void InitSampleAcquisition() {
 	TIM3->PSC = 50;									// Set prescaler
 	TIM3->ARR = 300; 								// Set auto reload register
 
-	TIM3->DIER |= TIM_DIER_UIE;						//  DMA/interrupt enable register
+	TIM3->DIER |= TIM_DIER_UIE;						// DMA/interrupt enable register
 	NVIC_EnableIRQ(TIM3_IRQn);
-	NVIC_SetPriority(TIM3_IRQn, 0);
+	NVIC_SetPriority(TIM3_IRQn, 0);					// Lower is higher priority
 
 	TIM3->CR1 |= TIM_CR1_CEN;
 	TIM3->EGR |= TIM_EGR_UG;						//  Re-initializes counter and generates update of registers
@@ -194,9 +194,9 @@ void InitCoverageTimer() {
 	TIM4->PSC = 10;
 	TIM4->ARR = 65535;
 
-	TIM4->DIER |= TIM_DIER_UIE;						//  DMA/interrupt enable register
+	TIM4->DIER |= TIM_DIER_UIE;						// DMA/interrupt enable register
 	NVIC_EnableIRQ(TIM4_IRQn);
-	NVIC_SetPriority(TIM4_IRQn, 0);
+	NVIC_SetPriority(TIM4_IRQn, 2);					// Lower is higher priority
 
 }
 
@@ -254,11 +254,11 @@ void InitEncoders() {
 	EXTI->FTSR |= EXTI_FTSR_TR11;					// Enable falling edge trigger
 	EXTI->IMR |= EXTI_IMR_MR11;						// Activate interrupt using mask register
 
-	NVIC_SetPriority(EXTI4_IRQn, 3);
+	NVIC_SetPriority(EXTI4_IRQn, 4);				// Lower is higher priority
 	NVIC_EnableIRQ(EXTI4_IRQn);
-	NVIC_SetPriority(EXTI9_5_IRQn, 3);
+	NVIC_SetPriority(EXTI9_5_IRQn, 4);				// Lower is higher priority
 	NVIC_EnableIRQ(EXTI9_5_IRQn);
-	NVIC_SetPriority(EXTI15_10_IRQn, 3);
+	NVIC_SetPriority(EXTI15_10_IRQn, 4);			// Lower is higher priority
 	NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
@@ -278,7 +278,7 @@ void InitUART() {
 
 	// Set up interrupts
 	UART4->CR1 |= USART_CR1_RXNEIE;
-	NVIC_SetPriority(UART4_IRQn, 3);
+	NVIC_SetPriority(UART4_IRQn, 3);				// Lower is higher priority
 	NVIC_EnableIRQ(UART4_IRQn);
 
 	UART4->CR1 |= USART_CR1_UE;						// USART Enable

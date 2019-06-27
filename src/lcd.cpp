@@ -25,6 +25,8 @@ void LCD::Init(void) {
 	Command(ILI9341_RESET);
 	Delay(50000);
 
+	int temp = SPI5->DR;
+
 	CommandData(CDARGS {ILI9341_POWERA, 0x39, 0x2C, 0x00, 0x34, 0x02});
 	CommandData(CDARGS {ILI9341_POWERB, 0x00, 0xC1, 0x30});
 	CommandData(CDARGS {ILI9341_DTCA, 0x85, 0x00, 0x78});		// default is  0x85, 0x00, 0x78
@@ -57,7 +59,7 @@ void LCD::Init(void) {
 };
 
 void LCD::CommandData(CDARGS cmds) {
-	while (SPI_DMA_Working);
+	//while (SPI_DMA_Working);
 	Command(cmds[0]);
 	LCD_DCX_SET;
 	for (uint8_t i = 1; i < cmds.size(); ++i)
@@ -127,6 +129,7 @@ void LCD::ColourFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const u
 	SetCursorPosition(x0, y0, x1, y1);
 	Command(ILI9341_GRAM);
 	LCD_DCX_SET;
+
 	SPISetDataSize(SPIDataSize_16b);				// 16-bit SPI mode
 
 	// Send first 65535 bytes, SPI must be in 16-bit Mode
@@ -209,6 +212,7 @@ void LCD::DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uin
 			y0 += 1;
 		}
 	}
+
 }
 
 
@@ -346,6 +350,7 @@ void LCD::SPI_DMA_SendHalfWord(const uint16_t& value, const uint16_t& count) {
 	DMA2_Stream6->M0AR = (uint32_t) &DMAint16;		// DMA_InitStruct.DMA_Memory0BaseAddr;
 	DMA2_Stream6->CR |= DMA_SxCR_EN;				// Enable DMA transfer stream
 	SPI5->CR2 |= SPI_CR2_TXDMAEN;					// Enable SPI TX DMA
+
 }
 
 

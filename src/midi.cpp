@@ -89,6 +89,7 @@ void MIDIHandler::DrawEvent(const MIDIEvent& event) {
 	lcd.DrawString(10, top, ui.intToString(event.channel + 1) + " ", &lcd.Font_Large, colour, LCD_BLACK);
 	if (event.type == NoteOn || event.type == NoteOff) {
 
+
 		//lcd.ColourFill(40, top + 1, 70, top + MIDIDRAWHEIGHT - 2, (event.type == NoteOn) ? colour : LCD_BLACK);
 		if (event.type == NoteOn) {
 			lcd.ColourFill(40, top + 1, 70, top + MIDIDRAWHEIGHT - 2, colour);
@@ -96,6 +97,7 @@ void MIDIHandler::DrawEvent(const MIDIEvent& event) {
 			lcd.ColourFill(41, top + 2, 69, top + MIDIDRAWHEIGHT - 3, LCD_BLACK);
 			lcd.DrawRect(40, top + 1, 70, top + MIDIDRAWHEIGHT - 2, colour);
 		}
+
 		lcd.DrawString(71, top, " " + NoteName(event.val1) + " ", &lcd.Font_Large, colour, LCD_BLACK);
 		lcd.DrawString(115, top, " vel ", &lcd.Font_Large, colour, LCD_BLACK);
 		lcd.DrawString(170, top, ui.intToString(event.val2) + "   ", &lcd.Font_Large, colour, LCD_BLACK);
