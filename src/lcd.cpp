@@ -1,8 +1,8 @@
 #include "lcd.h"
 
-#define CP_ON		TIM4->EGR |= TIM_EGR_UG;TIM4->CR1 |= TIM_CR1_CEN;coverageTimer=0;
-#define CP_OFF		TIM4->CR1 &= ~TIM_CR1_CEN;
-#define CP_CAP		TIM4->CR1 &= ~TIM_CR1_CEN;coverageTotal = (coverageTimer * 65536) + TIM4->CNT;
+#define CP_ON		TIM9->EGR |= TIM_EGR_UG;TIM9->CR1 |= TIM_CR1_CEN;coverageTimer=0;
+#define CP_OFF		TIM9->CR1 &= ~TIM_CR1_CEN;
+#define CP_CAP		TIM9->CR1 &= ~TIM_CR1_CEN;coverageTotal = (coverageTimer * 65536) + TIM9->CNT;
 extern volatile uint32_t coverageTimer;
 extern volatile uint32_t coverageTotal;
 

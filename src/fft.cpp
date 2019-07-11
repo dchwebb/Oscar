@@ -16,8 +16,7 @@ FFT::FFT() {
 // Carry out Fast fourier transform
 void FFT::runFFT(volatile float candSin[]) {
 
-	CP_CAP
-	CP_ON
+
 	calcFFT(candSin);
 	displayFFT(candSin);
 
@@ -26,8 +25,7 @@ void FFT::runFFT(volatile float candSin[]) {
 // Carry out Fast fourier transform
 void FFT::waterfall(volatile float candSin[]) {
 
-	CP_CAP
-	CP_ON
+
 	calcFFT(candSin);
 	displayWaterfall(candSin);
 }

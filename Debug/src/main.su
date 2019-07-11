@@ -11,12 +11,11 @@ main.cpp:57:17:uint16_t CalcZeroSize()	16	static
 main.cpp:61:14:float FreqFromPos(uint16_t)	16	static
 main.cpp:69:7:void TIM3_IRQHandler()	24	static
 main.cpp:189:7:void EXTI4_IRQHandler()	4	static
-main.cpp:201:7:void EXTI9_5_IRQHandler()	16	static
-main.cpp:223:7:void EXTI15_10_IRQHandler()	16	static
-main.cpp:235:7:void TIM4_IRQHandler()	4	static
-main.cpp:241:7:void UART4_IRQHandler()	16	static
+main.cpp:201:7:void EXTI9_5_IRQHandler()	4	static
+main.cpp:215:7:void TIM9_IRQHandler()	4	static
+main.cpp:221:7:void UART4_IRQHandler()	16	static
 cmath:1802:5:constexpr typename __gnu_cxx::__enable_if<std::__is_integer<_Tp>::__value, double>::__type std::round(_Tp) [with _Tp = int]	24	static
-main.cpp:250:5:int main()	69536	static
+main.cpp:230:5:int main()	69536	static
 move.h:101:5:constexpr typename std::remove_reference< <template-parameter-1-1> >::type&& std::move(_Tp&&) [with _Tp = std::__cxx11::basic_string<char>&]	16	static
 basic_string.h:5033:5:std::__cxx11::basic_string<_CharT, _Traits, _Alloc> std::operator+(const _CharT*, std::__cxx11::basic_string<_CharT, _Traits, _Alloc>&&) [with _CharT = char; _Traits = std::char_traits<char>; _Alloc = std::allocator<char>]	24	static
 allocator.h:131:7:std::allocator< <template-parameter-1-1> >::allocator() [with _Tp = MenuItem]	16	static
@@ -184,5 +183,5 @@ stl_algobase.h:559:9:static _Tp* std::__copy_move_backward<_IsMove, true, std::r
 fft.h:31:7:FFT::~FFT()	16	static
 ui.h:35:7:UI::~UI()	16	static
 midi.h:21:7:MIDIHandler::~MIDIHandler()	16	static
-main.cpp:444:1:void __static_initialization_and_destruction_0(int, int)	16	static
-main.cpp:444:1:cpp)	8	static
+main.cpp:424:1:void __static_initialization_and_destruction_0(int, int)	16	static
+main.cpp:424:1:cpp)	8	static

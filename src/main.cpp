@@ -207,33 +207,13 @@ extern "C"
 				encoderBtnR = true;
 				DB_OFF												// Disable debounce timer
 			}
-		} else {
-			// read encoder pins using state table to debounce
-			uint8_t pinState = (!(GPIOE->IDR & GPIO_IDR_IDR_8) << 1) | !(GPIOE->IDR & GPIO_IDR_IDR_9);		// Store position of each pin
-			encoderStateR = encTable[encoderStateR & 0xF][pinState];	// Determine new state from the pins and state table.
-			if (encoderStateR & 0x30) {
-				encoderPendingR = (encoderStateR & 0x30) == DIR_CW ? 1 : -1;
-			}
 		}
-
-		EXTI->PR |= EXTI_PR_PR7 | EXTI_PR_PR8 | EXTI_PR_PR9;		// Clear interrupt pending
-	}
-
-	// Left Encoder
-	void EXTI15_10_IRQHandler(void) {
-
-		uint8_t pinState = (!(GPIOE->IDR & GPIO_IDR_IDR_10) << 1) | !(GPIOE->IDR & GPIO_IDR_IDR_11);	// Store position of each pin
-		encoderStateL = encTable[encoderStateL & 0xF][pinState];	// Determine new state from the pins and state table.
-		if (encoderStateL & 0x30) {
-			encoderPendingL = (encoderStateL & 0x30) == DIR_CW ? 1 : -1;
-		}
-
-		EXTI->PR |= EXTI_PR_PR10 | EXTI_PR_PR11;					// Clear interrupt pending
+		EXTI->PR |= EXTI_PR_PR7;									// Clear interrupt pending
 	}
 
 	//	Coverage timer
-	void TIM4_IRQHandler(void) {
-		TIM4->SR &= ~TIM_SR_UIF;									// clear UIF flag
+	void TIM9_IRQHandler(void) {
+		TIM9->SR &= ~TIM_SR_UIF;									// clear UIF flag
 		coverageTimer ++;
 	}
 
