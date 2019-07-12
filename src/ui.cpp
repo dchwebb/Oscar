@@ -132,18 +132,24 @@ void UI::DrawMenu() {
 }
 
 void UI::handleEncoders() {
-	if (encoderPendingL) {
-		if (menuMode)	MenuAction(&EncoderModeL, encoderPendingL);
-		else			EncoderAction(EncoderModeL, encoderPendingL);
+	// encoders count in fours with the zero point set to 100
+	if (std::abs((int8_t)100 - L_ENC_CNT) > 3) {
+		int8_t v = L_ENC_CNT > 100 ? 1 : -1;
+		if (menuMode)
+			MenuAction(&EncoderModeL, v);
+		else
+			EncoderAction(EncoderModeL, v);
 
-		encoderPendingL = 0;
+		L_ENC_CNT -= L_ENC_CNT > 100 ? 4 : -4;
 	}
 
-	if (encoderPendingR) {
-		if (menuMode)	MenuAction(&EncoderModeR, encoderPendingR);
-		else			EncoderAction(EncoderModeR, encoderPendingR);
+	if (std::abs((int8_t)100 - R_ENC_CNT) > 3) {
+		int8_t v = R_ENC_CNT > 100 ? 1 : -1;
+		if (menuMode)	MenuAction(&EncoderModeR, v);
+		else			EncoderAction(EncoderModeR, v);
 
-		encoderPendingR = 0;
+		R_ENC_CNT -= R_ENC_CNT > 100 ? 4 : -4;
+
 	}
 
 	if ((encoderBtnL || encoderBtnR) && menuMode) {

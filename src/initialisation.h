@@ -11,6 +11,9 @@
 #define DB_ON		TIM5->EGR |= TIM_EGR_UG; TIM5->CR1 |= TIM_CR1_CEN;
 #define DB_OFF		TIM5->CR1 &= ~TIM_CR1_CEN;
 
+#define L_ENC_CNT	TIM1->CNT
+#define R_ENC_CNT	TIM4->CNT
+
 #define ADC_BUFFER_LENGTH 12
 
 extern volatile uint16_t ADC_array[];
