@@ -1,52 +1,37 @@
 #include "lcd.h"
 
-#define CP_ON		TIM9->EGR |= TIM_EGR_UG;TIM9->CR1 |= TIM_CR1_CEN;coverageTimer=0;
-#define CP_OFF		TIM9->CR1 &= ~TIM_CR1_CEN;
-#define CP_CAP		TIM9->CR1 &= ~TIM_CR1_CEN;coverageTotal = (coverageTimer * 65536) + TIM9->CNT;
-extern volatile uint32_t coverageTimer;
-extern volatile uint32_t coverageTotal;
-
-LCD::LCD() {
-	//	 Hacky way of storing a reference to the character draw buffers in their respective font typedefs
-	/*Font_Small.charBuffer = charSmallBuffer;
-	Font_Medium.charBuffer = charMediumBuffer;
-	Font_Large.charBuffer = charLargeBuffer;*/
-}
-
 void LCD::Init(void) {
 
 	// Force reset
-	LCD_RST_RESET;
+	LCD_RST_RESET;		// Set reset pin low
 	Delay(20000);
-	LCD_RST_SET;
+	LCD_RST_SET;		// Set reset pin high
 	Delay(20000);
 
 	// Software reset
 	Command(ILI9341_RESET);
 	Delay(50000);
 
-	int temp = SPI5->DR;
-
-	CommandData(CDARGS {ILI9341_POWERA, 0x39, 0x2C, 0x00, 0x34, 0x02});
-	CommandData(CDARGS {ILI9341_POWERB, 0x00, 0xC1, 0x30});
-	CommandData(CDARGS {ILI9341_DTCA, 0x85, 0x00, 0x78});		// default is  0x85, 0x00, 0x78
-	CommandData(CDARGS {ILI9341_DTCB, 0x00,	0x00});				// default is  0x66, 0x00
-	CommandData(CDARGS {ILI9341_POWER_SEQ, 0x64, 0x03, 0x12, 0x81});		// default is 0x55 0x01 0x23 0x01
-	CommandData(CDARGS {ILI9341_PRC, 0x20});					// 0x20: DDVDH = 2xVCI  (Pump ratio control)
-	CommandData(CDARGS {ILI9341_POWER1,	0x23});					// 0x23: GVDD level = 4.6V (reference level for VCOM level and grayscale voltage level)
-	CommandData(CDARGS {ILI9341_POWER2,	0x10});					// Appears to be invalid - should be 0b000 - 0b011
-	CommandData(CDARGS {ILI9341_VCOM1, 0x3E, 0x28});			// 0x3E: VCOMH = 4.250V; 0x28: VCOML = 3.700V
-	CommandData(CDARGS {ILI9341_VCOM2, 0x86});					// 0x86: VCOM offset voltage = VMH - 58 VML – 58;
-	CommandData(CDARGS {ILI9341_MAC, 0x48});					// Memory access control: MX = Column Address Order, RGB-BGR Order control
-	CommandData(CDARGS {ILI9341_PIXEL_FORMAT, 0x55});			// 16 bit format
-	CommandData(CDARGS {ILI9341_FRC, 0x00, 0x18});
-	CommandData(CDARGS {ILI9341_DFC, 0x08, 0x82, 0x27});
-	CommandData(CDARGS {ILI9341_3GAMMA_EN, 0x00});
-	CommandData(CDARGS {ILI9341_COLUMN_ADDR, 0x00, 0x00, 0x00, 0xEF});
-	CommandData(CDARGS {ILI9341_PAGE_ADDR, 0x00, 0x00, 0x01, 0x3F});
-	CommandData(CDARGS {ILI9341_GAMMA, 0x01});
-	CommandData(CDARGS {ILI9341_PGAMMA,	0x0F, 0x31, 0x2B, 0x0C, 0x0E, 0x08, 0x4E, 0xF1, 0x37, 0x07, 0x10, 0x03, 0x0E, 0x09, 0x00});
-	CommandData(CDARGS {ILI9341_NGAMMA, 0x00, 0x0E, 0x14, 0x03, 0x11, 0x07, 0x31, 0xC1, 0x48, 0x08, 0x0F, 0x0C, 0x31, 0x36, 0x0F});
+	CommandData(cdArgs_t {ILI9341_POWERA, 0x39, 0x2C, 0x00, 0x34, 0x02});
+	CommandData(cdArgs_t {ILI9341_POWERB, 0x00, 0xC1, 0x30});
+	CommandData(cdArgs_t {ILI9341_DTCA, 0x85, 0x00, 0x78});		// default is  0x85, 0x00, 0x78
+	CommandData(cdArgs_t {ILI9341_DTCB, 0x00,	0x00});			// default is  0x66, 0x00
+	CommandData(cdArgs_t {ILI9341_POWER_SEQ, 0x64, 0x03, 0x12, 0x81});		// default is 0x55 0x01 0x23 0x01
+	CommandData(cdArgs_t {ILI9341_PRC, 0x20});					// 0x20: DDVDH = 2xVCI  (Pump ratio control)
+	CommandData(cdArgs_t {ILI9341_POWER1,	0x23});				// 0x23: GVDD level = 4.6V (reference level for VCOM level and grayscale voltage level)
+	CommandData(cdArgs_t {ILI9341_POWER2,	0x10});				// Appears to be invalid - should be 0b000 - 0b011
+	CommandData(cdArgs_t {ILI9341_VCOM1, 0x3E, 0x28});			// 0x3E: VCOMH = 4.250V; 0x28: VCOML = 3.700V
+	CommandData(cdArgs_t {ILI9341_VCOM2, 0x86});				// 0x86: VCOM offset voltage = VMH - 58 VML – 58;
+	CommandData(cdArgs_t {ILI9341_MAC, 0x48});					// Memory access control: MX = Column Address Order, RGB-BGR Order control
+	CommandData(cdArgs_t {ILI9341_PIXEL_FORMAT, 0x55});			// 16 bit format
+	CommandData(cdArgs_t {ILI9341_FRC, 0x00, 0x18});
+	CommandData(cdArgs_t {ILI9341_DFC, 0x08, 0x82, 0x27});
+	CommandData(cdArgs_t {ILI9341_3GAMMA_EN, 0x00});
+	CommandData(cdArgs_t {ILI9341_COLUMN_ADDR, 0x00, 0x00, 0x00, 0xEF});
+	CommandData(cdArgs_t {ILI9341_PAGE_ADDR, 0x00, 0x00, 0x01, 0x3F});
+	CommandData(cdArgs_t {ILI9341_GAMMA, 0x01});
+	CommandData(cdArgs_t {ILI9341_PGAMMA,	0x0F, 0x31, 0x2B, 0x0C, 0x0E, 0x08, 0x4E, 0xF1, 0x37, 0x07, 0x10, 0x03, 0x0E, 0x09, 0x00});
+	CommandData(cdArgs_t {ILI9341_NGAMMA, 0x00, 0x0E, 0x14, 0x03, 0x11, 0x07, 0x31, 0xC1, 0x48, 0x08, 0x0F, 0x0C, 0x31, 0x36, 0x0F});
 	Command(ILI9341_SLEEP_MODE);
 
 	Delay(1000000);
@@ -54,12 +39,15 @@ void LCD::Init(void) {
 	Command(ILI9341_DISPLAY_ON);
 	Command(ILI9341_GRAM);
 
+#ifdef STM32F42_43xxx
 	Rotate(LCD_Landscape_Flipped);
+#else
+	Rotate(LCD_Landscape);
+#endif
 	ScreenFill(LCD_BLACK);
 };
 
-void LCD::CommandData(CDARGS cmds) {
-	//while (SPI_DMA_Working);
+void LCD::CommandData(cdArgs_t cmds) {
 	Command(cmds[0]);
 	LCD_DCX_SET;
 	for (uint8_t i = 1; i < cmds.size(); ++i)
@@ -103,10 +91,10 @@ void LCD::SetCursorPosition(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) 
 void LCD::Rotate(LCD_Orientation_t o) {
 	Command(ILI9341_MAC);
 	switch (o) {
-		case LCD_Portrait :				Data(0x58);
-		case LCD_Portrait_Flipped : 	Data(0x88);
-		case LCD_Landscape : 			Data(0x28);
-		case LCD_Landscape_Flipped :	Data(0xE8);
+		case LCD_Portrait :				Data(0x58); break;
+		case LCD_Portrait_Flipped : 	Data(0x88); break;
+		case LCD_Landscape : 			Data(0x28); break;
+		case LCD_Landscape_Flipped :	Data(0xE8); break;
 	}
 
 	orientation = o;
@@ -127,17 +115,25 @@ void LCD::ColourFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const u
 	uint32_t pixelCount = (x1 - x0 + 1) * (y1 - y0 + 1);
 
 	SetCursorPosition(x0, y0, x1, y1);
+	DMAint16 = colour;								// data to transfer - set early to avoid problem where F722 doesn't update buffer until midway through send
 	Command(ILI9341_GRAM);
+
 	LCD_DCX_SET;
 
 	SPISetDataSize(SPIDataSize_16b);				// 16-bit SPI mode
 
-	// Send first 65535 bytes, SPI must be in 16-bit Mode
-	SPI_DMA_SendHalfWord(colour, (pixelCount > 0xFFFF) ? 0xFFFF : pixelCount);
+	LCD_CLEAR_DMA_FLAGS
+	LCD_DMA_STREAM->CR &= ~DMA_SxCR_MINC;			// Memory not in increment mode
+	LCD_DMA_STREAM->NDTR = (pixelCount > 0xFFFF) ? pixelCount / 2 : pixelCount;						// Number of data items to transfer
+	LCD_DMA_STREAM->M0AR = (uint32_t) &DMAint16;	// DMA_InitStruct.DMA_Memory0BaseAddr;
+	LCD_DMA_STREAM->CR |= DMA_SxCR_EN;				// Enable DMA transfer stream
+	LCD_SPI->CR2 |= SPI_CR2_TXDMAEN;				// Enable SPI TX DMA
 
 	if (pixelCount > 0xFFFF) {						// Send remaining data
 		while (SPI_DMA_Working);
-		SPI_DMA_SendHalfWord(colour, pixelCount - 0xFFFF);
+		LCD_CLEAR_DMA_FLAGS
+		LCD_DMA_STREAM->NDTR = pixelCount / 2;		// Number of data items to transfer
+		LCD_DMA_STREAM->CR |= DMA_SxCR_EN;			// Enable DMA transfer stream
 	}
 }
 
@@ -150,14 +146,12 @@ void LCD::PatternFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const 
 	LCD_DCX_SET;
 	SPISetDataSize(SPIDataSize_16b);				// 16-bit SPI mode
 
-	// Clear DMA Stream 6 flags using high interrupt flag clear register
-	DMA2->HIFCR = DMA_HIFCR_CFEIF6 | DMA_HIFCR_CDMEIF6 | DMA_HIFCR_CTEIF6 | DMA_HIFCR_CHTIF6 | DMA_HIFCR_CTCIF6;
-
-	DMA2_Stream6->CR |= DMA_SxCR_MINC;				// Memory in increment mode
-	DMA2_Stream6->NDTR = pixelCount;				// Number of data items to transfer
-	DMA2_Stream6->M0AR = (uint32_t)PixelData;		// DMA_InitStruct.DMA_Memory0BaseAddr
-	DMA2_Stream6->CR |= DMA_SxCR_EN;				// Enable DMA transfer stream
-	SPI5->CR2 |= SPI_CR2_TXDMAEN;					// Enable SPI TX DMA
+	LCD_CLEAR_DMA_FLAGS
+	LCD_DMA_STREAM->CR |= DMA_SxCR_MINC;			// Memory in increment mode
+	LCD_DMA_STREAM->NDTR = pixelCount;				// Number of data items to transfer
+	LCD_DMA_STREAM->M0AR = (uint32_t)PixelData;		// DMA_InitStruct.DMA_Memory0BaseAddr
+	LCD_DMA_STREAM->CR |= DMA_SxCR_EN;				// Enable DMA transfer stream
+	LCD_SPI->CR2 |= SPI_CR2_TXDMAEN;				// Enable SPI TX DMA
 }
 
 void LCD::DrawPixel(uint16_t x, uint16_t y, const uint16_t& colour) {
@@ -171,7 +165,6 @@ void LCD::DrawPixel(uint16_t x, uint16_t y, const uint16_t& colour) {
 void LCD::DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint32_t& colour) {
 
 	int16_t dx, dy, err;
-	uint16_t tmp;
 
 	// Check lines are not too long
 	if (x0 >= width)	x0 = width - 1;
@@ -217,9 +210,6 @@ void LCD::DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uin
 
 
 void LCD::DrawRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint32_t& colour) {
-
-	int16_t dx, dy, err;
-	uint16_t tmp;
 
 	// Check lines are not too long
 	if (x0 >= width)	x0 = width - 1;
@@ -312,15 +302,25 @@ void LCD::DrawStringMem(uint16_t x0, uint16_t y0, uint16_t memWidth, uint16_t* m
 
 void LCD::SPISetDataSize(const SPIDataSize_t& Mode) {
 
-	SPI5->CR1 &= ~SPI_CR1_SPE;						// Disable SPI
+//	LCD_SPI->CR1 &= ~SPI_CR1_SPE;					// Disable SPI
 
+
+#ifndef STM32F722xx
 	if (Mode == SPIDataSize_16b) {
-		SPI5->CR1 |= SPI_CR1_DFF;					// Data frame format: 0: 8-bit data frame format; 1: 16-bit data frame format
+		LCD_SPI->CR1 |= SPI_CR1_DFF;				// Data frame format: 0: 8-bit data frame format; 1: 16-bit data frame format
 	} else {
-		SPI5->CR1 &= ~SPI_CR1_DFF;
+		LCD_SPI->CR1 &= ~SPI_CR1_DFF;
 	}
+#else
+	//0111: 8-bit; 1111: 16-bit
+	if (Mode == SPIDataSize_16b) {
+		LCD_SPI->CR2 |= SPI_CR2_DS;					// Data frame format: 0: 8-bit data frame format; 1: 16-bit data frame format
+	} else {
+		LCD_SPI->CR2 &= ~SPI_CR2_DS_3;
+	}
+#endif
 
-	SPI5->CR1 |= SPI_CR1_SPE;						// Re-enable SPI
+//	LCD_SPI->CR1 |= SPI_CR1_SPE;					// Re-enable SPI
 }
 
 inline void LCD::SPISendByte(const uint8_t data) {
@@ -328,30 +328,22 @@ inline void LCD::SPISendByte(const uint8_t data) {
 	while (SPI_DMA_Working);
 
 	// check if in 16 bit mode. Data frame format: 0: 8-bit data frame format; 1: 16-bit data frame format
-	if (SPI5->CR1 & SPI_CR1_DFF)
+#ifndef STM32F722xx
+	if (LCD_SPI->CR1 & SPI_CR1_DFF)
 		SPISetDataSize(SPIDataSize_8b);
+#else
+	if (LCD_SPI->CR2 & SPI_CR2_DS_3)
+		SPISetDataSize(SPIDataSize_8b);
+#endif
 
-	SPI5->DR = data;								// Fill output buffer with data
+	uint8_t* SPI_DR = (uint8_t*)&(LCD_SPI->DR);		// cast the data register address as an 8 bit pointer - otherwise data gets packed wtih an extra byte of zeros
+	*SPI_DR = data;
+	//LCD_SPI->DR = data;							// Fill output buffer with data
 
 	while (SPI_DMA_Working);						// Wait for transmission to complete
 }
 
-void LCD::SPI_DMA_SendHalfWord(const uint16_t& value, const uint16_t& count) {
 
-	while (SPI_DMA_Working);						// Check number of data items to transfer is zero (ie stream is free)
-
-	DMAint16 = value;								// data to transfer - use class property so does not go out of scope
-
-	// Clear DMA Stream 6 flags using high interrupt flag clear register
-	DMA2->HIFCR = DMA_HIFCR_CFEIF6 | DMA_HIFCR_CDMEIF6 | DMA_HIFCR_CTEIF6 | DMA_HIFCR_CHTIF6 | DMA_HIFCR_CTCIF6;
-
-	DMA2_Stream6->CR &= ~DMA_SxCR_MINC;				// Memory not in increment mode
-	DMA2_Stream6->NDTR = count;						// Number of data items to transfer
-	DMA2_Stream6->M0AR = (uint32_t) &DMAint16;		// DMA_InitStruct.DMA_Memory0BaseAddr;
-	DMA2_Stream6->CR |= DMA_SxCR_EN;				// Enable DMA transfer stream
-	SPI5->CR2 |= SPI_CR2_TXDMAEN;					// Enable SPI TX DMA
-
-}
 
 
 
