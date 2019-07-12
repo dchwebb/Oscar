@@ -1,7 +1,14 @@
 #pragma once
 
 #include "stm32f4xx.h"
-
+#include <cmath>
+#include <string>
+#include <sstream>
+#include <queue>
+#include <deque>
+#include <array>
+#include <vector>
+#include <algorithm>
 
 // Coverage profiler macros using timer 4 to count clock cycles / 10
 #define CP_ON		TIM9->EGR |= TIM_EGR_UG; TIM9->CR1 |= TIM_CR1_CEN; coverageTimer=0;
@@ -55,7 +62,7 @@
 #define ADC_BUFFER_LENGTH 12
 
 extern volatile uint16_t ADC_array[];
-enum encoderType { HorizScaleCoarse, HorizScaleFine, CalibVertScale, CalibVertOffset, VoltScale, TriggerChannel, TriggerY, FFTAutoTune, FFTChannel };
+enum encoderType { HorizScaleCoarse, HorizScaleFine, CalibVertScale, CalibVertOffset, VoltScale, TriggerChannel, TriggerY, FFTAutoTune, FFTChannel, ChannelSelect };
 enum mode { Oscilloscope, Fourier, Waterfall, Circular, MIDI };
 enum oscChannel {channelA, channelB, channelC, channelNone};
 

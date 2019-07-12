@@ -1,10 +1,7 @@
 #pragma once
 
-//#include "stm32f7xx.h"
 #include "initialisation.h"
 #include "fontData.h"
-#include <vector>
-#include <string>
 
 #define DRAWWIDTH 320
 #define DRAWHEIGHT 215

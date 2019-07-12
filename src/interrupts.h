@@ -118,7 +118,6 @@ void TIM3_IRQHandler(void) {
 	}
 }
 
-
 // Left Encoder Button
 void L_BTN_NO(EXTI, _IRQHandler)(void) {
 

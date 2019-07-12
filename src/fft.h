@@ -1,9 +1,6 @@
 #pragma once
 
 #include "initialisation.h"
-#include <cmath>
-#include <sstream>
-#include <array>
 #include "lcd.h"
 #include "ui.h"
 

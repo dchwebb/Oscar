@@ -4,7 +4,7 @@
 void MIDIHandler::ProcessMidi() {
 	Timer += 1;
 	if (!MIDIQueue.empty()) {
-		volatile bool edited = false, added = false, processed = false;
+		volatile bool edited = false, processed = false;
 		volatile uint8_t val1, val2;
 
 		MIDIType type = (MIDIType)(MIDIQueue.front() >> 4);

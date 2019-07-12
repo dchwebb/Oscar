@@ -1,13 +1,9 @@
 #pragma once
 
-#include <string>
-#include <sstream>
-#include <cmath>
-#include <algorithm>
+#include "initialisation.h"
 #include "lcd.h"
 #include "fft.h"
 #include "osc.h"
-#include "initialisation.h"
 
 extern void ResetMode();
 
@@ -37,7 +33,7 @@ public:
 	void DrawUI();
 	void handleEncoders();
 	void MenuAction(encoderType* et, volatile const int8_t& val);
-	void EncoderAction(encoderType type, int8_t val);
+	void EncoderAction(encoderType type, const int8_t& val);
 	void ResetMode();
 	void DrawMenu();
 	std::string EncoderLabel(encoderType type);
@@ -47,7 +43,7 @@ public:
 	bool menuMode = false;
 
 	std::vector<MenuItem> OscMenu{  { 0, "Horiz Coarse", HorizScaleCoarse },{ 1, "Horiz Fine", HorizScaleFine },{ 2, "Vert scale", VoltScale},{ 3, "Trigger Y", TriggerY},
-		{ 4, "Trigger Ch", TriggerChannel},{ 5, "Calib Scale", CalibVertScale },{ 5, "Calib Offset", CalibVertOffset } };
+		{ 4, "Trigger Ch", TriggerChannel},{ 5, "Calib Scale", CalibVertScale },{ 5, "Calib Offset", CalibVertOffset },{ 6, "Channel Sel", ChannelSelect } };
 	std::vector<MenuItem> FftMenu{  { 0, "Horiz Coarse", HorizScaleCoarse },{ 1, "Horiz Fine", HorizScaleFine },{ 2, "AutoTune", FFTAutoTune},{ 3, "Channel", FFTChannel} };
 
 

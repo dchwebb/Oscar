@@ -52,12 +52,12 @@ void UI::MenuAction(encoderType* et, volatile const int8_t& val) {
 	DrawMenu();
 }
 
-void UI::EncoderAction(encoderType type, int8_t val) {
+void UI::EncoderAction(encoderType type, const int8_t& val) {
 	int16_t adj;
 	switch (type) {
 	case HorizScaleCoarse :
 		adj = TIM3->ARR + 10 * val;
-		if (adj > 0 && adj < 6000)
+		if (adj > 10 && adj < 6000)
 			TIM3->ARR = adj;
 		DrawUI();
 		break;
@@ -79,6 +79,13 @@ void UI::EncoderAction(encoderType type, int8_t val) {
 			DrawUI();
 		}
 		break;
+	case ChannelSelect :
+		osc.OscDisplay += val;
+		osc.OscDisplay = osc.OscDisplay == 0 ? 7 : osc.OscDisplay == 8 ? 1 : osc.OscDisplay;
+		// FIXME - handle triggers
+		DrawUI();
+		break;
+
 	case TriggerChannel :
 		if ((osc.TriggerTest == nullptr && val > 0) || (osc.TriggerTest == &adcB && val < 0))
 			osc.TriggerTest = &adcA;
@@ -168,11 +175,17 @@ void UI::handleEncoders() {
 	// Change display mode
 	if (encoderBtnL) {
 		switch (displayMode) {
-		case Oscilloscope :	displayMode = Fourier;			break;
+		case Oscilloscope :
+			osc.SampleTimer = TIM3->ARR;
+			displayMode = Fourier;
+			break;
 		case Fourier :		displayMode = Waterfall;		break;
 		case Waterfall :	displayMode = Circular;			break;
 		case Circular :		displayMode = MIDI;				break;
-		case MIDI :			displayMode = Oscilloscope;		break;
+		case MIDI :
+			TIM3->ARR = osc.SampleTimer;
+			displayMode = Oscilloscope;
+			break;
 		}
 		ResetMode();
 	}
@@ -227,10 +240,12 @@ std::string UI::EncoderLabel(encoderType type) {
 		return "Zoom Horiz";
 	case HorizScaleFine :
 		return "Zoom Horiz";
+	case ChannelSelect :
+		return "Ch:" + std::string(osc.OscDisplay & 1 ? "A" : "") + std::string(osc.OscDisplay & 2 ? "B" : "") + std::string(osc.OscDisplay & 4 ? "C  " : "  ");
 	case CalibVertScale :
 		return "Calib Scale";
 	case CalibVertOffset :
-		return "Calib Offset";
+		return "Calib Offs";
 	case VoltScale :
 		return "Zoom Vert";
 	case TriggerY :

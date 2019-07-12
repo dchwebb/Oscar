@@ -1,4 +1,5 @@
 #include <fft.h>
+//#define M_PI		3.14159265358979323846
 
 FFT::FFT() {
 	for (int s = 0; s < LUTSIZE; s++){
@@ -16,7 +17,8 @@ FFT::FFT() {
 // Carry out Fast fourier transform
 void FFT::runFFT(volatile float candSin[]) {
 
-
+	CP_CAP
+	CP_ON
 	calcFFT(candSin);
 	displayFFT(candSin);
 
@@ -25,7 +27,8 @@ void FFT::runFFT(volatile float candSin[]) {
 // Carry out Fast fourier transform
 void FFT::waterfall(volatile float candSin[]) {
 
-
+	CP_CAP
+	CP_ON
 	calcFFT(candSin);
 	displayWaterfall(candSin);
 }
@@ -124,8 +127,6 @@ void FFT::displayWaterfall(volatile float candSin[]) {
 			}
 		}
 
-			int susp = 1;
-
 		// black out any remaining pixels
 		for (; vPos >= 0; --vPos) {
 
@@ -135,7 +136,6 @@ void FFT::displayWaterfall(volatile float candSin[]) {
 
 		// check if ready to draw next buffer
 		if ((col % FFTDRAWBUFFERWIDTH) == 0) {
-			debugCount = DMA2_Stream6->NDTR;			// tracks how many items left in DMA draw buffer
 			lcd.PatternFill(col - FFTDRAWBUFFERWIDTH, 0, col - 1, DRAWHEIGHT, FFTDrawBuffer[FFTDrawBufferNumber]);
 		}
 	}
@@ -296,8 +296,6 @@ void FFT::displayFFT(volatile float candSin[]) {
 					uint16_t harmonicNumber = round((float)harmonic[h] / harmonic[0]);
 					std::string harmonicInfo = ui.intToString(harmonicNumber) + " " + ui.floatToString(harmonicFreq(harmonic[h]), false) + "Hz";
 					lcd.DrawStringMem(0, 20 + 20 * h, FFTDRAWBUFFERWIDTH, FFTDrawBuffer[FFTDrawBufferNumber], harmonicInfo, &lcd.Font_Small, harmColours[h], LCD_BLACK);
-
-					debugCount = DMA2_Stream6->NDTR;			// tracks how many items left in DMA draw buffer
 				}
 			}
 			lcd.PatternFill(i - FFTDRAWBUFFERWIDTH, 0, i - 1, DRAWHEIGHT, FFTDrawBuffer[FFTDrawBufferNumber]);
