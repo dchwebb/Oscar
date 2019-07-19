@@ -5,3 +5,7 @@
 *.o
 *.list
 *.map
+*.kicad_pcb-bak
+*.bak
+*.su
+*.su

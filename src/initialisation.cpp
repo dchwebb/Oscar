@@ -208,24 +208,22 @@ void InitDebounceTimer() {
 }
 
 void InitEncoders() {
-	// Encoder L: Button on PE4, up/down on PE10 and PE11; Encoder R: button on PA7, up/down on PB6 and PB7
+	// Encoder L: Button on PB4, up/down on PE10 and PE11; Encoder R: button on PA7, up/down on PB6 and PB7
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;			// reset and clock control - advanced high performance bus - GPIO port A
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;			// reset and clock control - advanced high performance bus - GPIO port B
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN;			// reset and clock control - advanced high performance bus - GPIO port E
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;			// Enable system configuration clock: used to manage external interrupt line connection to GPIOs
 
-	// encoder connections to pull up
-	GPIOA->PUPDR |= GPIO_PUPDR_PUPDR7_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
-	GPIOE->PUPDR |= GPIO_PUPDR_PUPDR4_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
-
 	// configure PA7 button to fire on an interrupt
+	GPIOA->PUPDR |= GPIO_PUPDR_PUPDR7_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
 	SYSCFG->EXTICR[1] |= SYSCFG_EXTICR2_EXTI7_PA;	// Select Pin PA7 which uses External interrupt 2
 	EXTI->RTSR |= EXTI_RTSR_TR7;					// Enable rising edge trigger
 	EXTI->FTSR |= EXTI_FTSR_TR7;					// Enable falling edge trigger
 	EXTI->IMR |= EXTI_IMR_MR7;						// Activate interrupt using mask register
 
-	// configure PE4 button to fire on an interrupt
-	SYSCFG->EXTICR[1] |= SYSCFG_EXTICR2_EXTI4_PE;	// Select Pin PA0 which uses External interrupt 2
+	// configure PB4 button to fire on an interrupt
+	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR4_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
+	SYSCFG->EXTICR[1] |= SYSCFG_EXTICR2_EXTI4_PB;	// Select Pin PB4 which uses External interrupt 2
 	EXTI->RTSR |= EXTI_RTSR_TR4;					// Enable rising edge trigger
 	EXTI->FTSR |= EXTI_FTSR_TR4;					// Enable falling edge trigger
 	EXTI->IMR |= EXTI_IMR_MR4;						// Activate interrupt using mask register

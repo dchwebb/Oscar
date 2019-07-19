@@ -1,17 +1,192 @@
-fft.h:28:7:FFT::~FFT()	8	static
-ui.h:31:7:UI::~UI()	16	static
-interrupts.h:2:6:void TIM3_IRQHandler()	12	static
-interrupts.h:122:6:void EXTI4_IRQHandler()	0	static
-interrupts.h:134:6:void EXTI9_5_IRQHandler()	0	static
-interrupts.h:146:6:void TIM1_BRK_TIM9_IRQHandler()	0	static
-main.cpp:74:5:int main()	69576	static
-stl_deque.h:658:5:std::_Deque_base<_Tp, _Alloc>::~_Deque_base() [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
-midi.h:20:7:MIDIHandler::~MIDIHandler()	16	static
-stl_deque.h:679:5:void std::_Deque_base<_Tp, _Alloc>::_M_initialize_map(std::size_t) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	40	static
+new:146:14:void* operator new(std::size_t, void*)	16	static
+gthr-default.h:229:1:int __gthread_key_delete(__gthread_key_t)	16	static
+stl_deque.h:89:3:constexpr std::size_t std::__deque_buf_size(std::size_t)	16	static
+ui.h:24:8:MenuItem::~MenuItem()	16	static
+lcd.h:73:7:LCD::LCD()	16	static
+ui.h:31:7:UI::UI()	768	static
+stl_queue.h:96:11:std::queue<unsigned char>::~queue()	16	static
 midi.h:20:7:MIDIHandler::MIDIHandler()	64	static
-basic_string.tcc:206:7:void std::__cxx11::basic_string<_CharT, _Traits, _Alloc>::_M_construct(_InIterator, _InIterator, std::forward_iterator_tag) [with _FwdIterator = const char*; _CharT = char; _Traits = std::char_traits<char>; _Alloc = std::allocator<char>]	24	static
-deque.tcc:462:7:) [with _Args = {unsigned char}; _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	32	static
+osc.h:8:7:Osc::Osc()	16	static
+main.cpp:57:17:uint16_t CalcVertOffset(const volatile uint16_t&)	32	static
+main.cpp:61:17:uint16_t CalcZeroSize()	16	static
+main.cpp:65:14:float FreqFromPos(uint16_t)	16	static
+interrupts.h:2:6:void TIM3_IRQHandler()	24	static
+interrupts.h:122:6:void EXTI4_IRQHandler()	4	static
+interrupts.h:134:6:void EXTI9_5_IRQHandler()	4	static
+interrupts.h:146:6:void TIM1_BRK_TIM9_IRQHandler()	4	static
 interrupts.h:152:6:void UART4_IRQHandler()	16	static
-basic_string.tcc:206:7:void std::__cxx11::basic_string<_CharT, _Traits, _Alloc>::_M_construct(_InIterator, _InIterator, std::forward_iterator_tag) [with _FwdIterator = char*; _CharT = char; _Traits = std::char_traits<char>; _Alloc = std::allocator<char>]	24	static
-ui.h:31:7:UI::UI()	480	static
-main.cpp:299:1:cpp)	16	static
+cmath:1802:5:constexpr typename __gnu_cxx::__enable_if<std::__is_integer<_Tp>::__value, double>::__type std::round(_Tp) [with _Tp = int]	24	static
+move.h:76:5:constexpr _Tp&& std::forward(typename std::remove_reference<_From>::type&) [with _Tp = const short unsigned int&]	16	static
+stl_pair.h:341:12:constexpr std::pair<_T1, _T2>::pair(std::pair<_U1, _U2>&&) [with _U1 = const short unsigned int&; _U2 = const short unsigned int&; typename std::enable_if<(std::_PCC<((! std::is_same<_T1, _U1>::value) || (! std::is_same<_T2, _U2>::value)), _T1, _T2>::_MoveConstructiblePair<_U1, _U2>() && std::_PCC<((! std::is_same<_T1, _U1>::value) || (! std::is_same<_T2, _U2>::value)), _T1, _T2>::_ImplicitlyMoveConvertiblePair<_U1, _U2>()), bool>::type <anonymous> = 1u; _T1 = short unsigned int; _T2 = short unsigned int]	16	static
+main.cpp:74:5:int main()	69568	static
+move.h:101:5:constexpr typename std::remove_reference< <template-parameter-1-1> >::type&& std::move(_Tp&&) [with _Tp = std::__cxx11::basic_string<char>&]	16	static
+basic_string.h:5033:5:std::__cxx11::basic_string<_CharT, _Traits, _Alloc> std::operator+(const _CharT*, std::__cxx11::basic_string<_CharT, _Traits, _Alloc>&&) [with _CharT = char; _Traits = std::char_traits<char>; _Alloc = std::allocator<char>]	24	static
+allocator.h:131:7:std::allocator< <template-parameter-1-1> >::allocator() [with _Tp = MenuItem]	16	static
+allocator.h:139:7:std::allocator< <template-parameter-1-1> >::~allocator() [with _Tp = MenuItem]	16	static
+initializer_list:75:7:constexpr const _E* std::initializer_list<_E>::begin() const [with _E = MenuItem]	16	static
+initializer_list:71:7:constexpr std::initializer_list<_E>::size_type std::initializer_list<_E>::size() const [with _E = MenuItem]	16	static
+initializer_list:79:7:constexpr const _E* std::initializer_list<_E>::end() const [with _E = MenuItem]	24	static
+stl_vector.h:375:7:std::vector<_Tp, _Alloc>::vector(std::initializer_list<_Tp>, const allocator_type&) [with _Tp = MenuItem; _Alloc = std::allocator<MenuItem>]	40	static
+stl_vector.h:425:7:std::vector<_Tp, _Alloc>::~vector() [with _Tp = MenuItem; _Alloc = std::allocator<MenuItem>]	24	static
+stl_deque.h:884:7:std::deque<_Tp, _Alloc>::deque() [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
+stl_deque.h:1040:7:std::deque<_Tp, _Alloc>::~deque() [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	48	static
+move.h:101:5:constexpr typename std::remove_reference< <template-parameter-1-1> >::type&& std::move(_Tp&&) [with _Tp = std::deque<unsigned char, std::allocator<unsigned char> >&]	16	static
+stl_queue.h:151:7:std::queue<_Tp, _Sequence>::queue(_Sequence&&) [with _Tp = unsigned char; _Sequence = std::deque<unsigned char, std::allocator<unsigned char> >]	24	static
+stl_deque.h:884:7:std::deque<_Tp, _Alloc>::deque() [with _Tp = MIDIEvent; _Alloc = std::allocator<MIDIEvent>]	16	static
+stl_deque.h:1040:7:std::deque<_Tp, _Alloc>::~deque() [with _Tp = MIDIEvent; _Alloc = std::allocator<MIDIEvent>]	48	static
+stl_algobase.h:195:5:const _Tp& std::min(const _Tp&, const _Tp&) [with _Tp = float]	16	static
+stl_algobase.h:219:5:const _Tp& std::max(const _Tp&, const _Tp&) [with _Tp = float]	16	static
+move.h:101:5:constexpr typename std::remove_reference< <template-parameter-1-1> >::type&& std::move(_Tp&&) [with _Tp = unsigned char&]	16	static
+stl_queue.h:247:7:void std::queue<_Tp, _Sequence>::push(std::queue<_Tp, _Sequence>::value_type&&) [with _Tp = unsigned char; _Sequence = std::deque<unsigned char, std::allocator<unsigned char> >]	24	static
+basic_string.h:5045:5:std::__cxx11::basic_string<_CharT, _Traits, _Alloc> std::operator+(std::__cxx11::basic_string<_CharT, _Traits, _Alloc>&&, const _CharT*) [with _CharT = char; _Traits = std::char_traits<char>; _Alloc = std::allocator<char>]	24	static
+stl_algobase.h:219:5:const _Tp& std::max(const _Tp&, const _Tp&) [with _Tp = int]	16	static
+stl_pair.h:241:17:constexpr std::pair<_T1, _T2>::pair(const _T1&, const _T2&) [with _U1 = const short unsigned int&; _U2 = const short unsigned int&; typename std::enable_if<(std::_PCC<true, _T1, _T2>::_ConstructiblePair<_U1, _U2>() && std::_PCC<true, _T1, _T2>::_ImplicitlyConvertiblePair<_U1, _U2>()), bool>::type <anonymous> = 1u; _T1 = const short unsigned int&; _T2 = const short unsigned int&]	24	static
+stl_algo.h:3299:5:std::pair<const _Tp&, const _Tp&> std::minmax(const _Tp&, const _Tp&) [with _Tp = short unsigned int]	24	static
+new_allocator.h:79:7:__gnu_cxx::new_allocator<_Tp>::new_allocator() [with _Tp = MenuItem]	16	static
+new_allocator.h:86:7:__gnu_cxx::new_allocator<_Tp>::~new_allocator() [with _Tp = MenuItem]	16	static
+stl_vector.h:79:14:std::_Vector_base<MenuItem, std::allocator<MenuItem> >::_Vector_impl::~_Vector_impl()	16	static
+stl_vector.h:127:7:std::_Vector_base<_Tp, _Alloc>::_Vector_base(const allocator_type&) [with _Tp = MenuItem; _Alloc = std::allocator<MenuItem>]	16	static
+stl_vector.h:159:7:std::_Vector_base<_Tp, _Alloc>::~_Vector_base() [with _Tp = MenuItem; _Alloc = std::allocator<MenuItem>]	16	static
+stl_vector.h:1281:9:void std::vector<_Tp, _Alloc>::_M_range_initialize(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const MenuItem*; _Tp = MenuItem; _Alloc = std::allocator<MenuItem>]	40	static
+stl_vector.h:113:7:std::_Vector_base<_Tp, _Alloc>::_Tp_alloc_type& std::_Vector_base<_Tp, _Alloc>::_M_get_Tp_allocator() [with _Tp = MenuItem; _Alloc = std::allocator<MenuItem>]	16	static
+stl_construct.h:148:5:void std::_Destroy(_ForwardIterator, _ForwardIterator, std::allocator<_T2>&) [with _ForwardIterator = MenuItem*; _Tp = MenuItem]	24	static
+stl_deque.h:547:14:std::_Deque_base<unsigned char, std::allocator<unsigned char> >::_Deque_impl::~_Deque_impl()	16	static
+stl_deque.h:488:7:std::_Deque_base<_Tp, _Alloc>::_Deque_base() [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
+stl_deque.h:658:5:std::_Deque_base<_Tp, _Alloc>::~_Deque_base() [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
+stl_deque.h:1159:7:std::deque<_Tp, _Alloc>::iterator std::deque<_Tp, _Alloc>::begin() [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
+stl_deque.h:1176:7:std::deque<_Tp, _Alloc>::iterator std::deque<_Tp, _Alloc>::end() [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
+stl_deque.h:585:7:std::_Deque_base<_Tp, _Alloc>::_Tp_alloc_type& std::_Deque_base<_Tp, _Alloc>::_M_get_Tp_allocator() [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
+stl_deque.h:149:7:std::_Deque_iterator<_Tp, _Ref, _Ptr>::_Deque_iterator(const iterator&) [with _Tp = unsigned char; _Ref = unsigned char&; _Ptr = unsigned char*]	16	static
+stl_deque.h:2031:7:void std::deque<_Tp, _Alloc>::_M_destroy_data(std::deque<_Tp, _Alloc>::iterator, std::deque<_Tp, _Alloc>::iterator, const std::allocator<_CharT>&) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	56	static
+stl_deque.h:958:7:std::deque<_Tp, _Alloc>::deque(std::deque<_Tp, _Alloc>&&) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	24	static
+stl_deque.h:547:14:std::_Deque_base<MIDIEvent, std::allocator<MIDIEvent> >::_Deque_impl::~_Deque_impl()	16	static
+stl_deque.h:488:7:std::_Deque_base<_Tp, _Alloc>::_Deque_base() [with _Tp = MIDIEvent; _Alloc = std::allocator<MIDIEvent>]	16	static
+stl_deque.h:658:5:std::_Deque_base<_Tp, _Alloc>::~_Deque_base() [with _Tp = MIDIEvent; _Alloc = std::allocator<MIDIEvent>]	16	static
+stl_deque.h:1159:7:std::deque<_Tp, _Alloc>::iterator std::deque<_Tp, _Alloc>::begin() [with _Tp = MIDIEvent; _Alloc = std::allocator<MIDIEvent>]	16	static
+stl_deque.h:1176:7:std::deque<_Tp, _Alloc>::iterator std::deque<_Tp, _Alloc>::end() [with _Tp = MIDIEvent; _Alloc = std::allocator<MIDIEvent>]	16	static
+stl_deque.h:585:7:std::_Deque_base<_Tp, _Alloc>::_Tp_alloc_type& std::_Deque_base<_Tp, _Alloc>::_M_get_Tp_allocator() [with _Tp = MIDIEvent; _Alloc = std::allocator<MIDIEvent>]	16	static
+stl_deque.h:149:7:std::_Deque_iterator<_Tp, _Ref, _Ptr>::_Deque_iterator(const iterator&) [with _Tp = MIDIEvent; _Ref = MIDIEvent&; _Ptr = MIDIEvent*]	16	static
+stl_deque.h:2031:7:void std::deque<_Tp, _Alloc>::_M_destroy_data(std::deque<_Tp, _Alloc>::iterator, std::deque<_Tp, _Alloc>::iterator, const std::allocator<_CharT>&) [with _Tp = MIDIEvent; _Alloc = std::allocator<MIDIEvent>]	56	static
+stl_deque.h:1532:7:void std::deque<_Tp, _Alloc>::push_back(std::deque<_Tp, _Alloc>::value_type&&) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
+stl_vector.h:90:2:std::_Vector_base<_Tp, _Alloc>::_Vector_impl::_Vector_impl(const _Tp_alloc_type&) [with _Tp = MenuItem; _Alloc = std::allocator<MenuItem>]	16	static
+stl_vector.h:174:7:void std::_Vector_base<_Tp, _Alloc>::_M_deallocate(std::_Vector_base<_Tp, _Alloc>::pointer, std::size_t) [with _Tp = MenuItem; _Alloc = std::allocator<MenuItem>]	24	static
+stl_iterator_base_funcs.h:135:5:typename std::iterator_traits<_Iterator>::difference_type std::distance(_InputIterator, _InputIterator) [with _InputIterator = const MenuItem*]	32	static
+stl_vector.h:167:7:std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = MenuItem; _Alloc = std::allocator<MenuItem>]	16	static
+stl_uninitialized.h:279:5:_ForwardIterator std::__uninitialized_copy_a(_InputIterator, _InputIterator, _ForwardIterator, std::allocator<_Tp>&) [with _InputIterator = const MenuItem*; _ForwardIterator = MenuItem*; _Tp = MenuItem]	24	static
+stl_construct.h:122:5:void std::_Destroy(_ForwardIterator, _ForwardIterator) [with _ForwardIterator = MenuItem*]	16	static
+stl_deque.h:555:2:std::_Deque_base<_Tp, _Alloc>::_Deque_impl::_Deque_impl() [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
+allocator.h:139:7:std::allocator< <template-parameter-1-1> >::~allocator() [with _Tp = unsigned char]	16	static
+stl_deque.h:679:5:void std::_Deque_base<_Tp, _Alloc>::_M_initialize_map(std::size_t) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	48	static
+stl_deque.h:736:5:void std::_Deque_base<_Tp, _Alloc>::_M_destroy_nodes(std::_Deque_base<_Tp, _Alloc>::_Map_pointer, std::_Deque_base<_Tp, _Alloc>::_Map_pointer) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	32	static
+stl_deque.h:618:7:void std::_Deque_base<_Tp, _Alloc>::_M_deallocate_map(std::_Deque_base<_Tp, _Alloc>::_Map_pointer, std::size_t) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	32	static
+move.h:101:5:constexpr typename std::remove_reference< <template-parameter-1-1> >::type&& std::move(_Tp&&) [with _Tp = std::_Deque_base<unsigned char, std::allocator<unsigned char> >&]	16	static
+stl_deque.h:517:7:std::_Deque_base<_Tp, _Alloc>::_Deque_base(std::_Deque_base<_Tp, _Alloc>&&) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	32	static
+stl_deque.h:555:2:std::_Deque_base<_Tp, _Alloc>::_Deque_impl::_Deque_impl() [with _Tp = MIDIEvent; _Alloc = std::allocator<MIDIEvent>]	16	static
+allocator.h:139:7:std::allocator< <template-parameter-1-1> >::~allocator() [with _Tp = MIDIEvent]	16	static
+stl_deque.h:679:5:void std::_Deque_base<_Tp, _Alloc>::_M_initialize_map(std::size_t) [with _Tp = MIDIEvent; _Alloc = std::allocator<MIDIEvent>]	48	static
+stl_deque.h:736:5:void std::_Deque_base<_Tp, _Alloc>::_M_destroy_nodes(std::_Deque_base<_Tp, _Alloc>::_Map_pointer, std::_Deque_base<_Tp, _Alloc>::_Map_pointer) [with _Tp = MIDIEvent; _Alloc = std::allocator<MIDIEvent>]	32	static
+stl_deque.h:618:7:void std::_Deque_base<_Tp, _Alloc>::_M_deallocate_map(std::_Deque_base<_Tp, _Alloc>::_Map_pointer, std::size_t) [with _Tp = MIDIEvent; _Alloc = std::allocator<MIDIEvent>]	32	static
+move.h:76:5:constexpr _Tp&& std::forward(typename std::remove_reference<_From>::type&) [with _Tp = unsigned char]	16	static
+deque.tcc:149:7:) [with _Args = {unsigned char}; _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	24	static
+allocator.h:133:7:std::allocator< <template-parameter-1-1> >::allocator(const std::allocator< <template-parameter-1-1> >&) [with _Tp = MenuItem]	16	static
+alloc_traits.h:461:7:static void std::allocator_traits<std::allocator<_CharT> >::deallocate(std::allocator_traits<std::allocator<_CharT> >::allocator_type&, std::allocator_traits<std::allocator<_CharT> >::pointer, std::allocator_traits<std::allocator<_CharT> >::size_type) [with _Tp = MenuItem]	24	static
+stl_iterator_base_types.h:204:5:typename std::iterator_traits<_Iterator>::iterator_category std::__iterator_category(const _Iter&) [with _Iter = const MenuItem*]	16	static
+stl_iterator_base_funcs.h:96:5:typename std::iterator_traits<_Iterator>::difference_type std::__distance(_RandomAccessIterator, _RandomAccessIterator, std::random_access_iterator_tag) [with _RandomAccessIterator = const MenuItem*]	24	static
+alloc_traits.h:435:7:static _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(std::allocator_traits<std::allocator<_CharT> >::allocator_type&, std::allocator_traits<std::allocator<_CharT> >::size_type) [with _Tp = MenuItem]	16	static
+stl_uninitialized.h:107:5:_ForwardIterator std::uninitialized_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = const MenuItem*; _ForwardIterator = MenuItem*]	32	static
+stl_construct.h:100:9:static void std::_Destroy_aux<<anonymous> >::__destroy(_ForwardIterator, _ForwardIterator) [with _ForwardIterator = MenuItem*; bool <anonymous> = false]	16	static
+allocator.h:131:7:std::allocator< <template-parameter-1-1> >::allocator() [with _Tp = unsigned char]	16	static
+stl_deque.h:146:7:std::_Deque_iterator<_Tp, _Ref, _Ptr>::_Deque_iterator() [with _Tp = unsigned char; _Ref = unsigned char&; _Ptr = unsigned char*]	16	static
+new_allocator.h:86:7:__gnu_cxx::new_allocator<_Tp>::~new_allocator() [with _Tp = unsigned char]	16	static
+stl_algobase.h:219:5:const _Tp& std::max(const _Tp&, const _Tp&) [with _Tp = unsigned int]	16	static
+stl_deque.h:611:7:std::_Deque_base<_Tp, _Alloc>::_Map_pointer std::_Deque_base<_Tp, _Alloc>::_M_allocate_map(std::size_t) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	32	static
+stl_deque.h:718:5:void std::_Deque_base<_Tp, _Alloc>::_M_create_nodes(std::_Deque_base<_Tp, _Alloc>::_Map_pointer, std::_Deque_base<_Tp, _Alloc>::_Map_pointer) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	32	static
+stl_deque.h:252:7:void std::_Deque_iterator<_Tp, _Ref, _Ptr>::_M_set_node(std::_Deque_iterator<_Tp, _Ref, _Ptr>::_Map_pointer) [with _Tp = unsigned char; _Ref = unsigned char&; _Ptr = unsigned char*]	24	static
+stl_deque.h:604:7:void std::_Deque_base<_Tp, _Alloc>::_M_deallocate_node(std::_Deque_base<_Tp, _Alloc>::_Ptr) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	24	static
+stl_deque.h:593:7:std::_Deque_base<_Tp, _Alloc>::_Map_alloc_type std::_Deque_base<_Tp, _Alloc>::_M_get_map_allocator() const [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
+allocator.h:139:7:std::allocator< <template-parameter-1-1> >::~allocator() [with _Tp = unsigned char*]	16	static
+alloc_traits.h:461:7:static void std::allocator_traits<std::allocator<_CharT> >::deallocate(std::allocator_traits<std::allocator<_CharT> >::allocator_type&, std::allocator_traits<std::allocator<_CharT> >::pointer, std::allocator_traits<std::allocator<_CharT> >::size_type) [with _Tp = unsigned char*]	24	static
+move.h:101:5:constexpr typename std::remove_reference< <template-parameter-1-1> >::type&& std::move(_Tp&&) [with _Tp = std::allocator<unsigned char>&]	16	static
+stl_deque.h:509:7:std::_Deque_base<_Tp, _Alloc>::_Deque_base(std::_Deque_base<_Tp, _Alloc>&&, std::true_type) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	32	static
+allocator.h:131:7:std::allocator< <template-parameter-1-1> >::allocator() [with _Tp = MIDIEvent]	16	static
+stl_deque.h:146:7:std::_Deque_iterator<_Tp, _Ref, _Ptr>::_Deque_iterator() [with _Tp = MIDIEvent; _Ref = MIDIEvent&; _Ptr = MIDIEvent*]	16	static
+new_allocator.h:86:7:__gnu_cxx::new_allocator<_Tp>::~new_allocator() [with _Tp = MIDIEvent]	16	static
+stl_deque.h:611:7:std::_Deque_base<_Tp, _Alloc>::_Map_pointer std::_Deque_base<_Tp, _Alloc>::_M_allocate_map(std::size_t) [with _Tp = MIDIEvent; _Alloc = std::allocator<MIDIEvent>]	32	static
+stl_deque.h:718:5:void std::_Deque_base<_Tp, _Alloc>::_M_create_nodes(std::_Deque_base<_Tp, _Alloc>::_Map_pointer, std::_Deque_base<_Tp, _Alloc>::_Map_pointer) [with _Tp = MIDIEvent; _Alloc = std::allocator<MIDIEvent>]	32	static
+stl_deque.h:252:7:void std::_Deque_iterator<_Tp, _Ref, _Ptr>::_M_set_node(std::_Deque_iterator<_Tp, _Ref, _Ptr>::_Map_pointer) [with _Tp = MIDIEvent; _Ref = MIDIEvent&; _Ptr = MIDIEvent*]	24	static
+stl_deque.h:604:7:void std::_Deque_base<_Tp, _Alloc>::_M_deallocate_node(std::_Deque_base<_Tp, _Alloc>::_Ptr) [with _Tp = MIDIEvent; _Alloc = std::allocator<MIDIEvent>]	24	static
+stl_deque.h:593:7:std::_Deque_base<_Tp, _Alloc>::_Map_alloc_type std::_Deque_base<_Tp, _Alloc>::_M_get_map_allocator() const [with _Tp = MIDIEvent; _Alloc = std::allocator<MIDIEvent>]	16	static
+allocator.h:139:7:std::allocator< <template-parameter-1-1> >::~allocator() [with _Tp = MIDIEvent*]	16	static
+alloc_traits.h:461:7:static void std::allocator_traits<std::allocator<_CharT> >::deallocate(std::allocator_traits<std::allocator<_CharT> >::allocator_type&, std::allocator_traits<std::allocator<_CharT> >::pointer, std::allocator_traits<std::allocator<_CharT> >::size_type) [with _Tp = MIDIEvent*]	24	static
+alloc_traits.h:474:2:) [with _Up = unsigned char; _Args = {unsigned char}; _Tp = unsigned char]	24	static
+deque.tcc:462:7:) [with _Args = {unsigned char}; _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	24	static
+new_allocator.h:81:7:__gnu_cxx::new_allocator<_Tp>::new_allocator(const __gnu_cxx::new_allocator<_Tp>&) [with _Tp = MenuItem]	16	static
+new_allocator.h:109:7:void __gnu_cxx::new_allocator<_Tp>::deallocate(__gnu_cxx::new_allocator<_Tp>::pointer, __gnu_cxx::new_allocator<_Tp>::size_type) [with _Tp = MenuItem]	24	static
+new_allocator.h:99:7:_Tp* __gnu_cxx::new_allocator<_Tp>::allocate(__gnu_cxx::new_allocator<_Tp>::size_type, const void*) [with _Tp = MenuItem]	24	static
+stl_uninitialized.h:68:9:static _ForwardIterator std::__uninitialized_copy<_TrivialValueTypes>::__uninit_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = const MenuItem*; _ForwardIterator = MenuItem*; bool _TrivialValueTypes = false]	32	static
+move.h:47:5:_Tp* std::__addressof(_Tp&) [with _Tp = MenuItem]	16	static
+stl_construct.h:92:5:void std::_Destroy(_Tp*) [with _Tp = MenuItem]	16	static
+new_allocator.h:79:7:__gnu_cxx::new_allocator<_Tp>::new_allocator() [with _Tp = unsigned char]	16	static
+alloc_traits.h:435:7:static _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(std::allocator_traits<std::allocator<_CharT> >::allocator_type&, std::allocator_traits<std::allocator<_CharT> >::size_type) [with _Tp = unsigned char*]	16	static
+stl_deque.h:597:7:std::_Deque_base<_Tp, _Alloc>::_Ptr std::_Deque_base<_Tp, _Alloc>::_M_allocate_node() [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	24	static
+stl_deque.h:126:21:static std::size_t std::_Deque_iterator<_Tp, _Ref, _Ptr>::_S_buffer_size() [with _Tp = unsigned char; _Ref = unsigned char&; _Ptr = unsigned char*]	8	static
+alloc_traits.h:461:7:static void std::allocator_traits<std::allocator<_CharT> >::deallocate(std::allocator_traits<std::allocator<_CharT> >::allocator_type&, std::allocator_traits<std::allocator<_CharT> >::pointer, std::allocator_traits<std::allocator<_CharT> >::size_type) [with _Tp = unsigned char]	24	static
+stl_deque.h:589:7:const _Tp_alloc_type& std::_Deque_base<_Tp, _Alloc>::_M_get_Tp_allocator() const [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
+allocator.h:137:9:std::allocator< <template-parameter-1-1> >::allocator(const std::allocator<_Tp1>&) [with _Tp1 = unsigned char; _Tp = unsigned char*]	16	static
+new_allocator.h:86:7:__gnu_cxx::new_allocator<_Tp>::~new_allocator() [with _Tp = unsigned char*]	16	static
+new_allocator.h:109:7:void __gnu_cxx::new_allocator<_Tp>::deallocate(__gnu_cxx::new_allocator<_Tp>::pointer, __gnu_cxx::new_allocator<_Tp>::size_type) [with _Tp = unsigned char*]	24	static
+stl_deque.h:568:2:std::_Deque_base<_Tp, _Alloc>::_Deque_impl::_Deque_impl(std::_Deque_base<_Tp, _Alloc>::_Tp_alloc_type&&) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
+stl_deque.h:574:7:void std::_Deque_base<_Tp, _Alloc>::_Deque_impl::_M_swap_data(std::_Deque_base<_Tp, _Alloc>::_Deque_impl&) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
+new_allocator.h:79:7:__gnu_cxx::new_allocator<_Tp>::new_allocator() [with _Tp = MIDIEvent]	16	static
+alloc_traits.h:435:7:static _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(std::allocator_traits<std::allocator<_CharT> >::allocator_type&, std::allocator_traits<std::allocator<_CharT> >::size_type) [with _Tp = MIDIEvent*]	16	static
+stl_deque.h:597:7:std::_Deque_base<_Tp, _Alloc>::_Ptr std::_Deque_base<_Tp, _Alloc>::_M_allocate_node() [with _Tp = MIDIEvent; _Alloc = std::allocator<MIDIEvent>]	24	static
+stl_deque.h:126:21:static std::size_t std::_Deque_iterator<_Tp, _Ref, _Ptr>::_S_buffer_size() [with _Tp = MIDIEvent; _Ref = MIDIEvent&; _Ptr = MIDIEvent*]	8	static
+alloc_traits.h:461:7:static void std::allocator_traits<std::allocator<_CharT> >::deallocate(std::allocator_traits<std::allocator<_CharT> >::allocator_type&, std::allocator_traits<std::allocator<_CharT> >::pointer, std::allocator_traits<std::allocator<_CharT> >::size_type) [with _Tp = MIDIEvent]	24	static
+stl_deque.h:589:7:const _Tp_alloc_type& std::_Deque_base<_Tp, _Alloc>::_M_get_Tp_allocator() const [with _Tp = MIDIEvent; _Alloc = std::allocator<MIDIEvent>]	16	static
+allocator.h:137:9:std::allocator< <template-parameter-1-1> >::allocator(const std::allocator<_Tp1>&) [with _Tp1 = MIDIEvent; _Tp = MIDIEvent*]	16	static
+new_allocator.h:86:7:__gnu_cxx::new_allocator<_Tp>::~new_allocator() [with _Tp = MIDIEvent*]	16	static
+new_allocator.h:109:7:void __gnu_cxx::new_allocator<_Tp>::deallocate(__gnu_cxx::new_allocator<_Tp>::pointer, __gnu_cxx::new_allocator<_Tp>::size_type) [with _Tp = MIDIEvent*]	24	static
+new_allocator.h:119:9:) [with _Up = unsigned char; _Args = {unsigned char}; _Tp = unsigned char]	32	static
+stl_deque.h:2112:7:void std::deque<_Tp, _Alloc>::_M_reserve_map_at_back(std::deque<_Tp, _Alloc>::size_type) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
+new_allocator.h:113:7:__gnu_cxx::new_allocator<_Tp>::size_type __gnu_cxx::new_allocator<_Tp>::max_size() const [with _Tp = MenuItem]	16	static
+move.h:76:5:constexpr _Tp&& std::forward(typename std::remove_reference<_From>::type&) [with _Tp = const MenuItem&]	16	static
+ui.h:24:8:MenuItem::MenuItem(const MenuItem&)	16	static
+stl_construct.h:74:5:) [with _T1 = MenuItem; _Args = {const MenuItem&}]	24	static
+new_allocator.h:99:7:_Tp* __gnu_cxx::new_allocator<_Tp>::allocate(__gnu_cxx::new_allocator<_Tp>::size_type, const void*) [with _Tp = unsigned char*]	24	static
+alloc_traits.h:435:7:static _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(std::allocator_traits<std::allocator<_CharT> >::allocator_type&, std::allocator_traits<std::allocator<_CharT> >::size_type) [with _Tp = unsigned char]	16	static
+new_allocator.h:109:7:void __gnu_cxx::new_allocator<_Tp>::deallocate(__gnu_cxx::new_allocator<_Tp>::pointer, __gnu_cxx::new_allocator<_Tp>::size_type) [with _Tp = unsigned char]	24	static
+new_allocator.h:79:7:__gnu_cxx::new_allocator<_Tp>::new_allocator() [with _Tp = unsigned char*]	16	static
+allocator.h:133:7:std::allocator< <template-parameter-1-1> >::allocator(const std::allocator< <template-parameter-1-1> >&) [with _Tp = unsigned char]	16	static
+move.h:101:5:constexpr typename std::remove_reference< <template-parameter-1-1> >::type&& std::move(_Tp&&) [with _Tp = std::_Deque_iterator<unsigned char, unsigned char&, unsigned char*>&]	16	static
+move.h:179:5:typename std::enable_if<std::__and_<std::is_move_constructible<_Tp>, std::is_move_assignable<_Tp> >::value>::type std::swap(_Tp&, _Tp&) [with _Tp = std::_Deque_iterator<unsigned char, unsigned char&, unsigned char*>]	40	static
+move.h:101:5:constexpr typename std::remove_reference< <template-parameter-1-1> >::type&& std::move(_Tp&&) [with _Tp = unsigned char**&]	16	static
+move.h:179:5:typename std::enable_if<std::__and_<std::is_move_constructible<_Tp>, std::is_move_assignable<_Tp> >::value>::type std::swap(_Tp&, _Tp&) [with _Tp = unsigned char**]	24	static
+move.h:101:5:constexpr typename std::remove_reference< <template-parameter-1-1> >::type&& std::move(_Tp&&) [with _Tp = unsigned int&]	16	static
+move.h:179:5:typename std::enable_if<std::__and_<std::is_move_constructible<_Tp>, std::is_move_assignable<_Tp> >::value>::type std::swap(_Tp&, _Tp&) [with _Tp = unsigned int]	24	static
+new_allocator.h:99:7:_Tp* __gnu_cxx::new_allocator<_Tp>::allocate(__gnu_cxx::new_allocator<_Tp>::size_type, const void*) [with _Tp = MIDIEvent*]	24	static
+alloc_traits.h:435:7:static _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(std::allocator_traits<std::allocator<_CharT> >::allocator_type&, std::allocator_traits<std::allocator<_CharT> >::size_type) [with _Tp = MIDIEvent]	16	static
+new_allocator.h:109:7:void __gnu_cxx::new_allocator<_Tp>::deallocate(__gnu_cxx::new_allocator<_Tp>::pointer, __gnu_cxx::new_allocator<_Tp>::size_type) [with _Tp = MIDIEvent]	24	static
+new_allocator.h:79:7:__gnu_cxx::new_allocator<_Tp>::new_allocator() [with _Tp = MIDIEvent*]	16	static
+deque.tcc:901:5:void std::deque<_Tp, _Alloc>::_M_reallocate_map(std::deque<_Tp, _Alloc>::size_type, bool) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	56	static
+new_allocator.h:113:7:__gnu_cxx::new_allocator<_Tp>::size_type __gnu_cxx::new_allocator<_Tp>::max_size() const [with _Tp = unsigned char*]	16	static
+new_allocator.h:99:7:_Tp* __gnu_cxx::new_allocator<_Tp>::allocate(__gnu_cxx::new_allocator<_Tp>::size_type, const void*) [with _Tp = unsigned char]	24	static
+new_allocator.h:81:7:__gnu_cxx::new_allocator<_Tp>::new_allocator(const __gnu_cxx::new_allocator<_Tp>&) [with _Tp = unsigned char]	16	static
+new_allocator.h:113:7:__gnu_cxx::new_allocator<_Tp>::size_type __gnu_cxx::new_allocator<_Tp>::max_size() const [with _Tp = MIDIEvent*]	16	static
+new_allocator.h:99:7:_Tp* __gnu_cxx::new_allocator<_Tp>::allocate(__gnu_cxx::new_allocator<_Tp>::size_type, const void*) [with _Tp = MIDIEvent]	24	static
+stl_algobase.h:446:5:_OI std::copy(_II, _II, _OI) [with _II = unsigned char**; _OI = unsigned char**]	32	static
+stl_algobase.h:622:5:_BI2 std::copy_backward(_BI1, _BI1, _BI2) [with _BI1 = unsigned char**; _BI2 = unsigned char**]	32	static
+new_allocator.h:113:7:__gnu_cxx::new_allocator<_Tp>::size_type __gnu_cxx::new_allocator<_Tp>::max_size() const [with _Tp = unsigned char]	16	static
+new_allocator.h:113:7:__gnu_cxx::new_allocator<_Tp>::size_type __gnu_cxx::new_allocator<_Tp>::max_size() const [with _Tp = MIDIEvent]	16	static
+cpp_type_traits.h:408:5:_Iterator std::__miter_base(_Iterator) [with _Iterator = unsigned char**]	16	static
+stl_algobase.h:420:5:_OI std::__copy_move_a2(_II, _II, _OI) [with bool _IsMove = false; _II = unsigned char**; _OI = unsigned char**]	32	static
+stl_algobase.h:595:5:_BI2 std::__copy_move_backward_a2(_BI1, _BI1, _BI2) [with bool _IsMove = false; _BI1 = unsigned char**; _BI2 = unsigned char**]	32	static
+stl_algobase.h:277:5:_Iterator std::__niter_base(_Iterator) [with _Iterator = unsigned char**]	16	static
+stl_algobase.h:375:5:_OI std::__copy_move_a(_II, _II, _OI) [with bool _IsMove = false; _II = unsigned char**; _OI = unsigned char**]	32	static
+stl_algobase.h:577:5:_BI2 std::__copy_move_backward_a(_BI1, _BI1, _BI2) [with bool _IsMove = false; _BI1 = unsigned char**; _BI2 = unsigned char**]	32	static
+stl_algobase.h:357:9:static _Tp* std::__copy_move<_IsMove, true, std::random_access_iterator_tag>::__copy_m(const _Tp*, const _Tp*, _Tp*) [with _Tp = unsigned char*; bool _IsMove = false]	32	static
+stl_algobase.h:559:9:static _Tp* std::__copy_move_backward<_IsMove, true, std::random_access_iterator_tag>::__copy_move_b(const _Tp*, const _Tp*, _Tp*) [with _Tp = unsigned char*; bool _IsMove = false]	32	static
+fft.h:28:7:FFT::~FFT()	16	static
+ui.h:31:7:UI::~UI()	16	static
+midi.h:20:7:MIDIHandler::~MIDIHandler()	16	static
+main.cpp:299:1:void __static_initialization_and_destruction_0(int, int)	16	static
+main.cpp:299:1:cpp)	8	static

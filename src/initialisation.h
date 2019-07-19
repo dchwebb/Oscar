@@ -27,7 +27,7 @@
 #endif
 #define R_ENC_CNT	TIM4->CNT
 #define L_BTN_NO(a, b) a ## 4 ## b
-#define L_BTN_GPIO	GPIOE
+#define L_BTN_GPIO	GPIOB
 #ifdef STM32F42_43xxx
 #define R_BTN_NO(a, b) a ## 7 ## b
 #else
