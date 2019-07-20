@@ -1,4 +1,4 @@
-update=16/07/2019 18:08:46
+update=19/07/2019 12:09:13
 version=1
 last_client=kicad
 [general]
@@ -16,10 +16,10 @@ LibDir=
 version=1
 PageLayoutDescrFile=
 LastNetListRead=oscar.net
-CopperLayerCount=2
+CopperLayerCount=4
 BoardThickness=1.6
 AllowMicroVias=0
-AllowBlindVias=0
+AllowBlindVias=1
 RequireCourtyardDefinitions=0
 ProhibitOverlappingCourtyards=1
 MinTrackWidth=0.2
@@ -57,4 +57,10 @@ OthersTextUpright=1
 SolderMaskClearance=0.051
 SolderMaskMinWidth=0.25
 SolderPasteClearance=0
-SolderPasteRatio=0
+SolderPasteRatio=-0
+[pcbnew/Layer.In1.Cu]
+Name=GND
+Type=0
+[pcbnew/Layer.In2.Cu]
+Name=PWR
+Type=0

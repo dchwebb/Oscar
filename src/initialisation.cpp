@@ -244,7 +244,7 @@ void InitEncoders() {
 	TIM1->ARR = 0xFFFF; 							// Set auto reload register to max
 	TIM1->SMCR |= TIM_SMCR_SMS_0 |TIM_SMCR_SMS_1;	// SMS=011 for counting on both TI1 and TI2 edges
 	TIM1->SMCR |= TIM_SMCR_ETF;						// Enable digital filter
-	TIM1->CNT = 100;								// Start counter at mid way point
+	TIM1->CNT = 32000;								// Start counter at mid way point
 	TIM1->CR1 |= TIM_CR1_CEN;
 
 	// R Encoder using timer functionality - PB6, PB7
@@ -263,7 +263,7 @@ void InitEncoders() {
 	TIM4->ARR = 0xFFFF; 							// Set auto reload register to max
 	TIM4->SMCR |= TIM_SMCR_SMS_0 |TIM_SMCR_SMS_1;	// SMS=011 for counting on both TI1 and TI2 edges
 	TIM4->SMCR |= TIM_SMCR_ETF;						// Enable digital filter
-	TIM4->CNT = 100;								// Start counter at mid way point
+	TIM4->CNT = 32000;								// Start counter at mid way point
 	TIM4->CR1 |= TIM_CR1_CEN;
 
 

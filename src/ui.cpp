@@ -56,10 +56,11 @@ void UI::EncoderAction(encoderType type, const int8_t& val) {
 	int16_t adj;
 	switch (type) {
 	case HorizScaleCoarse :
-		adj = TIM3->ARR + 10 * val;
-		if (adj > 10 && adj < 6000)
+		adj = TIM3->ARR + (TIM3->ARR < 100 ? 5 : TIM3->ARR < 500 ? 10 : TIM3->ARR < 1000 ? 50 : 100) * val;
+		if (adj > 10 && adj < 6000) {
 			TIM3->ARR = adj;
-		DrawUI();
+			DrawUI();
+		}
 		break;
 	case HorizScaleFine :
 		TIM3->ARR += val;
@@ -140,22 +141,22 @@ void UI::DrawMenu() {
 
 void UI::handleEncoders() {
 	// encoders count in fours with the zero point set to 100
-	if (std::abs((int8_t)100 - L_ENC_CNT) > 3) {
-		int8_t v = L_ENC_CNT > 100 ? 1 : -1;
+	if (std::abs((int16_t)32000 - L_ENC_CNT) > 3) {
+		int8_t v = L_ENC_CNT > 32000 ? 1 : -1;
 		if (menuMode)
 			MenuAction(&EncoderModeL, v);
 		else
 			EncoderAction(EncoderModeL, v);
 
-		L_ENC_CNT -= L_ENC_CNT > 100 ? 4 : -4;
+		L_ENC_CNT -= L_ENC_CNT > 32000 ? 4 : -4;
 	}
 
-	if (std::abs((int8_t)100 - R_ENC_CNT) > 3) {
-		int8_t v = R_ENC_CNT > 100 ? 1 : -1;
+	if (std::abs((int16_t)32000 - R_ENC_CNT) > 3) {
+		int8_t v = R_ENC_CNT > 32000 ? 1 : -1;
 		if (menuMode)	MenuAction(&EncoderModeR, v);
 		else			EncoderAction(EncoderModeR, v);
 
-		R_ENC_CNT -= R_ENC_CNT > 100 ? 4 : -4;
+		R_ENC_CNT -= R_ENC_CNT > 32000 ? 4 : -4;
 
 	}
 

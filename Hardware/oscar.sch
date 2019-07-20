@@ -1792,24 +1792,8 @@ Wire Wire Line
 Wire Wire Line
 	9550 3900 9550 3950
 Connection ~ 9550 3900
-$Comp
-L Switch:SW_Push_Dual SW3
-U 1 1 5D769FD2
-P 8750 4850
-F 0 "SW3" H 8750 5135 50  0000 C CNN
-F 1 "SW_Push_Dual" H 8750 5044 50  0000 C CNN
-F 2 "Buttons_Switches_SMD:SW_MEC_5GSH9" H 8750 5050 50  0001 C CNN
-F 3 "~" H 8750 5050 50  0001 C CNN
-	1    8750 4850
-	1    0    0    -1  
-$EndComp
 Wire Wire Line
 	8550 4850 8550 5050
-Wire Wire Line
-	8950 4850 8950 5050
-Wire Wire Line
-	8950 5050 8950 5200
-Connection ~ 8950 5050
 $Comp
 L Device:C C8
 U 1 1 5D7D7D33
@@ -1980,4 +1964,17 @@ F 3 "" H 5300 5500 50  0001 C CNN
 	1    5300 5500
 	-1   0    0    1   
 $EndComp
+$Comp
+L Switch:SW_Push SW3
+U 1 1 5D32F73D
+P 8750 4850
+F 0 "SW3" H 8750 5135 50  0000 C CNN
+F 1 "SW_Push" H 8750 5044 50  0000 C CNN
+F 2 "Buttons_Switches_THT:SW_PUSH_6mm" H 8750 5050 50  0001 C CNN
+F 3 "~" H 8750 5050 50  0001 C CNN
+	1    8750 4850
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8950 4850 8950 5200
 $EndSCHEMATC
