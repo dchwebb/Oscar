@@ -1306,46 +1306,46 @@ Wire Wire Line
 	5200 5950 5350 5950
 $Comp
 L Amplifier_Operational:TL074 U4
-U 1 1 5D2E5670
+U 3 1 5D2E5670
 P 6050 2400
 F 0 "U4" H 6050 2767 50  0000 C CNN
 F 1 "TL074" H 6050 2676 50  0000 C CNN
 F 2 "SMD_Packages:SOIC-14_N" H 6000 2500 50  0001 C CNN
 F 3 "http://www.ti.com/lit/ds/symlink/tl071.pdf" H 6100 2600 50  0001 C CNN
-	1    6050 2400
+	3    6050 2400
 	1    0    0    -1  
 $EndComp
 $Comp
 L Amplifier_Operational:TL074 U4
-U 4 1 5D2E8442
+U 2 1 5D2E8442
 P 6050 4600
 F 0 "U4" H 6050 4967 50  0000 C CNN
 F 1 "TL074" H 6050 4876 50  0000 C CNN
 F 2 "SMD_Packages:SOIC-14_N" H 6000 4700 50  0001 C CNN
 F 3 "http://www.ti.com/lit/ds/symlink/tl071.pdf" H 6100 4800 50  0001 C CNN
-	4    6050 4600
+	2    6050 4600
 	1    0    0    -1  
 $EndComp
 $Comp
 L Amplifier_Operational:TL074 U4
-U 3 1 5D2EA4AD
+U 1 1 5D2EA4AD
 P 6050 6950
 F 0 "U4" H 6050 7317 50  0000 C CNN
 F 1 "TL074" H 6050 7226 50  0000 C CNN
 F 2 "SMD_Packages:SOIC-14_N" H 6000 7050 50  0001 C CNN
 F 3 "http://www.ti.com/lit/ds/symlink/tl071.pdf" H 6100 7150 50  0001 C CNN
-	3    6050 6950
+	1    6050 6950
 	1    0    0    -1  
 $EndComp
 $Comp
 L Amplifier_Operational:TL074 U4
-U 2 1 5D2ECB47
+U 4 1 5D2ECB47
 P 9150 7000
 F 0 "U4" H 9150 7367 50  0000 C CNN
 F 1 "TL074" H 9150 7276 50  0000 C CNN
 F 2 "SMD_Packages:SOIC-14_N" H 9100 7100 50  0001 C CNN
 F 3 "http://www.ti.com/lit/ds/symlink/tl071.pdf" H 9200 7200 50  0001 C CNN
-	2    9150 7000
+	4    9150 7000
 	1    0    0    -1  
 $EndComp
 Wire Wire Line

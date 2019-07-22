@@ -151,6 +151,13 @@ void TIM1_BRK_TIM9_IRQHandler(void) {
 // MIDI Decoder
 void UART4_IRQHandler(void) {
 	if (UART4->SR | USART_SR_RXNE) {
-		midi.MIDIQueue.push(UART4->DR);							// accessing DR automatically resets the receive flag
+		midi.Queue[midi.QueueWrite] = UART4->DR; 				// accessing DR automatically resets the receive flag
+		midi.QueueSize++;
+		midi.QueueWrite = (midi.QueueWrite + 1) % MIDIQUEUESIZE;
+		//midi.MIDIQueue.push(UART4->DR);							// accessing DR automatically resets the receive flag
 	}
+}
+
+void SysTick_Handler(void) {
+	SysTickVal++;
 }

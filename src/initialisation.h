@@ -62,6 +62,8 @@
 #define ADC_BUFFER_LENGTH 12
 
 extern volatile uint16_t ADC_array[];
+extern volatile uint32_t SysTickVal;
+
 enum encoderType { HorizScaleCoarse, HorizScaleFine, CalibVertScale, CalibVertOffset, VoltScale, TriggerChannel, TriggerY, FFTAutoTune, FFTChannel, ChannelSelect };
 enum mode { Oscilloscope, Fourier, Waterfall, Circular, MIDI };
 enum oscChannel {channelA, channelB, channelC, channelNone};

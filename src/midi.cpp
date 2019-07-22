@@ -3,36 +3,40 @@
 
 void MIDIHandler::ProcessMidi() {
 	Timer += 1;
-	if (!MIDIQueue.empty()) {
+
+	if (QueueSize > 0) {
 		volatile bool edited = false, processed = false;
 		volatile uint8_t val1, val2;
 
-		MIDIType type = (MIDIType)(MIDIQueue.front() >> 4);
-		uint8_t channel = MIDIQueue.front() & 0x0F;
+		extern uint32_t MIDIDebug;
+		MIDIDebug = QueueSize;
+
+		MIDIType type = static_cast<MIDIType>(Queue[QueueRead] >> 4);
+		uint8_t channel = Queue[QueueRead] & 0x0F;
 
 		//NoteOn = 0x9, NoteOff = 0x8, PolyPressure = 0xA, ControlChange = 0xB, ProgramChange = 0xC, ChannelPressure = 0xD, PitchBend = 0xE, System = 0xF
-		if ((MIDIQueue.size() > 2 && (type == NoteOn || type == NoteOff || type == PolyPressure ||  type == ControlChange ||  type == PitchBend)) ||
-				(MIDIQueue.size() > 1 && (type == ProgramChange || type == ChannelPressure))) {
+		while ((QueueSize > 2 && (type == NoteOn || type == NoteOff || type == PolyPressure ||  type == ControlChange ||  type == PitchBend)) ||
+				(QueueSize > 1 && (type == ProgramChange || type == ChannelPressure))) {
 
-			MIDIQueue.pop();
-			val1 = MIDIQueue.front();
-			MIDIQueue.pop();
+			QueueInc();
+			val1 = Queue[QueueRead];
+			QueueInc();
 			if (type == ProgramChange || type == ChannelPressure) {
 				val2 = 0;
 			} else {
-				val2 = MIDIQueue.front();
-				MIDIQueue.pop();
+				val2 = Queue[QueueRead];
+				QueueInc();
 			}
+
 
 			//	For more efficient display overwrite last event if the type is the same but the value (or note off) has changed
 			if (!MIDIEvents.empty()) {
 
-				auto event = MIDIEvents.rbegin();
+				auto event = MIDIEvents.begin();
 
 				if (type == NoteOff && !(event->type == NoteOn && event->val1 == val1)) {
-					event = std::find_if(MIDIEvents.rbegin(), MIDIEvents.rend(), [&] (MIDIEvent me) { return me.type == NoteOn && me.val1 == val1 && me.channel == channel; } );
+					event = std::find_if(MIDIEvents.begin(), MIDIEvents.end(), [&] (MIDIEvent me) { return me.type == NoteOn && me.val1 == val1 && me.channel == channel; } );
 				}
-
 
 				if (event->channel == channel && (type == event->type || (type == NoteOff && event->type == NoteOn)) &&
 						((((type == NoteOff || type == ControlChange) && event->val1 == val1) || type == PitchBend || type == ChannelPressure))) {
@@ -43,31 +47,60 @@ void MIDIHandler::ProcessMidi() {
 					edited = true;
 				}
 			}
-			processed = true;
+
+			if (!edited)
+				MIDIEvents.push_front({Timer, type, channel, val1, val2});
+
+			// erase first item if list greater than maximum size
+			if (MIDIEvents.size() > 12)
+				MIDIEvents.erase(MIDIEvents.end());
+
+			type = static_cast<MIDIType>(Queue[QueueRead] >> 4);
+			channel = Queue[QueueRead] & 0x0F;
 		}
 
-		if (processed && !edited)
-			MIDIEvents.push_back({Timer, type, channel, val1, val2});
-
-		// erase first item if list greater than maximum size
-		if (MIDIEvents.size() > 12)
-			MIDIEvents.erase(MIDIEvents.begin());
+		// Clock
+		if (QueueSize > 0 && Queue[QueueRead] == 0xF8) {
+			ClockCount++;
+			// MIDI clock triggers at 24 pulses per quarter note
+			if (ClockCount == 6) {
+				Clock = SysTickVal;
+				ClockCount = 0;
+			}
+			QueueInc();
+		}
 
 		//	handle unknown data in queue
-		if (MIDIQueue.size() > 2 && type != 0x9 && type != 0x8 && type != 0xD && type != 0xE) {
-			MIDIQueue.pop();
-		}
-
-	}
-
-	if (MIDIQueue.size() < 10) {
-		MIDIPos = 0;
-		for (auto event = MIDIEvents.crbegin(); event != MIDIEvents.crend(); ++event) {
-			DrawEvent(*event);
-			MIDIPos += 1;
+		if (QueueSize > 2 && type != 0x9 && type != 0x8 && type != 0xD && type != 0xE) {
+			QueueInc();
 		}
 	}
 
+	// Draw clock
+	extern uint16_t MIDIUnknown;
+	MIDIUnknown = SysTickVal - Clock;
+	if (Clock > 0 && SysTickVal - Clock < 200) {
+		lcd.ColourFill(300, 230, 305, 235, LCD_WHITE);
+	} else {
+		lcd.ColourFill(300, 230, 305, 235, LCD_BLACK);
+	}
+
+	if (QueueSize < 10) {
+		// Draw midi events one at a time
+		if (MIDIEvents.size() > 0) {
+			if (MIDIPos >= MIDIEvents.size()) {
+				MIDIPos = 0;
+			}
+			DrawEvent(MIDIEvents[MIDIPos]);
+			MIDIPos++;
+		}
+	}
+}
+
+
+inline void MIDIHandler::QueueInc() {
+	QueueSize--;
+	QueueRead = (QueueRead + 1) % MIDIQUEUESIZE;
 }
 
 void MIDIHandler::DrawEvent(const MIDIEvent& event) {
@@ -78,7 +111,7 @@ void MIDIHandler::DrawEvent(const MIDIEvent& event) {
 	volatile int32_t g = (colour >> 5) & 0b111111;
 	volatile int32_t b = (colour & 0b11111) << 1;
 	volatile int32_t age = Timer - event.time;
-	age = age >> 3;
+	age = age >> 6;			// increase shift for slower fade out times
 	r -= std::min(age, r);
 	g -= std::min(age, g);
 	b -= std::min(age, b);;

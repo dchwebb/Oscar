@@ -7,6 +7,7 @@
 
 
 extern uint32_t SystemCoreClock;
+volatile uint32_t SysTickVal = 0;
 
 volatile uint16_t OscBufferA[2][DRAWWIDTH], OscBufferB[2][DRAWWIDTH], OscBufferC[2][DRAWWIDTH];
 volatile uint16_t prevPixelA = 0, prevPixelB = 0, prevPixelC = 0, adcA, adcB, adcC, oldAdc, capturePos = 0, drawPos = 0, bufferSamples = 0;
@@ -20,6 +21,8 @@ volatile float freqFund;
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 volatile uint16_t freqCrossZero, FFTErrors = 0;
 
+volatile uint16_t MIDIUnknown = 0;
+volatile uint32_t MIDIDebug = 0;
 
 //	default calibration values for 15k and 100k resistors on input opamp scaling to a maximum of 8v (slightly less for negative signals)
 #if defined(STM32F722xx)
@@ -44,7 +47,7 @@ volatile uint16_t circPrevPixel[2] {0, 0};
 volatile bool circDataAvailable[2] {false, false};
 volatile float captureFreq[2] {0, 0};
 volatile float circAngle;
-mode displayMode = Oscilloscope;
+mode displayMode = MIDI;
 #define CIRCLENGTH 160
 
 
@@ -82,7 +85,8 @@ int main(void) {
 	InitADC();
 	InitEncoders();
 	InitUART();
-//	InitDAC();		// FIXME For testing
+	InitSysTick();
+	//	InitDAC();		// FIXME For testing
 
 	lcd.Init();								// Initialize ILI9341 LCD
 

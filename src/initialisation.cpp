@@ -49,15 +49,15 @@ void InitSysTick()
 
 	// Register macros found in core_cm4.h
 	SysTick->CTRL = 0;									// Disable SysTick
-	SysTick->LOAD = 0x1000000 - 1;						// Set reload register to maximum 2^24
+	SysTick->LOAD = 0xFFFF - 1;						// Set reload register to maximum 2^24
 
 	// Set priority of Systick interrupt to least urgency (ie largest priority value)
-//	NVIC_SetPriority (SysTick_IRQn, (1 << __NVIC_PRIO_BITS) - 1);
+	NVIC_SetPriority (SysTick_IRQn, (1 << __NVIC_PRIO_BITS) - 1);
 
 	SysTick->VAL = 0;									// Reset the SysTick counter value
 
-//	SysTick->CTRL |= SysTick_CTRL_CLKSOURCE_Msk;		// Select processor clock: 1 = processor clock; 0 = external clock
-//	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;			// Enable SysTick interrupt
+	SysTick->CTRL |= SysTick_CTRL_CLKSOURCE_Msk;		// Select processor clock: 1 = processor clock; 0 = external clock
+	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;			// Enable SysTick interrupt
 	SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;			// Enable SysTick
 }
 

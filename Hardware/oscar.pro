@@ -1,4 +1,4 @@
-update=19/07/2019 12:09:13
+update=20/07/2019 14:43:33
 version=1
 last_client=kicad
 [general]
@@ -60,7 +60,7 @@ SolderPasteClearance=0
 SolderPasteRatio=-0
 [pcbnew/Layer.In1.Cu]
 Name=GND
-Type=0
+Type=1
 [pcbnew/Layer.In2.Cu]
 Name=PWR
-Type=0
+Type=1
