@@ -68,7 +68,7 @@ void InitLCDHardware(void) {
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOFEN;			// reset and clock control - advanced high performance bus - GPIO port F
 	RCC->APB2ENR |= RCC_APB2ENR_SPI5EN;
 
-	// Init WRX (Write execution control) pin PD13
+	// Init DC (Data/Command) pin PD13
 	GPIOD->MODER |= GPIO_MODER_MODER13_0;			// 00: Input (reset state)	01: General purpose output mode	10: Alternate function mode	11: Analog mode
 	GPIOD->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR13_0;	// Medium  - 00: Low speed; 01: Medium speed; 10: High speed; 11: Very high speed
 

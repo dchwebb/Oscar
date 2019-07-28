@@ -1642,13 +1642,13 @@ Text GLabel 3400 2550 2    50   Input ~ 0
 CH_B_IN
 Text GLabel 3400 2050 2    50   Input ~ 0
 CH_C_IN
-Text GLabel 3400 3250 2    50   Input ~ 0
+Text GLabel 3400 3050 2    50   Input ~ 0
 L_ENC_BTN
 Text GLabel 3400 4350 2    50   Input ~ 0
 L_ENC_UP
 Text GLabel 3400 4450 2    50   Input ~ 0
 L_ENC_DN
-Text GLabel 3400 5150 2    50   Input ~ 0
+Text GLabel 3400 4950 2    50   Input ~ 0
 R_ENC_BTN
 Text GLabel 1650 4250 0    50   Input ~ 0
 R_ENC_UP
@@ -1659,7 +1659,7 @@ Wire Wire Line
 Wire Wire Line
 	3250 2550 3400 2550
 Wire Wire Line
-	3400 5150 3250 5150
+	3400 4950 3250 4950
 Wire Wire Line
 	1850 5050 1650 5050
 Wire Wire Line
@@ -1834,8 +1834,6 @@ Text GLabel 1650 2050 0    50   Input ~ 0
 NRST
 Wire Wire Line
 	1650 2050 1850 2050
-Wire Wire Line
-	3400 3250 3250 3250
 NoConn ~ 1850 3450
 NoConn ~ 1850 3750
 NoConn ~ 1850 3850
@@ -1846,7 +1844,7 @@ NoConn ~ 1850 4550
 NoConn ~ 1850 4650
 NoConn ~ 1850 4850
 NoConn ~ 1850 3650
-NoConn ~ 3250 4950
+NoConn ~ 3250 5150
 NoConn ~ 3250 4850
 NoConn ~ 3250 4750
 NoConn ~ 3250 4650
@@ -1856,7 +1854,6 @@ NoConn ~ 3250 3850
 NoConn ~ 3250 3550
 NoConn ~ 3250 4150
 NoConn ~ 3250 3150
-NoConn ~ 3250 3050
 NoConn ~ 3250 2950
 NoConn ~ 3250 2850
 NoConn ~ 3250 2650
@@ -2046,17 +2043,6 @@ Text GLabel 1400 6150 2    50   Input ~ 0
 LCD_RESET
 Text GLabel 1400 6350 2    50   Input ~ 0
 LCD_DC
-$Comp
-L power:GND #PWR0108
-U 1 1 5D43652F
-P 1400 6450
-F 0 "#PWR0108" H 1400 6200 50  0001 C CNN
-F 1 "GND" V 1400 6200 50  0000 C CNN
-F 2 "" H 1400 6450 50  0001 C CNN
-F 3 "" H 1400 6450 50  0001 C CNN
-	1    1400 6450
-	0    -1   -1   0   
-$EndComp
 Wire Wire Line
 	1400 7350 1400 7450
 Wire Wire Line
@@ -2108,13 +2094,54 @@ Wire Wire Line
 Text GLabel 1400 6550 2    50   Input ~ 0
 LCD_MOSI
 Wire Wire Line
-	1250 6650 1300 6650
-Wire Wire Line
-	1400 6650 1400 6750
-Connection ~ 1300 6650
-Wire Wire Line
-	1300 6650 1400 6650
-Connection ~ 1400 6750
-Wire Wire Line
 	1300 6550 1400 6550
+Text GLabel 1400 6650 2    50   Input ~ 0
+LCD_MISO
+Text GLabel 1400 8100 2    50   Input ~ 0
+LCD_MISO
+$Comp
+L Connector_Generic:Conn_01x01 J11
+U 1 1 5D3E0C63
+P 1100 8100
+F 0 "J11" H 1018 7875 50  0000 C CNN
+F 1 "MISO_Connector" H 1018 7966 50  0000 C CNN
+F 2 "Wire_Pads:SolderWirePad_single_2mmDrill" H 1100 8100 50  0001 C CNN
+F 3 "~" H 1100 8100 50  0001 C CNN
+	1    1100 8100
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	1300 8100 1400 8100
+Text Label 5000 1450 0    50   ~ 0
+CHA_In
+Text Label 5050 3600 0    50   ~ 0
+CHB_In
+Text Label 5050 5950 0    50   ~ 0
+CHC_In
+Text Label 6800 6950 0    50   ~ 0
+CHC_Out
+Text Label 6800 4600 0    50   ~ 0
+CHB_Out
+Text Label 6800 2400 0    50   ~ 0
+CHA_Out
+Text Label 8350 1300 0    50   ~ 0
+MIDI_In
+Wire Wire Line
+	1400 6650 1300 6650
+$Comp
+L power:GND #PWR0108
+U 1 1 5D4C4EDD
+P 1400 6450
+F 0 "#PWR0108" H 1400 6200 50  0001 C CNN
+F 1 "GND" V 1400 6200 50  0000 C CNN
+F 2 "" H 1400 6450 50  0001 C CNN
+F 3 "" H 1400 6450 50  0001 C CNN
+	1    1400 6450
+	0    -1   -1   0   
+$EndComp
+Text Notes 700  6450 0    50   ~ 0
+5 = CS
+Wire Wire Line
+	3250 3050 3400 3050
+NoConn ~ 3250 3250
 $EndSCHEMATC

@@ -9,21 +9,6 @@
 extern uint32_t SystemCoreClock;
 volatile uint32_t SysTickVal = 0;
 
-volatile uint16_t OscBufferA[2][DRAWWIDTH], OscBufferB[2][DRAWWIDTH], OscBufferC[2][DRAWWIDTH];
-volatile uint16_t prevPixelA = 0, prevPixelB = 0, prevPixelC = 0, adcA, adcB, adcC, oldAdc, capturePos = 0, drawPos = 0, bufferSamples = 0;
-volatile bool freqBelowZero, capturing = false, drawing = false, encoderBtnL = false, encoderBtnR = false;
-volatile uint8_t VertOffsetA = 0, VertOffsetB = 0, captureBufferNumber = 0, drawBufferNumber = 0;
-volatile int8_t encoderPendingL = 0, encoderStateL = 0, encoderPendingR = 0, encoderStateR = 0;
-volatile int16_t drawOffset[2] {0, 0};
-volatile uint16_t capturedSamples[2] {0, 0};
-volatile uint32_t debugCount = 0, coverageTimer = 0, coverageTotal = 0;
-volatile float freqFund;
-volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
-volatile uint16_t freqCrossZero, FFTErrors = 0;
-
-volatile uint16_t MIDIUnknown = 0;
-volatile uint32_t MIDIDebug = 0;
-
 //	default calibration values for 15k and 100k resistors on input opamp scaling to a maximum of 8v (slightly less for negative signals)
 #if defined(STM32F722xx)
 	volatile int16_t vCalibOffset = -4240;
@@ -35,9 +20,16 @@ volatile uint32_t MIDIDebug = 0;
 	volatile int16_t vCalibOffset = -4190;
 	volatile float vCalibScale = 1.24f;
 #endif
-
-volatile int8_t voltScale = 8;
 volatile uint16_t CalibZeroPos = 9985;
+
+
+volatile uint16_t OscBufferA[2][DRAWWIDTH], OscBufferB[2][DRAWWIDTH], OscBufferC[2][DRAWWIDTH];
+volatile uint16_t prevPixelA = 0, prevPixelB = 0, prevPixelC = 0, adcA, adcB, adcC, oldAdc, capturePos = 0, drawPos = 0, bufferSamples = 0;
+volatile bool freqBelowZero, capturing = false, drawing = false, encoderBtnL = false, encoderBtnR = false;
+volatile uint8_t VertOffsetA = 0, VertOffsetB = 0, captureBufferNumber = 0, drawBufferNumber = 0;
+volatile int8_t encoderPendingL = 0, encoderStateL = 0, encoderPendingR = 0, encoderStateR = 0;
+volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
+volatile uint16_t freqCrossZero;
 
 volatile uint16_t zeroCrossings[2] {0, 0};
 volatile bool circDrawing[2] {false, false};
@@ -47,8 +39,10 @@ volatile uint16_t circPrevPixel[2] {0, 0};
 volatile bool circDataAvailable[2] {false, false};
 volatile float captureFreq[2] {0, 0};
 volatile float circAngle;
-mode displayMode = MIDI;
+mode displayMode = Oscilloscope;
 #define CIRCLENGTH 160
+
+volatile uint32_t debugCount = 0, coverageTimer = 0, coverageTotal = 0, MIDIDebug = 0;
 
 
 LCD lcd;
@@ -58,7 +52,7 @@ MIDIHandler midi;
 Osc osc;
 
 inline uint16_t CalcVertOffset(volatile const uint16_t& vPos) {
-	return std::max(std::min(((((float)(vPos * vCalibScale + vCalibOffset) / (4 * 4096) - 0.5f) * (8.0f / voltScale)) + 0.5f) * DRAWHEIGHT, (float)DRAWHEIGHT - 1), 1.0f);
+	return std::max(std::min(((((float)(vPos * vCalibScale + vCalibOffset) / (4 * 4096) - 0.5f) * (8.0f / osc.voltScale)) + 0.5f) * DRAWHEIGHT, (float)DRAWHEIGHT - 1), 1.0f);
 }
 
 inline uint16_t CalcZeroSize() {					// returns ADC size that corresponds to 0v
@@ -200,13 +194,13 @@ int main(void) {
 			}
 
 			// Check if drawing and that the sample capture is at or ahead of the draw position
-			if (drawing && (drawBufferNumber != captureBufferNumber || capturedSamples[captureBufferNumber] >= drawPos)) {
+			if (drawing && (drawBufferNumber != captureBufferNumber || osc.capturedSamples[captureBufferNumber] >= drawPos)) {
 
 				// Draw a black line over previous sample - except at beginning and end where we shouldn't clear the voltage and frequency markers
 				//lcd.ColourFill(drawPos, (drawPos < 27 || drawPos > 250 ? 11 : 0), drawPos, DRAWHEIGHT - (drawPos < 27 ? 11 : 0), LCD_BLACK);
 
 				// Calculate offset between capture and drawing positions to display correct sample
-				uint16_t calculatedOffset = (drawOffset[drawBufferNumber] + drawPos) % DRAWWIDTH;
+				uint16_t calculatedOffset = (osc.drawOffset[drawBufferNumber] + drawPos) % DRAWWIDTH;
 
 				uint16_t pixelA = CalcVertOffset(OscBufferA[drawBufferNumber][calculatedOffset]);
 				uint16_t pixelB = CalcVertOffset(OscBufferB[drawBufferNumber][calculatedOffset]);
@@ -257,8 +251,8 @@ int main(void) {
 					}
 				}
 				if (drawPos < 5) {
-					for (int m = 0; m < voltScale * 2; ++m) {
-						osc.DrawBuffer[osc.DrawBufferNumber][m * DRAWHEIGHT / (voltScale * 2)] = LCD_GREY;
+					for (int m = 0; m < osc.voltScale * 2; ++m) {
+						osc.DrawBuffer[osc.DrawBufferNumber][m * DRAWHEIGHT / (osc.voltScale * 2)] = LCD_GREY;
 					}
 				}
 
@@ -289,8 +283,8 @@ int main(void) {
 
 				if (drawPos == 1) {
 					// Write voltage
-					lcd.DrawString(0, 1, " " + ui.intToString(voltScale) + "v ", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
-					lcd.DrawString(0, DRAWHEIGHT - 10, "-" + ui.intToString(voltScale) + "v ", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
+					lcd.DrawString(0, 1, " " + ui.intToString(osc.voltScale) + "v ", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
+					lcd.DrawString(0, DRAWHEIGHT - 10, "-" + ui.intToString(osc.voltScale) + "v ", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 
 					// Write frequency
 					lcd.DrawString(250, 1, ui.floatToString(osc.Freq, false) + "Hz    ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);

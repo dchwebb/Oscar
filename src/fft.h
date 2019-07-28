@@ -21,8 +21,6 @@ extern LCD lcd;
 
 extern volatile uint32_t debugCount, coverageTotal, coverageTimer;
 extern volatile uint32_t debugNoBuff;
-extern volatile float freqFund;
-extern volatile uint16_t FFTErrors;
 extern volatile uint8_t captureBufferNumber, drawBufferNumber;
 
 class FFT {
@@ -45,12 +43,14 @@ public:
 	void setDrawBuffer(uint16_t* buff1, uint16_t* buff2);
 private:
 	float candCos[FFTSAMPLES];
+	float freqFund;
 
 	//uint16_t FFTDrawBuffer[2][(DRAWHEIGHT + 1) * FFTDRAWBUFFERWIDTH];
 	uint16_t* FFTDrawBuffer[2];
 	std::string CurrentHertz;
 	uint32_t maxHyp = 0;
 	uint16_t newARR = 0;
+	uint16_t FFTErrors = 0;
 	const uint16_t harmColours[FFTHARMONICCOLOURS] {LCD_WHITE, LCD_YELLOW, LCD_GREEN, LCD_ORANGE, LCD_CYAN} ;
 
 	uint8_t drawWaterfall[WATERFALLBUFFERS][WATERFALLSIZE];

@@ -30,7 +30,8 @@ void UI::MenuAction(encoderType* et, volatile const int8_t& val) {
 		currentMenu = &OscMenu;
 	else if (displayMode == Fourier || displayMode == Waterfall)
 		currentMenu = &FftMenu;
-	else if (displayMode == Circular) {}
+	else if (displayMode == Circular)
+		currentMenu = &CircMenu;
 	else if (displayMode == MIDI) {}
 
 	//	Move the selected menu item one forwards or one back based on value of encoder
@@ -44,6 +45,9 @@ void UI::MenuAction(encoderType* et, volatile const int8_t& val) {
 	if (displayMode == Oscilloscope) {
 		osc.EncModeL = EncoderModeL;
 		osc.EncModeR = EncoderModeR;
+	} else if (displayMode == Circular) {
+		osc.CircEncModeL = EncoderModeL;
+		osc.CircEncModeR = EncoderModeR;
 	} else if (displayMode == Fourier) {
 		fft.EncModeL = EncoderModeL;
 		fft.EncModeR = EncoderModeR;
@@ -72,9 +76,13 @@ void UI::EncoderAction(encoderType type, const int8_t& val) {
 	case CalibVertScale :
 		vCalibScale += val * .01;
 		break;
+	case ZeroCross :
+		osc.CircZeroCrossings = std::max(std::min(osc.CircZeroCrossings + val, 8), 1);
+		DrawUI();
+		break;
 	case VoltScale :
-		voltScale += val;
-		voltScale = std::max(std::min((int)voltScale, 8), 1);
+		osc.voltScale += val;
+		osc.voltScale = std::max(std::min((int)osc.voltScale, 8), 1);
 		if (displayMode == Circular) {
 			lcd.ScreenFill(LCD_BLACK);
 			DrawUI();
@@ -129,6 +137,8 @@ void UI::DrawMenu() {
 	std::vector<MenuItem>* currentMenu;
 	if (displayMode == Oscilloscope)
 		currentMenu = &OscMenu;
+	else if (displayMode == Circular)
+		currentMenu = &CircMenu;
 	else if (displayMode == Fourier || displayMode == Waterfall)
 		currentMenu = &FftMenu;
 
@@ -162,12 +172,13 @@ void UI::handleEncoders() {
 
 	if ((encoderBtnL || encoderBtnR) && menuMode) {
 		encoderBtnL = encoderBtnR = menuMode = false;
+		lcd.ScreenFill(LCD_BLACK);
 		DrawUI();
 		return;
 	}
 
 	// Menu mode
-	if (encoderBtnR && (displayMode == Oscilloscope || displayMode == Fourier)) {
+	if (encoderBtnR && (displayMode == Oscilloscope || displayMode == Circular || displayMode == Fourier)) {
 		menuMode = true;
 		lcd.ScreenFill(LCD_BLACK);
 		DrawMenu();
@@ -249,6 +260,8 @@ std::string UI::EncoderLabel(encoderType type) {
 		return "Calib Offs";
 	case VoltScale :
 		return "Zoom Vert";
+	case ZeroCross :
+		return "Zero X: " + intToString(osc.CircZeroCrossings);
 	case TriggerY :
 		return "Trigger Y";
 	case TriggerChannel :

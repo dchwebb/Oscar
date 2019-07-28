@@ -35,6 +35,7 @@ void TIM3_IRQHandler(void) {
 			capturing = true;
 			captureBufferNumber = circDataAvailable[0] ? 1 : 0;		// select correct capture buffer based on whether buffer 0 or 1 contains data
 			capturePos = 0;				// used to check if a sample is ready to be drawn
+			osc.CircZeroCrossCnt = 0;
 			zeroCrossings[captureBufferNumber] = 0;
 		}
 
@@ -44,17 +45,21 @@ void TIM3_IRQHandler(void) {
 
 			// store array of zero crossing points
 			if (capturePos > 0 && oldAdc < CalibZeroPos && adcA >= CalibZeroPos) {
-				zeroCrossings[captureBufferNumber] = capturePos;
-				circDataAvailable[captureBufferNumber] = true;
+				osc.CircZeroCrossCnt++;
 
-				captureFreq[captureBufferNumber] = FreqFromPos(capturePos);		// get frequency here before potentially altering sampling speed
-				capturing = false;
+				if (osc.CircZeroCrossCnt == osc.CircZeroCrossings) {
+					zeroCrossings[captureBufferNumber] = capturePos;
+					circDataAvailable[captureBufferNumber] = true;
 
-				// auto adjust sample time to try and get the longest sample for the display (280 is number of pixels wide we ideally want the captured wave to be)
-				if (capturePos < 280) {
-					int16_t newARR = capturePos * (TIM3->ARR + 1) / 280;
-					if (newARR > 0)
-						TIM3->ARR = newARR;
+					captureFreq[captureBufferNumber] = FreqFromPos(capturePos);		// get frequency here before potentially altering sampling speed
+					capturing = false;
+
+					// auto adjust sample time to try and get the longest sample for the display (280 is number of pixels wide we ideally want the captured wave to be)
+					if (capturePos < 280) {
+						int16_t newARR = capturePos * (TIM3->ARR + 1) / 280;
+						if (newARR > 0)
+							TIM3->ARR = newARR;
+					}
 				}
 
 			// reached end  of buffer and zero crossing not found - increase timer size to get longer sample
@@ -83,19 +88,20 @@ void TIM3_IRQHandler(void) {
 
 			if (osc.TriggerTest == nullptr) {										// free running mode
 				capturePos = 0;
-				drawOffset[captureBufferNumber] = 0;
-				capturedSamples[captureBufferNumber] = -1;
+				osc.drawOffset[captureBufferNumber] = 0;
+				osc.capturedSamples[captureBufferNumber] = -1;
 			} else {
 				// calculate the drawing offset based on the current capture position minus the horizontal trigger position
-				drawOffset[captureBufferNumber] = capturePos - osc.TriggerX;
-				if (drawOffset[captureBufferNumber] < 0)	drawOffset[captureBufferNumber] += DRAWWIDTH;
+				osc.drawOffset[captureBufferNumber] = capturePos - osc.TriggerX;
+				if (osc.drawOffset[captureBufferNumber] < 0)
+					osc.drawOffset[captureBufferNumber] += DRAWWIDTH;
 
-				capturedSamples[captureBufferNumber] = osc.TriggerX - 1;	// used to check if a sample is ready to be drawn
+				osc.capturedSamples[captureBufferNumber] = osc.TriggerX - 1;	// used to check if a sample is ready to be drawn
 			}
 		}
 
 		// if capturing check if write buffer is full and switch to next buffer if so; if not full store current reading
-		if (capturing && capturedSamples[captureBufferNumber] == DRAWWIDTH - 1) {
+		if (capturing && osc.capturedSamples[captureBufferNumber] == DRAWWIDTH - 1) {
 			captureBufferNumber = captureBufferNumber == 1 ? 0 : 1;		// switch the capture buffer
 			bufferSamples = 0;			// stores number of samples captured since switching buffers to ensure triggered mode works correctly
 			capturing = false;
@@ -111,7 +117,7 @@ void TIM3_IRQHandler(void) {
 			if (capturePos == DRAWWIDTH - 1)	capturePos = 0;
 			else								capturePos++;
 
-			if (capturing)	capturedSamples[captureBufferNumber]++;
+			if (capturing)	osc.capturedSamples[captureBufferNumber]++;
 			else 			bufferSamples++;
 
 		}

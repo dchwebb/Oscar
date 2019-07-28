@@ -64,7 +64,7 @@
 extern volatile uint16_t ADC_array[];
 extern volatile uint32_t SysTickVal;
 
-enum encoderType { HorizScaleCoarse, HorizScaleFine, CalibVertScale, CalibVertOffset, VoltScale, TriggerChannel, TriggerY, FFTAutoTune, FFTChannel, ChannelSelect };
+enum encoderType { HorizScaleCoarse, HorizScaleFine, CalibVertScale, CalibVertOffset, VoltScale, TriggerChannel, TriggerY, FFTAutoTune, FFTChannel, ChannelSelect, ZeroCross };
 enum mode { Oscilloscope, Fourier, Waterfall, Circular, MIDI };
 enum oscChannel {channelA, channelB, channelC, channelNone};
 

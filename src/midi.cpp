@@ -77,8 +77,6 @@ void MIDIHandler::ProcessMidi() {
 	}
 
 	// Draw clock
-	extern uint16_t MIDIUnknown;
-	MIDIUnknown = SysTickVal - Clock;
 	if (Clock > 0 && SysTickVal - Clock < 200) {
 		lcd.ColourFill(300, 230, 305, 235, LCD_WHITE);
 	} else {
