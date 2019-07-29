@@ -118,9 +118,9 @@ void FFT::displayWaterfall(volatile float candSin[]) {
 
 					// depending on harmonic height draw either green or black, using darker shades of green at the back
 					if (vPos > h1 && vPos > h0) {
-						FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = LCD_BLACK;
+						DrawBuffer[FFTDrawBufferNumber][buffPos] = LCD_BLACK;
 					} else {
-						FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = greenShade;
+						DrawBuffer[FFTDrawBufferNumber][buffPos] = greenShade;
 					}
 					vPos--;
 				}
@@ -131,12 +131,12 @@ void FFT::displayWaterfall(volatile float candSin[]) {
 		for (; vPos >= 0; --vPos) {
 
 			uint16_t buffPos = vPos * FFTDRAWBUFFERWIDTH + ((col - 1) % FFTDRAWBUFFERWIDTH);
-			FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = LCD_BLACK;
+			DrawBuffer[FFTDrawBufferNumber][buffPos] = LCD_BLACK;
 		}
 
 		// check if ready to draw next buffer
 		if ((col % FFTDRAWBUFFERWIDTH) == 0) {
-			lcd.PatternFill(col - FFTDRAWBUFFERWIDTH, 0, col - 1, DRAWHEIGHT, FFTDrawBuffer[FFTDrawBufferNumber]);
+			lcd.PatternFill(col - FFTDRAWBUFFERWIDTH, 0, col - 1, DRAWHEIGHT, DrawBuffer[FFTDrawBufferNumber]);
 		}
 	}
 }
@@ -277,9 +277,9 @@ void FFT::displayFFT(volatile float candSin[]) {
 					dataAvailable[drawBufferNumber] = false;
 					return;
 				}
-				FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = harmColour;
+				DrawBuffer[FFTDrawBufferNumber][buffPos] = harmColour;
 			} else {
-				FFTDrawBuffer[FFTDrawBufferNumber][buffPos] = LCD_BLACK;
+				DrawBuffer[FFTDrawBufferNumber][buffPos] = LCD_BLACK;
 			}
 		}
 
@@ -295,10 +295,10 @@ void FFT::displayFFT(volatile float candSin[]) {
 
 					uint16_t harmonicNumber = round((float)harmonic[h] / harmonic[0]);
 					std::string harmonicInfo = ui.intToString(harmonicNumber) + " " + ui.floatToString(harmonicFreq(harmonic[h]), false) + "Hz";
-					lcd.DrawStringMem(0, 20 + 20 * h, FFTDRAWBUFFERWIDTH, FFTDrawBuffer[FFTDrawBufferNumber], harmonicInfo, &lcd.Font_Small, harmColours[h], LCD_BLACK);
+					lcd.DrawStringMem(0, 20 + 20 * h, FFTDRAWBUFFERWIDTH, DrawBuffer[FFTDrawBufferNumber], harmonicInfo, &lcd.Font_Small, harmColours[h], LCD_BLACK);
 				}
 			}
-			lcd.PatternFill(i - FFTDRAWBUFFERWIDTH, 0, i - 1, DRAWHEIGHT, FFTDrawBuffer[FFTDrawBufferNumber]);
+			lcd.PatternFill(i - FFTDRAWBUFFERWIDTH, 0, i - 1, DRAWHEIGHT, DrawBuffer[FFTDrawBufferNumber]);
 		}
 
 	}
@@ -337,8 +337,6 @@ inline float FFT::harmonicFreq(uint16_t harmonicNumber) {
 
 
 void FFT::sampleCapture(bool clearBuffer) {
-	//extern bool capturing;
-	//extern uint16_t capturePos;
 
 	if (clearBuffer)
 		dataAvailable[drawBufferNumber] = false;
@@ -353,15 +351,9 @@ void FFT::sampleCapture(bool clearBuffer) {
 
 void FFT::FFTInfo(void) {
 
-	//std::string s = ui.intToString(std::round(harmonicFreq(1))) + " - " + ui.intToString(harmonicFreq(319)) + "Hz   ";
 	std::string s = ui.floatToString(harmonicFreq(1), true) + " - " + ui.floatToString(harmonicFreq(319), true) + "Hz  ";
 	if (s != CurrentHertz) {
 		lcd.DrawString(115, DRAWHEIGHT + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 		CurrentHertz = s;
 	}
-}
-
-void FFT::setDrawBuffer(uint16_t* buff1, uint16_t* buff2) {
-	FFTDrawBuffer[0] = buff1;
-	FFTDrawBuffer[1] = buff2;
 }

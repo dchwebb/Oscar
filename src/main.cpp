@@ -22,12 +22,12 @@ volatile uint32_t SysTickVal = 0;
 #endif
 volatile uint16_t CalibZeroPos = 9985;
 
-
+uint16_t DrawBuffer[2][(DRAWHEIGHT + 1) * FFTDRAWBUFFERWIDTH];
 volatile uint16_t OscBufferA[2][DRAWWIDTH], OscBufferB[2][DRAWWIDTH], OscBufferC[2][DRAWWIDTH];
 volatile uint16_t prevPixelA = 0, prevPixelB = 0, prevPixelC = 0, adcA, adcB, adcC, oldAdc, capturePos = 0, drawPos = 0, bufferSamples = 0;
 volatile bool freqBelowZero, capturing = false, drawing = false, encoderBtnL = false, encoderBtnR = false;
 volatile uint8_t VertOffsetA = 0, VertOffsetB = 0, captureBufferNumber = 0, drawBufferNumber = 0;
-volatile int8_t encoderPendingL = 0, encoderStateL = 0, encoderPendingR = 0, encoderStateR = 0;
+//volatile int8_t encoderPendingL = 0, encoderStateL = 0, encoderPendingR = 0, encoderStateR = 0;
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 volatile uint16_t freqCrossZero;
 
@@ -68,6 +68,7 @@ extern "C"
 	#include "interrupts.h"
 }
 
+
 int main(void) {
 
 	SystemInit();							// Activates floating point coprocessor and resets clock
@@ -84,23 +85,15 @@ int main(void) {
 
 	lcd.Init();								// Initialize ILI9341 LCD
 
-/*
-	for (int p = 0; p < 50; ++p) {
-		lcd.ColourFill(10, 2, 10, 6, LCD_RED);
-		lcd.ColourFill(10, 4, 10, 8, LCD_BLUE);
-		lcd.Delay(100000);
-	}
-*/
-
 
 	InitSampleAcquisition();
 	ui.ResetMode();
 
 	// The FFT draw buffers are declared here and passed to the FFT Class as pointers to keep the size of the executable down
-	uint16_t DrawBuff0[(DRAWHEIGHT + 1) * FFTDRAWBUFFERWIDTH];
-	uint16_t DrawBuff1[(DRAWHEIGHT + 1) * FFTDRAWBUFFERWIDTH];
-	fft.setDrawBuffer(DrawBuff0, DrawBuff1);
-	osc.setDrawBuffer(DrawBuff0, DrawBuff1);
+	uint16_t DrawBuffer[2][(DRAWHEIGHT + 1) * FFTDRAWBUFFERWIDTH];
+	//uint16_t DrawBuff1[(DRAWHEIGHT + 1) * FFTDRAWBUFFERWIDTH];
+	//fft.setDrawBuffer(DrawBuff0, DrawBuff1);
+	//osc.setDrawBuffer(DrawBuff0, DrawBuff1);
 
 
 	CalibZeroPos = CalcZeroSize();
@@ -239,26 +232,26 @@ int main(void) {
 					if (h < vOffset) {
 						// do not draw
 					} else if (osc.OscDisplay & 1 && h >= AY.first && h <= AY.second) {
-						osc.DrawBuffer[osc.DrawBufferNumber][h - vOffset] = LCD_GREEN;
+						DrawBuffer[osc.DrawBufferNumber][h - vOffset] = LCD_GREEN;
 					} else if (osc.OscDisplay & 2 && h >= BY.first && h <= BY.second) {
-						osc.DrawBuffer[osc.DrawBufferNumber][h - vOffset] = LCD_LIGHTBLUE;
+						DrawBuffer[osc.DrawBufferNumber][h - vOffset] = LCD_LIGHTBLUE;
 					} else if (osc.OscDisplay & 4 && h >= CY.first && h <= CY.second) {
-						osc.DrawBuffer[osc.DrawBufferNumber][h - vOffset] = LCD_ORANGE;
+						DrawBuffer[osc.DrawBufferNumber][h - vOffset] = LCD_ORANGE;
 					} else if (drawPos % 4 == 0 && h == DRAWHEIGHT / 2) {
-						osc.DrawBuffer[osc.DrawBufferNumber][h - vOffset] = LCD_GREY;
+						DrawBuffer[osc.DrawBufferNumber][h - vOffset] = LCD_GREY;
 					} else {
-						osc.DrawBuffer[osc.DrawBufferNumber][h - vOffset] = LCD_BLACK;
+						DrawBuffer[osc.DrawBufferNumber][h - vOffset] = LCD_BLACK;
 					}
 				}
 				if (drawPos < 5) {
 					for (int m = 0; m < osc.voltScale * 2; ++m) {
-						osc.DrawBuffer[osc.DrawBufferNumber][m * DRAWHEIGHT / (osc.voltScale * 2)] = LCD_GREY;
+						DrawBuffer[osc.DrawBufferNumber][m * DRAWHEIGHT / (osc.voltScale * 2)] = LCD_GREY;
 					}
 				}
 
 				//debugCount = DMA1_Stream5->NDTR;
 
-				lcd.PatternFill(drawPos, vOffset, drawPos, DRAWHEIGHT - (drawPos < 27 ? 12 : 0), osc.DrawBuffer[osc.DrawBufferNumber]);
+				lcd.PatternFill(drawPos, vOffset, drawPos, DRAWHEIGHT - (drawPos < 27 ? 12 : 0), DrawBuffer[osc.DrawBufferNumber]);
 				osc.DrawBufferNumber = osc.DrawBufferNumber == 0 ? 1 : 0;
 
 				// Store previous sample so next sample can be drawn as a line from old to new

@@ -20,7 +20,6 @@ public:
 	float Freq;
 	uint16_t SampleTimer = 10;
 
-	uint16_t* DrawBuffer[2];
 	uint8_t DrawBufferNumber = 0;
 	uint8_t CircZeroCrossings = 2, CircZeroCrossCnt = 0;
 	int8_t OscDisplay = 0b111;
