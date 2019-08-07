@@ -179,7 +179,7 @@ int main(void) {
 
 		} else if (displayMode == Oscilloscope) {
 
-			if (!drawing && capturing) {								// check if we should start drawing
+			if (!drawing && (capturing || osc.tempDrawBuffer)) {								// check if we should start drawing
 				drawBufferNumber = captureBufferNumber;
 				drawing = true;
 				drawPos = 0;
@@ -226,7 +226,7 @@ int main(void) {
 				std::pair<uint16_t, uint16_t> BY = std::minmax(pixelB, (uint16_t)prevPixelB);
 				std::pair<uint16_t, uint16_t> CY = std::minmax(pixelC, (uint16_t)prevPixelC);
 
-				uint8_t vOffset = (drawPos < 27 || drawPos > 250) ? 10 : 0;		// offset draw area so as not to overwrite voltage and freq labels
+				uint8_t vOffset = (drawPos < 27 || drawPos > 250) ? 11 : 0;		// offset draw area so as not to overwrite voltage and freq labels
 				for (uint8_t h = 0; h <= DRAWHEIGHT - (drawPos < 27 ? 12 : 0); ++h) {
 
 					if (h < vOffset) {
@@ -262,6 +262,7 @@ int main(void) {
 				drawPos ++;
 				if (drawPos == DRAWWIDTH){
 					drawing = false;
+					osc.tempDrawBuffer = false;
 					CP_CAP
 				}
 
@@ -280,7 +281,10 @@ int main(void) {
 					lcd.DrawString(0, DRAWHEIGHT - 10, "-" + ui.intToString(osc.voltScale) + "v ", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 
 					// Write frequency
-					lcd.DrawString(250, 1, ui.floatToString(osc.Freq, false) + "Hz    ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+					if (osc.tempDrawBuffer)
+						lcd.DrawString(250, 1, "No Trigger", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+					else
+						lcd.DrawString(250, 1, ui.floatToString(osc.Freq, false) + "Hz    ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 				}
 
 			}

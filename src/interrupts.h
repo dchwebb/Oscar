@@ -75,9 +75,6 @@ void TIM3_IRQHandler(void) {
 
 	} else if (displayMode == Oscilloscope) {
 		// Average the last four ADC readings to smooth noise
-		/*adcA = ADC_array[0] + ADC_array[2] + ADC_array[4] + ADC_array[6];
-		adcB = ADC_array[1] + ADC_array[3] + ADC_array[5] + ADC_array[7];
-*/
 		adcA = ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9];
 		adcB = ADC_array[1] + ADC_array[4] + ADC_array[7] + ADC_array[10];
 		adcC = ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11];
@@ -117,8 +114,19 @@ void TIM3_IRQHandler(void) {
 			if (capturePos == DRAWWIDTH - 1)	capturePos = 0;
 			else								capturePos++;
 
-			if (capturing)	osc.capturedSamples[captureBufferNumber]++;
-			else 			bufferSamples++;
+			if (capturing)
+				osc.capturedSamples[captureBufferNumber]++;
+			else {
+				bufferSamples++;
+
+				// if trigger point not activating generate a temporary draw buffer
+				if (bufferSamples > 6000 && capturePos == 0) {
+					captureBufferNumber = captureBufferNumber == 1 ? 0 : 1;		// switch the capture buffer
+					bufferSamples = 0;
+					osc.drawOffset[captureBufferNumber] = 0;
+					osc.tempDrawBuffer = true;
+				}
+			}
 
 		}
 	}

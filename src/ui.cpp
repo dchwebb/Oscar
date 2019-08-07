@@ -107,8 +107,8 @@ void UI::EncoderAction(encoderType type, const int8_t& val) {
 
 		DrawUI();
 		break;
-	case TriggerY :
-		osc.TriggerY += 100 * val;
+	case Trigger_Y :
+		osc.TriggerY = std::min(std::max(osc.TriggerY + 100 * val, 3800), 16000);
 		break;
 	case FFTAutoTune :
 		fft.autoTune = !fft.autoTune;
@@ -262,7 +262,7 @@ std::string UI::EncoderLabel(encoderType type) {
 		return "Zoom Vert";
 	case ZeroCross :
 		return "Zero X: " + intToString(osc.CircZeroCrossings);
-	case TriggerY :
+	case Trigger_Y :
 		return "Trigger Y";
 	case TriggerChannel :
 		return std::string(osc.TriggerTest == &adcA ? "Trigger A " : osc.TriggerTest == &adcB ? "Trigger B " : osc.TriggerTest == &adcC ? "Trigger C " : "No Trigger");
