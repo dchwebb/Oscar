@@ -27,6 +27,6 @@ public:
 	volatile uint16_t capturedSamples[2] {0, 0};
 	volatile int16_t drawOffset[2] {0, 0};
 	volatile int8_t voltScale = 8;
-	volatile bool tempDrawBuffer = false;
+	volatile bool noTriggerDraw = false;		// set to true if no trigger signal but a draw buffer is available
 };
 

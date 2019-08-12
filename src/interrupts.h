@@ -124,7 +124,7 @@ void TIM3_IRQHandler(void) {
 					captureBufferNumber = captureBufferNumber == 1 ? 0 : 1;		// switch the capture buffer
 					bufferSamples = 0;
 					osc.drawOffset[captureBufferNumber] = 0;
-					osc.tempDrawBuffer = true;
+					osc.noTriggerDraw = true;
 				}
 			}
 

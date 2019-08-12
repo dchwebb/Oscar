@@ -179,7 +179,7 @@ int main(void) {
 
 		} else if (displayMode == Oscilloscope) {
 
-			if (!drawing && (capturing || osc.tempDrawBuffer)) {								// check if we should start drawing
+			if (!drawing && (capturing || osc.noTriggerDraw)) {								// check if we should start drawing
 				drawBufferNumber = captureBufferNumber;
 				drawing = true;
 				drawPos = 0;
@@ -262,7 +262,7 @@ int main(void) {
 				drawPos ++;
 				if (drawPos == DRAWWIDTH){
 					drawing = false;
-					osc.tempDrawBuffer = false;
+					osc.noTriggerDraw = false;
 					CP_CAP
 				}
 
@@ -281,7 +281,7 @@ int main(void) {
 					lcd.DrawString(0, DRAWHEIGHT - 10, "-" + ui.intToString(osc.voltScale) + "v ", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 
 					// Write frequency
-					if (osc.tempDrawBuffer)
+					if (osc.noTriggerDraw)
 						lcd.DrawString(250, 1, "No Trigger", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 					else
 						lcd.DrawString(250, 1, ui.floatToString(osc.Freq, false) + "Hz    ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
