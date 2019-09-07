@@ -35,9 +35,9 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING
  15 .debug_line   000062bc  00000000  00000000  0008ab70  2**0
                   CONTENTS, READONLY, DEBUGGING
- 16 .debug_str    00012396  00000000  00000000  00090e2c  2**0
+ 16 .debug_str    00012395  00000000  00000000  00090e2c  2**0
                   CONTENTS, READONLY, DEBUGGING
- 17 .comment      0000007c  00000000  00000000  000a31c2  2**0
+ 17 .comment      0000007c  00000000  00000000  000a31c1  2**0
                   CONTENTS, READONLY
  18 .debug_frame  00018bb0  00000000  00000000  000a3240  2**2
                   CONTENTS, READONLY, DEBUGGING
@@ -11045,7 +11045,7 @@ void TIM3_IRQHandler(void) {
  8005d7c:	4413      	add	r3, r2
  8005d7e:	2200      	movs	r2, #0
  8005d80:	805a      	strh	r2, [r3, #2]
-					osc.tempDrawBuffer = true;
+					osc.noTriggerDraw = true;
  8005d82:	4b0c      	ldr	r3, [pc, #48]	; (8005db4 <TIM3_IRQHandler+0x894>)
  8005d84:	2201      	movs	r2, #1
  8005d86:	77da      	strb	r2, [r3, #31]
@@ -12202,7 +12202,7 @@ int main(void) {
  800672e:	2b00      	cmp	r3, #0
  8006730:	f47f ac85 	bne.w	800603e <main+0x52>
 
-			if (!drawing && (capturing || osc.tempDrawBuffer)) {								// check if we should start drawing
+			if (!drawing && (capturing || osc.noTriggerDraw)) {								// check if we should start drawing
  8006734:	4b8c      	ldr	r3, [pc, #560]	; (8006968 <main+0x97c>)
  8006736:	781b      	ldrb	r3, [r3, #0]
  8006738:	b2db      	uxtb	r3, r3
@@ -13058,7 +13058,7 @@ int main(void) {
  8006f2c:	4bb4      	ldr	r3, [pc, #720]	; (8007200 <main+0x1214>)
  8006f2e:	2200      	movs	r2, #0
  8006f30:	701a      	strb	r2, [r3, #0]
-					osc.tempDrawBuffer = false;
+					osc.noTriggerDraw = false;
  8006f32:	4bae      	ldr	r3, [pc, #696]	; (80071ec <main+0x1200>)
  8006f34:	2200      	movs	r2, #0
  8006f36:	77da      	strb	r2, [r3, #31]
@@ -13336,7 +13336,7 @@ int main(void) {
  8007228:	0802e3b8 	.word	0x0802e3b8
 
 					// Write frequency
-					if (osc.tempDrawBuffer)
+					if (osc.noTriggerDraw)
  800722c:	4b4d      	ldr	r3, [pc, #308]	; (8007364 <main+0x1378>)
  800722e:	7fdb      	ldrb	r3, [r3, #31]
  8007230:	b2db      	uxtb	r3, r3

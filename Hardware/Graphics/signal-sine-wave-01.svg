@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0" y="0" width="704.9" height="240.011" viewBox="0, 0, 704.9, 240.011">
+  <g id="Layer_1">
+    <g>
+      <g>
+        <path d="M5.5,120.505 C5.5,120.505 28.337,4.689 64.224,5.504" fill-opacity="0" stroke="#000000" stroke-width="3"/>
+        <path d="M121.317,120.505 C121.317,120.505 98.48,4.689 62.593,5.504" fill-opacity="0" stroke="#000000" stroke-width="3"/>
+      </g>
+      <g>
+        <path d="M121.317,120.505 C121.317,120.505 144.154,236.322 180.04,235.506" fill-opacity="0" stroke="#000000" stroke-width="3"/>
+        <path d="M237.133,120.505 C237.133,120.505 214.296,236.322 178.409,235.506" fill-opacity="0" stroke="#000000" stroke-width="3"/>
+      </g>
+    </g>
+    <g>
+      <g>
+        <path d="M237.133,120.505 C237.133,120.505 259.97,4.689 295.857,5.504" fill-opacity="0" stroke="#000000" stroke-width="3"/>
+        <path d="M352.95,120.505 C352.95,120.505 330.113,4.689 294.226,5.504" fill-opacity="0" stroke="#000000" stroke-width="3"/>
+      </g>
+      <g>
+        <path d="M352.95,120.505 C352.95,120.505 375.787,236.322 411.674,235.506" fill-opacity="0" stroke="#000000" stroke-width="3"/>
+        <path d="M468.766,120.505 C468.766,120.505 445.929,236.322 410.042,235.506" fill-opacity="0" stroke="#000000" stroke-width="3"/>
+      </g>
+    </g>
+    <g>
+      <g>
+        <path d="M468.766,120.505 C468.766,120.505 491.603,4.689 527.49,5.504" fill-opacity="0" stroke="#000000" stroke-width="3"/>
+        <path d="M584.583,120.505 C584.583,120.505 561.746,4.689 525.859,5.504" fill-opacity="0" stroke="#000000" stroke-width="3"/>
+      </g>
+      <g>
+        <path d="M584.583,120.505 C584.583,120.505 607.42,236.322 643.307,235.506" fill-opacity="0" stroke="#000000" stroke-width="3"/>
+        <path d="M700.4,120.505 C700.4,120.505 677.563,236.322 641.676,235.506" fill-opacity="0" stroke="#000000" stroke-width="3"/>
+      </g>
+    </g>
+  </g>
+</svg>
