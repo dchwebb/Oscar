@@ -39,7 +39,7 @@ void LCD::Init(void) {
 	Command(ILI9341_DISPLAY_ON);
 	Command(ILI9341_GRAM);
 
-#ifdef STM32F42_43xxx
+#if defined(STM32F42_43xxx) || defined(STM32F446xx)
 	Rotate(LCD_Landscape_Flipped);
 #else
 	Rotate(LCD_Landscape);

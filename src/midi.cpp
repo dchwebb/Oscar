@@ -5,7 +5,7 @@ void MIDIHandler::ProcessMidi() {
 	Timer += 1;
 
 	if (QueueSize > 0) {
-		volatile bool edited = false, processed = false;
+		bool edited = false;
 		volatile uint8_t val1, val2;
 
 		extern uint32_t MIDIDebug;

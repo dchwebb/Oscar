@@ -289,7 +289,7 @@ std::string UI::floatToString(float f, bool smartFormat) {
 		ss << (int16_t)std::round(f);
 		s = ss.str();
 	} else	{
-		ss << (int16_t)std::round(f * 10);
+		ss << (int32_t)std::round(f * 10);
 		s = ss.str();
 		s.insert(s.length() - 1, ".");
 	}

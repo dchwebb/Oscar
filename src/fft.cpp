@@ -82,7 +82,6 @@ void FFT::displayWaterfall(volatile float candSin[]) {
 			drawWaterfall[waterfallBuffer][i - SMOOTHSIZE] = smoothVals[sPos];
 		}
 
-
 	}
 
 	sampleCapture(true);			// Signal to Interrupt that new capture can start
@@ -93,7 +92,7 @@ void FFT::displayWaterfall(volatile float candSin[]) {
 
 	// Cycle through each column in the display and draw
 	for (uint16_t col = 1; col <= DRAWWIDTH; ++col) {
-		uint8_t FFTDrawBufferNumber = (((col - 1) / FFTDRAWBUFFERWIDTH) % 2 == 0) ? 0 : 1;
+		uint8_t FFTDrawBufferNumber = (((col - 1) / DRAWBUFFERWIDTH) % 2 == 0) ? 0 : 1;
 		int16_t vPos = DRAWHEIGHT;		// track the vertical position to apply blanking or skip drawing rows as required
 
 		// work forwards through the buffers so the oldest buffer is drawn first at the front, newer buffers move forward
@@ -114,7 +113,7 @@ void FFT::displayWaterfall(volatile float candSin[]) {
 				while (vPos > 0 && (vPos >= h1 || vPos >= h0)) {
 
 					// draw column into memory buffer
-					uint16_t buffPos = vPos * FFTDRAWBUFFERWIDTH + ((col - 1) % FFTDRAWBUFFERWIDTH);
+					uint16_t buffPos = vPos * DRAWBUFFERWIDTH + ((col - 1) % DRAWBUFFERWIDTH);
 
 					// depending on harmonic height draw either green or black, using darker shades of green at the back
 					if (vPos > h1 && vPos > h0) {
@@ -130,13 +129,13 @@ void FFT::displayWaterfall(volatile float candSin[]) {
 		// black out any remaining pixels
 		for (; vPos >= 0; --vPos) {
 
-			uint16_t buffPos = vPos * FFTDRAWBUFFERWIDTH + ((col - 1) % FFTDRAWBUFFERWIDTH);
+			uint16_t buffPos = vPos * DRAWBUFFERWIDTH + ((col - 1) % DRAWBUFFERWIDTH);
 			DrawBuffer[FFTDrawBufferNumber][buffPos] = LCD_BLACK;
 		}
 
 		// check if ready to draw next buffer
-		if ((col % FFTDRAWBUFFERWIDTH) == 0) {
-			lcd.PatternFill(col - FFTDRAWBUFFERWIDTH, 0, col - 1, DRAWHEIGHT, DrawBuffer[FFTDrawBufferNumber]);
+		if ((col % DRAWBUFFERWIDTH) == 0) {
+			lcd.PatternFill(col - DRAWBUFFERWIDTH, 0, col - 1, DRAWHEIGHT, DrawBuffer[FFTDrawBufferNumber]);
 		}
 	}
 }
@@ -263,11 +262,12 @@ void FFT::displayFFT(volatile float candSin[]) {
 
 		uint16_t top = std::min(DRAWHEIGHT * (1 - (hypotenuse / (512 * FFTSAMPLES))), (float)DRAWHEIGHT);
 
-		uint8_t FFTDrawBufferNumber = (((i - 1) / FFTDRAWBUFFERWIDTH) % 2 == 0) ? 0 : 1;
+		uint8_t FFTDrawBufferNumber = (((i - 1) / DRAWBUFFERWIDTH) % 2 == 0) ? 0 : 1;
 
 		// draw column into memory buffer
-		for (int h = 0; h <= DRAWHEIGHT; ++h) {
-			uint16_t buffPos = h * FFTDRAWBUFFERWIDTH + ((i - 1) % FFTDRAWBUFFERWIDTH);
+		volatile int h = 0;
+		for (h = 0; h <= DRAWHEIGHT; ++h) {
+			uint16_t buffPos = h * DRAWBUFFERWIDTH + ((i - 1) % DRAWBUFFERWIDTH);
 
 			// depending on harmonic height draw either harmonic or black, using different colours to indicate main harmonics
 			if (h >= top) {
@@ -284,10 +284,10 @@ void FFT::displayFFT(volatile float candSin[]) {
 		}
 
 		// check if ready to draw next buffer
-		if ((i % FFTDRAWBUFFERWIDTH) == 0) {
+		if ((i % DRAWBUFFERWIDTH) == 0) {
 
 			// if drawing the last buffer display the harmonic frequencies at the top right
-			if (i > DRAWWIDTH - FFTDRAWBUFFERWIDTH) {
+			if (i > DRAWWIDTH - DRAWBUFFERWIDTH) {
 				sampleCapture(true);			// Signal to Interrupt that new capture can start
 
 				for (uint8_t h = 0; h < FFTHARMONICCOLOURS; ++h) {
@@ -295,10 +295,10 @@ void FFT::displayFFT(volatile float candSin[]) {
 
 					uint16_t harmonicNumber = round((float)harmonic[h] / harmonic[0]);
 					std::string harmonicInfo = ui.intToString(harmonicNumber) + " " + ui.floatToString(harmonicFreq(harmonic[h]), false) + "Hz";
-					lcd.DrawStringMem(0, 20 + 20 * h, FFTDRAWBUFFERWIDTH, DrawBuffer[FFTDrawBufferNumber], harmonicInfo, &lcd.Font_Small, harmColours[h], LCD_BLACK);
+					lcd.DrawStringMem(0, 20 + 20 * h, DRAWBUFFERWIDTH, DrawBuffer[FFTDrawBufferNumber], harmonicInfo, &lcd.Font_Small, harmColours[h], LCD_BLACK);
 				}
 			}
-			lcd.PatternFill(i - FFTDRAWBUFFERWIDTH, 0, i - 1, DRAWHEIGHT, DrawBuffer[FFTDrawBufferNumber]);
+			lcd.PatternFill(i - DRAWBUFFERWIDTH, 0, i - 1, DRAWHEIGHT, DrawBuffer[FFTDrawBufferNumber]);
 		}
 
 	}

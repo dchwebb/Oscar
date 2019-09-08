@@ -20,20 +20,41 @@
 #define DB_OFF		TIM5->CR1 &= ~TIM_CR1_CEN;
 
 //	Define encoder pins and timers for easier reconfiguring
-#ifdef STM32F42_43xxx
+#ifdef STM32F446xx
+#define L_ENC_CNT	TIM4->CNT
+#elif STM32F42_43xxx
 #define L_ENC_CNT	TIM1->CNT
 #else
 #define L_ENC_CNT	TIM8->CNT
 #endif
+
+#ifdef STM32F446xx
+#define R_ENC_CNT	TIM8->CNT
+#else
 #define R_ENC_CNT	TIM4->CNT
+#endif
+
+#ifdef STM32F446xx
+#define L_BTN_NO(a, b) a ## 10 ## b
+#define L_BTN_GPIO	GPIOA
+#else
 #define L_BTN_NO(a, b) a ## 4 ## b
 #define L_BTN_GPIO	GPIOB
-#ifdef STM32F42_43xxx
+#endif
+
+#ifdef STM32F446xx
+#define R_BTN_NO(a, b) a ## 13 ## b
+#elif STM32F42_43xxx
 #define R_BTN_NO(a, b) a ## 7 ## b
 #else
 #define R_BTN_NO(a, b) a ## 2 ## b
 #endif
+
+#ifdef STM32F446xx
+#define R_BTN_GPIO	GPIOB
+#else
 #define R_BTN_GPIO	GPIOA
+#endif
 
 // Define LCD DMA and SPI registers
 #ifdef STM32F42_43xxx
@@ -47,7 +68,12 @@
 #endif
 
 // Define macros for setting and clearing GPIO SPI pins
-#ifdef STM32F42_43xxx
+#ifdef STM32F446xx
+#define LCD_RST_RESET	GPIOC->BSRR |= GPIO_BSRR_BR_14
+#define LCD_RST_SET 	GPIOC->BSRR |= GPIO_BSRR_BS_14
+#define LCD_DCX_RESET	GPIOC->BSRR |= GPIO_BSRR_BR_13
+#define LCD_DCX_SET		GPIOC->BSRR |= GPIO_BSRR_BS_13
+#elif STM32F42_43xxx
 #define LCD_RST_RESET	GPIOD->BSRRH |= GPIO_BSRR_BS_12
 #define LCD_RST_SET 	GPIOD->BSRRL |= GPIO_BSRR_BS_12
 #define LCD_DCX_RESET	GPIOD->BSRRH |= GPIO_BSRR_BS_13
@@ -60,6 +86,8 @@
 #endif
 
 #define ADC_BUFFER_LENGTH 12
+#define DRAWBUFFERWIDTH 80
+#define CIRCLENGTH 160
 
 extern volatile uint16_t ADC_array[];
 extern volatile uint32_t SysTickVal;
