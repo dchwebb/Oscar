@@ -1,4 +1,4 @@
-346185488516765
+352665948809123
 Battery_Holders
 Bulgin_BX0036_1xC
 
@@ -19720,8 +19720,8 @@ Potentiometer horizontal  Omeg PC16PU  Omeg PC16PU  Omeg PC16PU  Vishay/Spectrol
 3
 Custom_Footprints
 Alpha_9mm_pot_hole
-Mounting Hole 6mm
-mounting hole 6mm
+Mounting Hole 7mm
+mounting hole 7mm
 0
 0
 0
@@ -19816,6 +19816,13 @@ Light Touch Switch, https://industrial.panasonic.com/cdbs/www-data/pdf/ATK0000/A
 0
 4
 2
+Custom_Footprints
+Sub_Miniature_Switch_MountingHole_3.5mm
+Mounting Hole 6mm, no annular
+mounting hole 6mm no annular
+0
+0
+0
 Custom_Footprints
 Sub_Miniature_Switch_MountingHole_3mm
 Mounting Hole 6mm, no annular
@@ -51997,6 +52004,27 @@ SolderWirePad_single_2mmDrill
 0
 Wire_Pads
 SolderWirePad_single_SMD_5x10mm
+
+
+0
+0
+0
+oscar_logo
+oscar_logo
+
+
+0
+5
+5
+oscar_logo
+oscar_logo2
+
+
+0
+0
+0
+oscar_logo
+sine
 
 
 0
