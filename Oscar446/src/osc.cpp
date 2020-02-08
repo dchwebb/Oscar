@@ -196,3 +196,11 @@ uint16_t Osc::CalcVertOffset(volatile const uint16_t& vPos) {
 float Osc::FreqFromPos(const uint16_t pos) {
 	return (float)SystemCoreClock / (2.0f * pos * (TIM3->PSC + 1) * (TIM3->ARR + 1));
 }
+
+// Choose the trigger channel based on config preference and channel visibility
+void Osc::setTriggerChannel() {
+	osc.TriggerTest = 	osc.TriggerChannel == channelNone ? nullptr :
+						(osc.TriggerChannel == channelC && (osc.oscDisplay & 4)) || osc.oscDisplay == 4 ? &adcC :
+						(osc.TriggerChannel == channelB || !(osc.oscDisplay & 1)) && (osc.oscDisplay & 2) ? &adcB : &adcA;
+
+}

@@ -56,6 +56,7 @@ void UI::MenuAction(encoderType* et, volatile const int8_t& val) {
 	DrawMenu();
 }
 
+
 void UI::EncoderAction(encoderType type, const int8_t& val) {
 
 	int16_t adj;
@@ -93,19 +94,22 @@ void UI::EncoderAction(encoderType type, const int8_t& val) {
 	case ChannelSelect :
 		osc.oscDisplay += val;
 		osc.oscDisplay = osc.oscDisplay == 0 ? 7 : osc.oscDisplay == 8 ? 1 : osc.oscDisplay;
-		// FIXME - handle triggers
+		osc.setTriggerChannel();
+
 		DrawUI();
 		break;
 
 	case TriggerChannel :
-		if ((osc.TriggerTest == nullptr && val > 0) || (osc.TriggerTest == &adcB && val < 0))
-			osc.TriggerTest = &adcA;
-		else if ((osc.TriggerTest == &adcA && val > 0) || (osc.TriggerTest == &adcC && val < 0))
-			osc.TriggerTest = &adcB;
-		else if ((osc.TriggerTest == &adcB && val > 0) || (osc.TriggerTest == nullptr && val < 0))
-			osc.TriggerTest = &adcC;
-		else if ((osc.TriggerTest == &adcC && val > 0) || (osc.TriggerTest == &adcA && val < 0))
-			osc.TriggerTest = nullptr;
+		if ((osc.TriggerChannel == channelNone && val > 0) || (osc.TriggerChannel == channelB && val < 0))
+			osc.TriggerChannel = channelA;
+		else if ((osc.TriggerChannel == channelA && val > 0) || (osc.TriggerChannel == channelC && val < 0))
+			osc.TriggerChannel = channelB;
+		else if ((osc.TriggerChannel == channelB && val > 0) || (osc.TriggerChannel == channelNone && val < 0))
+			osc.TriggerChannel = channelC;
+		else if ((osc.TriggerChannel == channelC && val > 0) || (osc.TriggerChannel == channelA && val < 0))
+			osc.TriggerChannel = channelNone;
+
+		osc.setTriggerChannel();
 
 		DrawUI();
 		break;
@@ -252,6 +256,7 @@ void UI::ResetMode() {
 	fft.capturing = osc.capturing = drawing = false;
 	osc.bufferSamples = capturePos = oldAdc = 0;
 	osc.circDrawing[0] = osc.circDrawing[1] = false;
+	osc.setTriggerChannel();
 	fft.dataAvailable[0] = fft.dataAvailable[1] = false;
 	fft.samples = displayMode == Fourier ? FFTSAMPLES : WATERFALLSAMPLES;
 
@@ -287,7 +292,7 @@ std::string UI::EncoderLabel(encoderType type) {
 	case Trigger_Y :
 		return "Trigger Y";
 	case TriggerChannel :
-		return std::string(osc.TriggerTest == &adcA ? "Trigger A " : osc.TriggerTest == &adcB ? "Trigger B " : osc.TriggerTest == &adcC ? "Trigger C " : "No Trigger");
+		return std::string(osc.TriggerChannel == channelA ? "Trigger A " : osc.TriggerChannel == channelB ? "Trigger B " : osc.TriggerChannel == channelC ? "Trigger C " : "No Trigger");
 	case FFTAutoTune :
 		return "Tune: " + std::string(fft.autoTune ? "auto" : "off ");
 	case TraceOverlay :

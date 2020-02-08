@@ -27,17 +27,6 @@ void TIM3_IRQHandler(void) {
 		adcB = (ADC_array[1] > 16000 ? ADC_array[4] : ADC_array[1]) + ADC_array[4] + ADC_array[7] + ADC_array[10];
 		adcC = ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11];
 
-/*
-		if (ADC_array[1] > 16000) {
-			volatile int a1 = ADC_array[1];
-			volatile int a4 = ADC_array[4];
-			volatile int a7 = ADC_array[7];
-			volatile int a10 = ADC_array[10];
-			volatile int x = 1;
-		}
-*/
-
-
 		// check if we should start capturing - ie not drawing from the capture buffer and crossed over the trigger threshold (or in free mode)
 		if (!osc.capturing && (!drawing || captureBufferNumber != drawBufferNumber) && (osc.TriggerTest == nullptr || (osc.bufferSamples > osc.TriggerX && oldAdc < osc.TriggerY && *osc.TriggerTest >= osc.TriggerY))) {
 			osc.capturing = true;

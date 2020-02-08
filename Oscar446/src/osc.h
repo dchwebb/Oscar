@@ -21,11 +21,13 @@ public:
 	void CircRun();
 	uint16_t CalcVertOffset(volatile const uint16_t& vPos);
 	float FreqFromPos(const uint16_t pos);
+	void setTriggerChannel();
 
 	// Oscilloscope settings
 	int16_t TriggerX = 10;
 	uint16_t TriggerY = 7000;
 	volatile uint16_t* TriggerTest = &adcA;			// store the currently active trigger channel as a reference for faster interrupt performance
+	oscChannel TriggerChannel = channelA;				// holds preferred trigger channel for when that channel is not displayed
 	encoderType EncModeL = HorizScale;
 	encoderType EncModeR = ChannelSelect;
 	uint16_t sampleTimer = 10;						// Preserves oscilloscope sample timer when switching to other modes
