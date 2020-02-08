@@ -2141,4 +2141,6 @@ Wire Wire Line
 	9700 5050 9700 5100
 Wire Wire Line
 	9700 5400 9700 5450
+Text Notes 5700 8200 0    50   ~ 0
+Input Scaling: 15k resistor limits maximum negative input to 8.5V\n12k resistor -12V -> 2.88V\n?? Try 13k
 $EndSCHEMATC

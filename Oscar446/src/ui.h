@@ -47,22 +47,22 @@ public:
 	bool menuMode = false, encoderBtnL = false, encoderBtnR = false;
 
 	std::vector<MenuItem> OscMenu{  { 0, "Horiz scale", HorizScale },
-									{ 1, "Vert scale", VoltScale},
+									{ 1, "Vert scale", VoltScale },
 									{ 2, "Channel Sel", ChannelSelect },
 									{ 3, "Multi-Lane", MultiLane },
-									{ 4, "Trigger Y", Trigger_Y},
-									{ 5, "Trigger X", Trigger_X},
-									{ 6, "Trigger Ch", TriggerChannel},
+									{ 4, "Trigger Y", Trigger_Y },
+									{ 5, "Trigger X", Trigger_X },
+									{ 6, "Trigger Ch", TriggerChannel },
 									{ 7, "Calib Scale", CalibVertScale },
 									{ 8, "Calib Offset", CalibVertOffset } };
 
 	std::vector<MenuItem> FftMenu{  { 0, "Horiz scale", HorizScale },
-									{ 1, "AutoTune", FFTAutoTune},
-									{ 2, "Trace overlay", TraceOverlay},
-									{ 3, "Multi-Lane", MultiLane } };
+									{ 1, "AutoTune", FFTAutoTune },
+									{ 2, "Trace overlay", TraceOverlay },
+									{ 3, "Channel", ActiveChannel } };
 
-	std::vector<MenuItem> CircMenu{ { 0, "Vert scale", VoltScale},
-									{ 1, "Channel", ActiveChannel},
+	std::vector<MenuItem> CircMenu{ { 0, "Vert scale", VoltScale },
+									{ 1, "Channel", ActiveChannel },
 									{ 2, "Zero cross", ZeroCross } };
 
 };

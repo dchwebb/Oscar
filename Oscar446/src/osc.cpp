@@ -35,10 +35,14 @@ void Osc::OscRun(){
 		}
 
 		//	frequency calculation - detect upwards zero crossings
-		if (!freqBelowZero && OscBufferA[drawBufferNumber][calculatedOffsetX] < CalibZeroPos) {		// first time reading goes below zero
+		uint16_t currentChannelY = 	(oscDisplay & 1) ? OscBufferA[drawBufferNumber][calculatedOffsetX] :
+									(oscDisplay & 2) ? OscBufferB[drawBufferNumber][calculatedOffsetX] :
+									OscBufferC[drawBufferNumber][calculatedOffsetX];
+
+		if (!freqBelowZero && currentChannelY < CalibZeroPos) {		// first time reading goes below zero
 			freqBelowZero = true;
 		}
-		if (freqBelowZero && OscBufferA[drawBufferNumber][calculatedOffsetX] >= CalibZeroPos) {		// zero crossing
+		if (freqBelowZero && currentChannelY >= CalibZeroPos) {		// zero crossing
 			//	second zero crossing - calculate frequency averaged over a number passes to smooth
 			if (freqCrossZero > 0 && drawPos - freqCrossZero > 3) {
 				if (Freq > 0)

@@ -12,7 +12,7 @@ volatile uint32_t SysTickVal = 0;
 
 //	default calibration values for 15k and 100k resistors on input opamp scaling to a maximum of 8v (slightly less for negative signals)
 #if defined(STM32F722xx) || defined(STM32F446xx)
-	volatile int16_t vCalibOffset = -4240;
+	volatile int16_t vCalibOffset = -4240;			// Dev board with 14k resistors: -3940, 1.499999
 	volatile float vCalibScale = 1.41f;
 #else
 	volatile int16_t vCalibOffset = -4190;
