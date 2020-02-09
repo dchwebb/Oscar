@@ -10,14 +10,8 @@
 extern uint32_t SystemCoreClock;
 volatile uint32_t SysTickVal = 0;
 
-//	default calibration values for 15k and 100k resistors on input opamp scaling to a maximum of 8v (slightly less for negative signals)
-#if defined(STM32F722xx) || defined(STM32F446xx)
-	volatile int16_t vCalibOffset = -4240;			// Dev board with 14k resistors: -3940, 1.499999
-	volatile float vCalibScale = 1.41f;
-#else
-	volatile int16_t vCalibOffset = -4190;
-	volatile float vCalibScale = 1.24f;
-#endif
+volatile int16_t vCalibOffset = -3590;			// Dev board with 14k resistors: -3940, 1.499999
+volatile float vCalibScale = 1.46f;
 volatile uint16_t CalibZeroPos = 9985;
 
 uint16_t DrawBuffer[2][(DRAWHEIGHT + 1) * DRAWBUFFERWIDTH];

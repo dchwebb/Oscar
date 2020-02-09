@@ -24,7 +24,7 @@ struct configValues {
 	char StartMarker[4] = "CFG";		// Start Marker
 
 	//	General settings
-	uint8_t Version = 1;				// version of saved config struct format
+	uint8_t Version = 2;				// version of saved config struct format
 	mode gen_displayMode = Oscilloscope;
 	int16_t gen_vCalibOffset;
 	float gen_vCalibScale;
@@ -32,7 +32,7 @@ struct configValues {
 	// oscilloscope settings
 	int16_t osc_TriggerX;
 	int32_t osc_TriggerY;
-	uint8_t osc_TriggerTest;
+	uint8_t osc_TriggerChannel;
 	encoderType osc_EncModeL;
 	encoderType osc_EncModeR;
 	uint16_t osc_SampleTimer;

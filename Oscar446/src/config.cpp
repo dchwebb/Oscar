@@ -44,7 +44,7 @@ void Config::SetConfig(configValues &cv) {
 
 	cv.osc_TriggerX = osc.TriggerX;
 	cv.osc_TriggerY = osc.TriggerY;
-	cv.osc_TriggerTest = (osc.TriggerTest == &adcA ? 1 : osc.TriggerTest == &adcB ? 2 : osc.TriggerTest == &adcC ? 3 : 0);
+	cv.osc_TriggerChannel = (osc.TriggerChannel == channelA ? 1 : osc.TriggerChannel == channelB ? 2 : osc.TriggerChannel == channelC ? 3 : 0);
 	cv.osc_EncModeL = osc.EncModeL;
 	cv.osc_EncModeR = osc.EncModeR;
 	cv.osc_SampleTimer = osc.sampleTimer;
@@ -67,14 +67,14 @@ void Config::RestoreConfig()
 	configValues cv;
 	memcpy(&cv, (uint32_t*)ADDR_FLASH_SECTOR_7, sizeof(cv));
 
-	if (strcmp(cv.StartMarker, "CFG") == 0 && strcmp(cv.EndMarker, "END") == 0 && cv.Version == 1) {
+	if (strcmp(cv.StartMarker, "CFG") == 0 && strcmp(cv.EndMarker, "END") == 0 && cv.Version == 2) {
 		displayMode = cv.gen_displayMode;
 		vCalibOffset = cv.gen_vCalibOffset;
 		vCalibScale = cv.gen_vCalibScale;
 
 		osc.TriggerX = cv.osc_TriggerX;
 		osc.TriggerY = cv.osc_TriggerY;
-		osc.TriggerTest = (cv.osc_TriggerTest == 1 ? &adcA : cv.osc_TriggerTest == 2 ? &adcB : cv.osc_TriggerTest == 3 ? &adcC : nullptr);
+		osc.TriggerChannel = (cv.osc_TriggerChannel == 1 ? channelA : cv.osc_TriggerChannel == 2 ? channelB : cv.osc_TriggerChannel == 3 ? channelC : channelNone);
 		osc.EncModeL = cv.osc_EncModeL;
 		osc.EncModeR = cv.osc_EncModeR;
 		osc.sampleTimer = cv.osc_SampleTimer;
