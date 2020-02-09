@@ -62,8 +62,8 @@ void UI::EncoderAction(encoderType type, const int8_t& val) {
 	int16_t adj;
 	switch (type) {
 	case HorizScale :
-		adj = TIM3->ARR + (TIM3->ARR < 100 ? 5 : TIM3->ARR < 500 ? 10 : TIM3->ARR < 1000 ? 50 : 100) * val;
-		if (adj > MINSAMPLETIMER && adj < 6000) {
+		adj = TIM3->ARR + (TIM3->ARR < 100 ? 5 : TIM3->ARR < 500 ? 10 : TIM3->ARR < 1000 ? 50 : 100) * -val;
+		if (adj > MINSAMPLETIMER && adj < 12000) {
 			TIM3->ARR = adj;
 			if (displayMode == Oscilloscope)		osc.sampleTimer = adj;
 			DrawUI();
@@ -84,7 +84,7 @@ void UI::EncoderAction(encoderType type, const int8_t& val) {
 		DrawUI();
 		break;
 	case VoltScale :
-		osc.voltScale += val;
+		osc.voltScale -= val;
 		osc.voltScale = std::max(std::min((int)osc.voltScale, 12), 1);
 		if (displayMode == Circular) {
 			lcd.ScreenFill(LCD_BLACK);

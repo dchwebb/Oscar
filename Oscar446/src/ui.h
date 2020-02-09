@@ -51,9 +51,11 @@ public:
 									{ 8, "Calib Offset", CalibVertOffset } };
 
 	std::vector<MenuItem> FftMenu{  { 0, "Horiz scale", HorizScale },
-									{ 1, "AutoTune", FFTAutoTune },
-									{ 2, "Trace overlay", TraceOverlay },
-									{ 3, "Channel", ActiveChannel } };
+									{ 1, "Vert scale", VoltScale },
+									{ 2, "Channel", ActiveChannel },
+									{ 3, "AutoTune", FFTAutoTune },
+									{ 4, "Trace overlay", TraceOverlay } };
+
 
 	std::vector<MenuItem> CircMenu{ { 0, "Vert scale", VoltScale },
 									{ 1, "Channel", ActiveChannel },
