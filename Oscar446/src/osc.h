@@ -7,8 +7,6 @@ class UI;		// forward reference to handle circular dependency
 extern UI ui;
 extern LCD lcd;
 
-extern volatile uint16_t adcA;
-extern uint16_t CalibZeroPos;
 
 // Class to store settings and working variables for oscilloscope and circular mode
 
@@ -24,7 +22,7 @@ public:
 	// Oscilloscope settings
 	int16_t TriggerX = 10;
 	uint16_t TriggerY = 7000;
-	volatile uint16_t* TriggerTest = &adcA;			// store the currently active trigger channel as a reference for faster interrupt performance
+	uint16_t* TriggerTest = &adcA;			// store the currently active trigger channel as a reference for faster interrupt performance
 	oscChannel TriggerChannel = channelA;			// holds preferred trigger channel for when that channel is not displayed
 	encoderType EncModeL = HorizScale;
 	encoderType EncModeR = ChannelSelect;

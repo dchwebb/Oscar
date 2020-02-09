@@ -46,14 +46,19 @@
 #define CIRCLENGTH 160
 #define MINSAMPLETIMER 10
 
+enum encoderType { HorizScale, HorizScaleFine, CalibVertScale, CalibVertOffset, VoltScale, TriggerChannel, Trigger_X, Trigger_Y, FFTAutoTune, ActiveChannel, ChannelSelect, ZeroCross, MultiLane, TraceOverlay };
+enum mode { Oscilloscope, Fourier, Waterfall, Circular, MIDI };
+enum oscChannel {channelA, channelB, channelC, channelNone};
+
 extern volatile uint16_t ADC_array[];
 extern volatile uint32_t SysTickVal;
 extern int16_t vCalibOffset;
 extern float vCalibScale;
-
-enum encoderType { HorizScale, HorizScaleFine, CalibVertScale, CalibVertOffset, VoltScale, TriggerChannel, Trigger_X, Trigger_Y, FFTAutoTune, ActiveChannel, ChannelSelect, ZeroCross, MultiLane, TraceOverlay };
-enum mode { Oscilloscope, Fourier, Waterfall, Circular, MIDI };
-enum oscChannel {channelA, channelB, channelC, channelNone};
+extern uint16_t CalibZeroPos;
+extern uint16_t oldAdc, capturePos, adcA, adcB, adcC;
+extern mode displayMode;
+extern bool drawing;
+extern uint32_t debugCount, coverageTotal, coverageTimer;
 
 
 

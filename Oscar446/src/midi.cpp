@@ -8,9 +8,6 @@ void MIDIHandler::ProcessMidi() {
 		bool edited = false;
 		volatile uint8_t val1, val2;
 
-		extern uint32_t MIDIDebug;
-		MIDIDebug = QueueSize;
-
 		MIDIType type = static_cast<MIDIType>(Queue[QueueRead] >> 4);
 		uint8_t channel = Queue[QueueRead] & 0x0F;
 

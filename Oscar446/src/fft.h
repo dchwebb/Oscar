@@ -18,10 +18,8 @@ class UI;		// forward reference to handle circular dependency
 extern UI ui;
 extern LCD lcd;
 
-extern volatile uint32_t debugCount, coverageTotal, coverageTimer;
 extern volatile uint8_t captureBufferNumber, drawBufferNumber;
 extern uint16_t DrawBuffer[2][(DRAWHEIGHT + 1) * DRAWBUFFERWIDTH];
-extern volatile uint16_t adcA;
 
 class FFT {
 public:

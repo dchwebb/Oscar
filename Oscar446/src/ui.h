@@ -16,10 +16,6 @@ extern LCD lcd;
 extern Osc osc;
 extern Config cfg;
 
-extern volatile uint16_t oldAdc, capturePos, adcA, adcB, adcC;
-extern volatile bool drawing;
-extern volatile uint32_t debugCount, coverageTotal, coverageTimer;
-extern mode displayMode;
 
 struct MenuItem {
 	int8_t pos;

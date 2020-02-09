@@ -12,7 +12,7 @@ void Osc::OscRun(){
 		laneCount = (multiLane && oscDisplay == 0b111 ? 3 : multiLane && oscDisplay > 2 && oscDisplay != 4 ? 2 : 1);
 		calculatedOffsetYB = (laneCount > 1 && oscDisplay & 0b001 ? DRAWHEIGHT / laneCount : 0);
 		calculatedOffsetYC = (laneCount == 2 ? DRAWHEIGHT / 2 : laneCount == 3 ? DRAWHEIGHT * 2 / 3 : 0);
-		CP_ON
+		//CP_ON
 	}
 
 	// Check if drawing and that the sample capture is at or ahead of the draw position
@@ -94,7 +94,7 @@ void Osc::OscRun(){
 		if (drawPos == DRAWWIDTH){
 			drawing = false;
 			noTriggerDraw = false;
-			CP_CAP
+			//CP_CAP
 		}
 
 		// Draw trigger as a yellow cross
@@ -136,7 +136,7 @@ void Osc::CircRun(){
 		circDrawPos[drawBufferNumber] = 0;
 		lcd.DrawString(140, DRAWHEIGHT + 8, ui.floatToString(captureFreq[drawBufferNumber], true) + "Hz  ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 		laneCount = 1;
-		CP_ON
+		//CP_ON
 	}
 
 	// to have a continuous display drawing next sample as old sample is finishing
@@ -178,7 +178,7 @@ void Osc::CircRun(){
 			if (circDrawPos[drawBufferNumber] == zeroCrossings[drawBufferNumber] + CIRCLENGTH){
 				circDrawing[drawBufferNumber] = false;
 				circDataAvailable[drawBufferNumber] = false;
-				CP_CAP
+				//CP_CAP
 			}
 		}
 	}
