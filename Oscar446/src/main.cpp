@@ -10,9 +10,9 @@
 extern uint32_t SystemCoreClock;
 volatile uint32_t SysTickVal = 0;
 
-volatile int16_t vCalibOffset = -3590;			// Dev board with 14k resistors: -3940, 1.499999
-volatile float vCalibScale = 1.46f;
-volatile uint16_t CalibZeroPos = 9985;
+int16_t vCalibOffset = -3590;			// Dev board with 14k resistors: -3940, 1.499999
+float vCalibScale = 1.46f;
+uint16_t CalibZeroPos = 9985;
 
 uint16_t DrawBuffer[2][(DRAWHEIGHT + 1) * DRAWBUFFERWIDTH];
 volatile uint16_t adcA, adcB, adcC, oldAdc, capturePos = 0;

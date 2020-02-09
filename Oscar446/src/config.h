@@ -14,8 +14,6 @@ extern FFT fft;
 extern LCD lcd;
 extern Osc osc;
 
-extern volatile int16_t vCalibOffset;
-extern volatile float vCalibScale;
 extern volatile uint16_t adcA, adcB, adcC;
 extern mode displayMode;
 

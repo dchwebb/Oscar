@@ -8,9 +8,7 @@ extern UI ui;
 extern LCD lcd;
 
 extern volatile uint16_t adcA;
-extern volatile float vCalibScale;
-extern volatile int16_t vCalibOffset;
-extern volatile uint16_t CalibZeroPos;
+extern uint16_t CalibZeroPos;
 
 // Class to store settings and working variables for oscilloscope and circular mode
 
@@ -27,7 +25,7 @@ public:
 	int16_t TriggerX = 10;
 	uint16_t TriggerY = 7000;
 	volatile uint16_t* TriggerTest = &adcA;			// store the currently active trigger channel as a reference for faster interrupt performance
-	oscChannel TriggerChannel = channelA;				// holds preferred trigger channel for when that channel is not displayed
+	oscChannel TriggerChannel = channelA;			// holds preferred trigger channel for when that channel is not displayed
 	encoderType EncModeL = HorizScale;
 	encoderType EncModeR = ChannelSelect;
 	uint16_t sampleTimer = 10;						// Preserves oscilloscope sample timer when switching to other modes
@@ -48,8 +46,8 @@ public:
 	float Freq;										// Displays frequency of current capture based on zero crossings
 	bool freqBelowZero, capturing;
 	uint16_t freqCrossZero;
-	volatile uint16_t capturedSamples[2] {0, 0}, bufferSamples;
-	volatile int16_t drawOffset[2] {0, 0};
+	uint16_t capturedSamples[2] {0, 0}, bufferSamples;
+	int16_t drawOffset[2] {0, 0};
 	uint16_t prevPixelA = 0, prevPixelB = 0, prevPixelC = 0, drawPos = 0;
 	uint16_t calculatedOffsetYB = 0, calculatedOffsetYC = 0;	// Pre-Calculated offsets when in multi-lane mode
 

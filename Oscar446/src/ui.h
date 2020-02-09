@@ -16,8 +16,6 @@ extern LCD lcd;
 extern Osc osc;
 extern Config cfg;
 
-extern volatile int16_t vCalibOffset;
-extern volatile float vCalibScale;
 extern volatile uint16_t oldAdc, capturePos, adcA, adcB, adcC;
 extern volatile bool drawing;
 extern volatile uint32_t debugCount, coverageTotal, coverageTimer;
