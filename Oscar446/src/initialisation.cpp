@@ -255,14 +255,6 @@ void InitEncoders() {
 	TIM8->CNT = 32000;								// Start counter at mid way point
 	TIM8->CR1 |= TIM_CR1_CEN;
 
-
-
-/*
-	NVIC_SetPriority(EXTI4_IRQn, 4);				// Lower is higher priority
-	NVIC_EnableIRQ(EXTI4_IRQn);
-	NVIC_SetPriority(EXTI9_5_IRQn, 4);				// Lower is higher priority
-	NVIC_EnableIRQ(EXTI9_5_IRQn);
-*/
 	NVIC_SetPriority(EXTI15_10_IRQn, 4);			// Lower is higher priority
 	NVIC_EnableIRQ(EXTI15_10_IRQn);
 

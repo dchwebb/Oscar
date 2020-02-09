@@ -134,7 +134,6 @@ void TIM3_IRQHandler(void) {
 	}
 }
 
-#ifdef STM32F446xx
 
 void EXTI15_10_IRQHandler(void) {
 
@@ -162,34 +161,6 @@ void EXTI15_10_IRQHandler(void) {
 }
 
 
-
-#else
-
-// Left Encoder Button
-void L_BTN_NO(EXTI, _IRQHandler)(void) {
-
-	if (!(L_BTN_GPIO->IDR & L_BTN_NO(GPIO_IDR_IDR_,))) 			// Encoder button pressed - L_BTN_NO() adds number of encoder button eg GPIO_IDR_IDR_2
-		DB_ON													// Enable debounce timer
-	if (L_BTN_GPIO->IDR & L_BTN_NO(GPIO_IDR_IDR_,) && TIM5->CNT > 100) {	// Encoder button released - check enough time has elapsed to ensure not a bounce. A quick press if around 300, a long one around 8000+
-		encoderBtnL = true;
-		DB_OFF													// Disable debounce timer
-	}
-	EXTI->PR |= L_BTN_NO(EXTI_PR_PR,);							// Clear interrupt pending
-}
-
-// Right Encoder Button
-void EXTI9_5_IRQHandler(void) {
-
-	if (!(R_BTN_GPIO->IDR & R_BTN_NO(GPIO_IDR_IDR_,))) 			// Encoder button pressed - R_BTN_NO() adds number of encoder button eg GPIO_IDR_IDR_7
-		DB_ON													// Enable debounce timer
-	if (R_BTN_GPIO->IDR & R_BTN_NO(GPIO_IDR_IDR_,) && TIM5->CNT > 100) {	// Encoder button released - check enough time has elapsed to ensure not a bounce. A quick press if around 300, a long one around 8000+
-		encoderBtnR = true;
-		DB_OFF													// Disable debounce timer
-	}
-	EXTI->PR |= R_BTN_NO(EXTI_PR_PR,);							// Clear interrupt pending
-}
-
-#endif
 
 //	Coverage timer
 void TIM1_BRK_TIM9_IRQHandler(void) {
