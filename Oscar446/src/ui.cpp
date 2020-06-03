@@ -128,7 +128,10 @@ void UI::EncoderAction(encoderType type, const int8_t& val) {
 		DrawUI();
 		break;
 	case ActiveChannel :
-		fft.channel = (fft.channel == channelA) ? channelB : (fft.channel == channelB) ? channelC : channelA;
+		if (val > 0)
+			fft.channel = (fft.channel == channelA) ? channelB : (fft.channel == channelB) ? channelC : channelA;
+		else
+			fft.channel = (fft.channel == channelA) ? channelC : (fft.channel == channelB) ? channelA : channelB;
 		DrawUI();
 		break;
 	case MultiLane :
