@@ -3,6 +3,7 @@
 *.FXP
 *.zip
 *.o
+*.d
 *.list
 *.map
 *.kicad_pcb-bak
