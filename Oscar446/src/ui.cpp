@@ -62,8 +62,8 @@ void UI::EncoderAction(encoderType type, const int8_t& val) {
 	int16_t adj;
 	switch (type) {
 	case HorizScale :
-		adj = TIM3->ARR + (TIM3->ARR < 100 ? 5 : TIM3->ARR < 500 ? 10 : TIM3->ARR < 1000 ? 50 : 100) * -val;
-		if (adj > MINSAMPLETIMER && adj < 12000) {
+		adj = TIM3->ARR + (TIM3->ARR < 500 ? 20 : TIM3->ARR < 2000 ? 40 : TIM3->ARR < 5000 ? 400 : 800) * -val;
+		if (adj > MINSAMPLETIMER && adj < 56000) {
 			TIM3->ARR = adj;
 			if (displayMode == Oscilloscope)		osc.sampleTimer = adj;
 			DrawUI();

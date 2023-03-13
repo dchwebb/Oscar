@@ -352,13 +352,15 @@ void FFT::displayFFT(volatile float candSin[]) {
 		int sampleAfter  = std::sqrt(pow(candSin[harmonic[0] + 1], 2) + pow(candCos[harmonic[0] + 1], 2));
 
 		// apply some hysteresis to avoid jumping around the target - the hysteresis needs to be scaled to the frequency
-		if (sampleAfter > sampleBefore + 2 * freqFund * targFund) {
-			newARR -= 1;
-		} else if (sampleBefore > sampleAfter + 2 * freqFund * targFund) {
-			newARR += 1;
+		if (sampleAfter + sampleBefore > 20000) {
+			if (sampleAfter > sampleBefore + 0.3f * freqFund * targFund) {
+				newARR -= 1;
+			} else if (sampleBefore > sampleAfter + 0.3f * freqFund * targFund) {
+				newARR += 1;
+			}
 		}
 
-		if (newARR > 0 && newARR < 6000 && TIM3->ARR != newARR) {
+		if (newARR > 0 && newARR < 25000 && TIM3->ARR != newARR) {
 			TIM3->ARR = newARR;
 		}
 	}
