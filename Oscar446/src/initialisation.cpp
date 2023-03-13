@@ -26,10 +26,10 @@ void SystemClock_Config(void) {
 #endif
 
     RCC->CFGR |= RCC_CFGR_HPRE_DIV1;			// HCLK = SYSCLK / 1
-	RCC->CFGR |= RCC_CFGR_PPRE2_DIV2;			// PCLK2 = HCLK / 2
-	RCC->CFGR |= RCC_CFGR_PPRE1_DIV4;			// PCLK1 = HCLK / 4
+	RCC->CFGR |= RCC_CFGR_PPRE2_DIV2;			// APB2 Prescaler: PCLK2 = HCLK / 2 = 84 Mhz
+	RCC->CFGR |= RCC_CFGR_PPRE1_DIV4;			// APB1 Prescaler: PCLK1 = HCLK / 4 = 42 MHz
 	RCC->CR |= RCC_CR_PLLON;					// Enable the main PLL
-	while((RCC->CR & RCC_CR_PLLRDY) == 0);		// Wait till the main PLL is ready
+	while ((RCC->CR & RCC_CR_PLLRDY) == 0);		// Wait till the main PLL is ready
 
 	// Configure Flash prefetch, Instruction cache, Data cache and wait state
 	FLASH->ACR = FLASH_ACR_PRFTEN | FLASH_ACR_ICEN | FLASH_ACR_DCEN | FLASH_ACR_LATENCY_5WS;
@@ -169,15 +169,15 @@ void InitADC(void) {
 //	Setup Timer 3 on an interrupt to trigger sample acquisition
 void InitSampleAcquisition() {
 	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;				// Enable Timer 3
-	TIM3->PSC = 50;									// Set prescaler
-	TIM3->ARR = 140; 								// Set auto reload register
+	TIM3->PSC = 50;									// Set prescaler: 84MHz (APB1 Timer Clock) / 51 (PSC + 1) = 1,647,059 Hz
+	TIM3->ARR = 140; 								// Set auto reload register (1,647,058 / 140 = 11,764 Hz)
 
 	TIM3->DIER |= TIM_DIER_UIE;						// DMA/interrupt enable register
 	NVIC_EnableIRQ(TIM3_IRQn);
 	NVIC_SetPriority(TIM3_IRQn, 0);					// Lower is higher priority
 
 	TIM3->CR1 |= TIM_CR1_CEN;
-	TIM3->EGR |= TIM_EGR_UG;						//  Re-initializes counter and generates update of registers
+	TIM3->EGR |= TIM_EGR_UG;						// Re-initializes counter and generates update of registers
 }
 
 //	Setup Timer 9 to count clock cycles for coverage profiling
@@ -207,6 +207,8 @@ void InitEncoders() {
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;			// reset and clock control - advanced high performance bus - GPIO port C
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;			// Enable system configuration clock: used to manage external interrupt line connection to GPIOs
 
+	// 00: Input (reset state); 01: Output; 10: Alternate function; 11: Analog
+
 	// configure PA10 button to fire on an interrupt
 	GPIOA->PUPDR |= GPIO_PUPDR_PUPDR10_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
 	SYSCFG->EXTICR[2] |= SYSCFG_EXTICR3_EXTI10_PA;	// Select Pin PA10 which uses External interrupt 2
@@ -214,12 +216,16 @@ void InitEncoders() {
 	EXTI->FTSR |= EXTI_FTSR_TR10;					// Enable falling edge trigger
 	EXTI->IMR |= EXTI_IMR_MR10;						// Activate interrupt using mask register
 
+
 	// configure PB13 button to fire on an interrupt
 	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR13_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
-	SYSCFG->EXTICR[3] |= SYSCFG_EXTICR4_EXTI13_PB;	// Select Pin PB4 which uses External interrupt 2
+	SYSCFG->EXTICR[3] |= SYSCFG_EXTICR4_EXTI13_PB;	// Select Pin PB13
 	EXTI->RTSR |= EXTI_RTSR_TR13;					// Enable rising edge trigger
 	EXTI->FTSR |= EXTI_FTSR_TR13;					// Enable falling edge trigger
 	EXTI->IMR |= EXTI_IMR_MR13;						// Activate interrupt using mask register
+/*  // Debug code for using right encoder button as GPIO output
+	GPIOB->MODER |= GPIO_MODER_MODER13_0;			// For debug set pin to output
+*/
 
 	// L Encoder using timer functionality - PB6 and PB7
 	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR6_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved

@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name "oscar-rescue")(type "Legacy")(uri "${KIPRJMOD}/oscar-rescue.lib")(options "")(descr ""))
+  (lib (name "lcd_Daughterboard-rescue")(type "Legacy")(uri "${KIPRJMOD}/lcd_Daughterboard-rescue.lib")(options "")(descr ""))
+)

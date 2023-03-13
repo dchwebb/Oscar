@@ -1,7 +1,10 @@
 // Main sample capture
-void TIM3_IRQHandler(void) {
-
+void TIM3_IRQHandler(void)
+{
 	TIM3->SR &= ~TIM_SR_UIF;					// clear UIF flag
+
+	// Debug code for using right encoder button as GPIO output
+	//GPIOB->ODR |= GPIO_ODR_ODR_13;
 
 	if (displayMode == Fourier || displayMode == Waterfall) {
 		if (capturePos == fft.samples && fft.capturing) {
@@ -132,6 +135,9 @@ void TIM3_IRQHandler(void) {
 
 
 	}
+
+	// Debug code for using right encoder button as GPIO output
+	//GPIOB->ODR &= ~GPIO_ODR_ODR_13;
 }
 
 

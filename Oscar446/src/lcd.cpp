@@ -21,7 +21,7 @@ void LCD::Init(void) {
 	CommandData(cdArgs_t {ILI9341_POWER1,	0x23});				// 0x23: GVDD level = 4.6V (reference level for VCOM level and grayscale voltage level)
 	CommandData(cdArgs_t {ILI9341_POWER2,	0x10});				// Appears to be invalid - should be 0b000 - 0b011
 	CommandData(cdArgs_t {ILI9341_VCOM1, 0x3E, 0x28});			// 0x3E: VCOMH = 4.250V; 0x28: VCOML = 3.700V
-	CommandData(cdArgs_t {ILI9341_VCOM2, 0x86});				// 0x86: VCOM offset voltage = VMH - 58 VML – 58;
+	CommandData(cdArgs_t {ILI9341_VCOM2, 0x86});				// 0x86: VCOM offset voltage = VMH - 58 VML ï¿½ 58;
 	CommandData(cdArgs_t {ILI9341_MAC, 0x48});					// Memory access control: MX = Column Address Order, RGB-BGR Order control
 	CommandData(cdArgs_t {ILI9341_PIXEL_FORMAT, 0x55});			// 16 bit format
 	CommandData(cdArgs_t {ILI9341_FRC, 0x00, 0x18});
@@ -30,7 +30,7 @@ void LCD::Init(void) {
 	CommandData(cdArgs_t {ILI9341_COLUMN_ADDR, 0x00, 0x00, 0x00, 0xEF});
 	CommandData(cdArgs_t {ILI9341_PAGE_ADDR, 0x00, 0x00, 0x01, 0x3F});
 	CommandData(cdArgs_t {ILI9341_GAMMA, 0x01});
-	CommandData(cdArgs_t {ILI9341_PGAMMA,	0x0F, 0x31, 0x2B, 0x0C, 0x0E, 0x08, 0x4E, 0xF1, 0x37, 0x07, 0x10, 0x03, 0x0E, 0x09, 0x00});
+	CommandData(cdArgs_t {ILI9341_PGAMMA, 0x0F, 0x31, 0x2B, 0x0C, 0x0E, 0x08, 0x4E, 0xF1, 0x37, 0x07, 0x10, 0x03, 0x0E, 0x09, 0x00});
 	CommandData(cdArgs_t {ILI9341_NGAMMA, 0x00, 0x0E, 0x14, 0x03, 0x11, 0x07, 0x31, 0xC1, 0x48, 0x08, 0x0F, 0x0C, 0x31, 0x36, 0x0F});
 	Command(ILI9341_SLEEP_MODE);
 
