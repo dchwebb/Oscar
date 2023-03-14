@@ -261,7 +261,7 @@ void UI::ResetMode() {
 	osc.circDrawing[0] = osc.circDrawing[1] = false;
 	osc.setTriggerChannel();
 	fft.dataAvailable[0] = fft.dataAvailable[1] = false;
-	fft.samples = displayMode == Fourier ? FFTSAMPLES : fft.WATERFALLSAMPLES;
+	fft.samples = displayMode == Fourier ? fft.fftSamples : fft.WATERFALLSAMPLES;
 
 
 	ui.DrawUI();

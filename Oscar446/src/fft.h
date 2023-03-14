@@ -5,7 +5,7 @@
 #include "ui.h"
 
 #define LUTSIZE 1024
-#define FFTSAMPLES 1024
+//#define FFTSAMPLES 1024
 #define FFTHARMONICCOLOURS 5
 
 #define WATERFALLDRAWHEIGHT 80

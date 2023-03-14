@@ -286,7 +286,7 @@ void FFT::displayFFT(const float* candSin)
 			smearHarmonic = 0;
 		}
 
-		uint16_t top = std::min(DRAWHEIGHT * (1 - (hypotenuse / (512 * FFTSAMPLES))), (float)DRAWHEIGHT);
+		uint16_t top = std::min(DRAWHEIGHT * (1 - (hypotenuse / (512 * fftSamples))), (float)DRAWHEIGHT);
 
 		uint8_t FFTDrawBufferNumber = (((i - 1) / DRAWBUFFERWIDTH) % 2 == 0) ? 0 : 1;
 
@@ -343,40 +343,40 @@ void FFT::displayFFT(const float* candSin)
 		freqFund = harmonicFreq(harmonic[0]);
 
 		// work out which harmonic we want the fundamental to be - to adjust the sampling rate so a change in ARR affects the tuning of the FFT proportionally
-		uint16_t targFund = std::max(std::round(freqFund / 10), 8.0f);
-		uint16_t newARR = 0;
+		float targFund = std::max(freqFund / 10, 8.0f);
+		float newARR;
 
 		// take the timer ARR, divide by fundamental to get new ARR setting tuned fundamental to target harmonic
-		if (std::abs(targFund - harmonic[0]) > 1)	newARR = targFund * TIM3->ARR / harmonic[0];
-		else										newARR = TIM3->ARR;
-
-		//	fine tune - check the sample before and after the fundamental and adjust to center around the fundamental
-		int sampleBefore = std::sqrt(pow(candSin[harmonic[0] - 1], 2) + pow(candCos[harmonic[0] - 1], 2));
-		int sampleAfter  = std::sqrt(pow(candSin[harmonic[0] + 1], 2) + pow(candCos[harmonic[0] + 1], 2));
-
-		// apply some hysteresis to avoid jumping around the target - the hysteresis needs to be scaled to the frequency
-		if (sampleAfter + sampleBefore > 20000) {
-			if (sampleAfter > sampleBefore + 0.3f * freqFund * targFund) {
-				newARR -= 1;
-			} else if (sampleBefore > sampleAfter + 0.3f * freqFund * targFund) {
-				newARR += 1;
-			}
+		if (std::abs(targFund - harmonic[0]) > 1) {
+			newARR = targFund * TIM3->ARR / harmonic[0];
+		} else {
+			newARR = TIM3->ARR;
 		}
 
-		if (newARR > 0 && newARR < 25000 && TIM3->ARR != newARR) {
-			TIM3->ARR = newARR;
+		//	fine tune - check the sample before and after the fundamental and adjust to center around the fundamental
+		float sampleBefore = std::sqrt(pow(candSin[harmonic[0] - 1], 2.0f) + pow(candCos[harmonic[0] - 1], 2.0f));
+		float sampleAfter  = std::sqrt(pow(candSin[harmonic[0] + 1], 2.0f) + pow(candCos[harmonic[0] + 1], 2.0f));
+
+		// Change ARR by an amount related to the proportion of the difference of the two surrounding harmonics,
+		// scaling faster at lower frequencies where there is more resolution
+		if (sampleAfter + sampleBefore > 100.0f) {
+			newARR += ((sampleAfter - sampleBefore) / (sampleAfter + sampleBefore)) * (freqFund < 80 ? -60.0f :  -30.0f);
+		}
+
+		if (newARR > 0.0f) {
+			TIM3->ARR = std::round(newARR);
 		}
 	}
 }
 
 
-inline float FFT::harmonicFreq(uint16_t harmonicNumber)
+inline float FFT::harmonicFreq(const uint16_t harmonicNumber)
 {
-	return ((float)SystemCoreClock * harmonicNumber) / (2 * FFTSAMPLES * (TIM3->PSC + 1) * (TIM3->ARR + 1));
+	return static_cast<float>(SystemCoreClock * harmonicNumber) / (2 * fftSamples * (TIM3->PSC + 1) * (TIM3->ARR + 1));
 }
 
 
-void FFT::sampleCapture(bool clearBuffer)
+void FFT::sampleCapture(const bool clearBuffer)
 {
 	if (clearBuffer)
 		dataAvailable[drawBufferNumber] = false;
