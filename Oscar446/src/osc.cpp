@@ -1,9 +1,10 @@
-#include <osc.h>
+#include "osc.h"
 
 // Main loop to display oscilloscope trace
-void Osc::OscRun(){
-
-	if (!drawing && (capturing || noTriggerDraw)) {								// check if we should start drawing
+void Osc::OscRun()
+{
+	// check if we should start drawing
+	if (!drawing && (capturing || noTriggerDraw)) {
 		drawBufferNumber = noTriggerDraw ? !(bool)captureBufferNumber : captureBufferNumber;
 		drawing = true;
 		drawPos = 0;
@@ -76,9 +77,12 @@ void Osc::OscRun(){
 				DrawBuffer[DrawBufferNumber][h - vOffset] = LCD_BLACK;
 			}
 		}
+
+		// Draw grey lines indicating voltage range for one channel or channel divisions for 2 or 3 channels
 		if (drawPos < 5) {
-			for (int m = 0; m < (laneCount == 1 ? voltScale * 2 : (laneCount * 2)); ++m) {
-				DrawBuffer[DrawBufferNumber][m * DRAWHEIGHT / (laneCount == 1 ? voltScale * 2 : (laneCount * 2)) - 11] = LCD_GREY;
+			for (int m = 1; m < (laneCount == 1 ? voltScale * 2 : (laneCount * 2)); ++m) {
+				int test = m * DRAWHEIGHT / (laneCount == 1 ? voltScale * 2 : (laneCount * 2)) - 11;
+				DrawBuffer[DrawBufferNumber][test] = LCD_GREY;
 			}
 		}
 
@@ -136,7 +140,6 @@ void Osc::CircRun(){
 		circDrawPos[drawBufferNumber] = 0;
 		lcd.DrawString(140, DRAWHEIGHT + 8, ui.floatToString(captureFreq[drawBufferNumber], true) + "Hz  ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 		laneCount = 1;
-		//CP_ON
 	}
 
 	// to have a continuous display drawing next sample as old sample is finishing
@@ -178,7 +181,6 @@ void Osc::CircRun(){
 			if (circDrawPos[drawBufferNumber] == zeroCrossings[drawBufferNumber] + CIRCLENGTH){
 				circDrawing[drawBufferNumber] = false;
 				circDataAvailable[drawBufferNumber] = false;
-				//CP_CAP
 			}
 		}
 	}
@@ -187,18 +189,21 @@ void Osc::CircRun(){
 
 
 // Calculates vertical offset of oscilloscope trace from raw ADC value
-uint16_t Osc::CalcVertOffset(volatile const uint16_t& vPos) {
+uint16_t Osc::CalcVertOffset(volatile const uint16_t& vPos)
+{
 	return std::max(std::min(((((float)(vPos * vCalibScale + vCalibOffset) / (4 * 4096) - 0.5f) * (8.0f / voltScale)) + 0.5f) / laneCount * DRAWHEIGHT, (float)((DRAWHEIGHT - 1) / laneCount)), 1.0f);
 }
 
 
 // returns frequency of signal based on number of samples wide the signal is in the screen
-float Osc::FreqFromPos(const uint16_t pos) {
+float Osc::FreqFromPos(const uint16_t pos)
+{
 	return (float)SystemCoreClock / (2.0f * pos * (TIM3->PSC + 1) * (TIM3->ARR + 1));
 }
 
 // Choose the trigger channel based on config preference and channel visibility
-void Osc::setTriggerChannel() {
+void Osc::setTriggerChannel()
+{
 	osc.TriggerTest = 	osc.TriggerChannel == channelNone ? nullptr :
 						(osc.TriggerChannel == channelC && (osc.oscDisplay & 4)) || osc.oscDisplay == 4 ? &adcC :
 						(osc.TriggerChannel == channelB || !(osc.oscDisplay & 1)) && (osc.oscDisplay & 2) ? &adcB : &adcA;
