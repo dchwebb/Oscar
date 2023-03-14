@@ -7,27 +7,27 @@ FFT::FFT()
 	}
 
 	// clear the waterfall buffers
-	for (uint16_t w = 0; w < WATERFALLBUFFERS; ++w) {
-		for (uint16_t i = 0; i < WATERFALLSIZE; i++) {
-			drawWaterfall[w][i] = WATERFALLDRAWHEIGHT;
+	for (uint16_t w = 0; w < waterfallBuffers; ++w) {
+		for (uint16_t i = 0; i < waterfallSize; i++) {
+			drawWaterfall[w][i] = waterfallDrawHeight;
 		}
 	}
 }
 
-// Carry out Fast fourier transform
-void FFT::Run() {
 
+void FFT::Run()
+{
+// Carry out Fast fourier transform
 	sampleCapture(false);									// checks if ready to start new capture
 
 	if (dataAvailable[0] || dataAvailable[1]) {
-
 		drawBufferNumber = dataAvailable[0] ? 0 : 1;		// select correct draw buffer based on whether buffer 0 or 1 contains data
-		calcFFT(FFTBuffer[drawBufferNumber]);
+		calcFFT(fftBuffer[drawBufferNumber]);
 
 		if (displayMode == Fourier) {
-			displayFFT(FFTBuffer[drawBufferNumber]);
+			displayFFT(fftBuffer[drawBufferNumber]);
 		} else {
-			displayWaterfall(FFTBuffer[drawBufferNumber]);
+			displayWaterfall(fftBuffer[drawBufferNumber]);
 		}
 	}
 }
@@ -39,18 +39,18 @@ void FFT::Run() {
 void FFT::displayWaterfall(const float* candSin)
 {
 	uint16_t badFFT = 0, top, mult, div, sPos = 0, hypPos = 0;
-	uint16_t smoothVals[WATERFALLSMOOTH];
+	uint16_t smoothVals[waterfallSmooth];
 
 	// Cycle through each column in the display and draw
-	for (uint16_t i = 1; i < WATERFALLSIZE; i++) {
+	for (uint16_t i = 1; i < waterfallSize; i++) {
 		// calculate hypotenuse ahead of draw position to apply smoothing
-		while (hypPos < i + WATERFALLSMOOTH && hypPos < WATERFALLSIZE) {
-			top = WATERFALLDRAWHEIGHT * (1 - (std::hypot(candSin[hypPos], candCos[hypPos]) / (128 * WATERFALLSAMPLES)));
+		while (hypPos < i + waterfallSmooth && hypPos < waterfallSize) {
+			top = waterfallDrawHeight * (1 - (std::hypot(candSin[hypPos], candCos[hypPos]) / (128 * WATERFALLSAMPLES)));
 
 			if (top < 30) {
 				badFFT++;					// every so often the FFT fails with extremely large numbers in all positions - just abort the draw and resample
 				if (badFFT > 200) {
-					FFTErrors++;
+					fftErrors++;
 					dataAvailable[drawBufferNumber] = false;
 					return;
 				}
@@ -65,9 +65,9 @@ void FFT::displayWaterfall(const float* candSin)
 
 		// apply smoothing - uses binary weighting around center point eg: (1w(i-2) + 2w(i-1) + 4w(i) + 2w(i+1) + 1w(i+2)) / (1+2+4+2+1)
 		top = div = 0;
-		for (int16_t x = i - WATERFALLSMOOTH; x <= i + WATERFALLSMOOTH; x++) {
-			if (x >= 0 && x < WATERFALLSIZE) {
-				mult = 1 << (WATERFALLSMOOTH - std::abs(i - x));
+		for (int16_t x = i - waterfallSmooth; x <= i + waterfallSmooth; x++) {
+			if (x >= 0 && x < waterfallSize) {
+				mult = 1 << (waterfallSmooth - std::abs(i - x));
 				div += mult;
 				top += mult * drawWaterfall[waterfallBuffer][x];
 			}
@@ -76,16 +76,16 @@ void FFT::displayWaterfall(const float* candSin)
 
 		// store smoothed values back to waterfallBuffer once all smoothing calculations have been done on that value
 		smoothVals[sPos] = top;
-		sPos = (sPos + 1) % WATERFALLSMOOTH;
-		if (i >= WATERFALLSMOOTH) {
-			drawWaterfall[waterfallBuffer][i - WATERFALLSMOOTH] = smoothVals[sPos];
+		sPos = (sPos + 1) % waterfallSmooth;
+		if (i >= waterfallSmooth) {
+			drawWaterfall[waterfallBuffer][i - waterfallSmooth] = smoothVals[sPos];
 		}
 
 	}
 
 	sampleCapture(true);			// Signal to Interrupt that new capture can start
 
-	waterfallBuffer = (waterfallBuffer + 1) % WATERFALLBUFFERS;
+	waterfallBuffer = (waterfallBuffer + 1) % waterfallBuffers;
 
 	int16_t h0, h1;
 
@@ -95,17 +95,17 @@ void FFT::displayWaterfall(const float* candSin)
 		int16_t vPos = DRAWHEIGHT;		// track the vertical position to apply blanking or skip drawing rows as required
 
 		// work forwards through the buffers so the oldest buffer is drawn first at the front, newer buffers move forward
-		for (uint16_t w = 0; w < WATERFALLBUFFERS; ++w) {
+		for (uint16_t w = 0; w < waterfallBuffers; ++w) {
 
 			//	Darken green has less effect than darkening orange or blue - adjust accordingly
 			uint16_t colourShade = ui.DarkenColour(fft.channel == channelA ? LCD_GREEN : fft.channel == channelB ? LCD_LIGHTBLUE : LCD_ORANGE,  (uint16_t)w * 2 * (fft.channel == channelA ? 1 : 0.8));
 
-			int16_t buff = (waterfallBuffer + w) % WATERFALLBUFFERS;
+			int16_t buff = (waterfallBuffer + w) % waterfallBuffers;
 			int xOffset = w * 2 + 3;
-			int yOffset = (WATERFALLBUFFERS - w) * 5 - 12;
+			int yOffset = (waterfallBuffers - w) * 5 - 12;
 
 			// check that buffer is visible after applying offset
-			if (col > xOffset && col < WATERFALLSIZE + xOffset) {
+			if (col > xOffset && col < waterfallSize + xOffset) {
 
 				h1 = drawWaterfall[buff][col - xOffset] + yOffset;
 				h0 = drawWaterfall[buff][col - xOffset - 1] + yOffset;
@@ -141,9 +141,9 @@ void FFT::displayWaterfall(const float* candSin)
 }
 
 
-// Carry out Fast fourier transform
-void FFT::calcFFT(volatile float candSin[])
+void FFT::calcFFT(float* candSin)
 {
+	// Carry out Fast fourier transform
 	uint16_t bitReverse = 0;
 	const uint16_t fftbits = log2(samples);
 
@@ -259,9 +259,9 @@ void FFT::displayFFT(const float* candSin)
 {
 	harmonic.fill(0);
 	int16_t badFFT = 0, currHarmonic = -1, smearHarmonic = 0;
-	maxHyp = 0;
-	//uint16_t overlayColour = ui.DarkenColour(fft.channel == channelA ? LCD_GREEN : fft.channel == channelB ? LCD_LIGHTBLUE : LCD_ORANGE,  20);
-	uint16_t overlayColour = fft.channel == channelA ? LCD_DULLGREEN : fft.channel == channelB ? LCD_DULLBLUE : LCD_DULLORANGE;
+	uint32_t maxHyp = 0;
+
+	const uint16_t overlayColour = fft.channel == channelA ? LCD_DULLGREEN : fft.channel == channelB ? LCD_DULLBLUE : LCD_DULLORANGE;
 
 	// Cycle through each column in the display and draw
 	for (uint16_t i = 1; i <= DRAWWIDTH; i++) {
@@ -269,7 +269,7 @@ void FFT::displayFFT(const float* candSin)
 		float hypotenuse = std::hypot(candSin[i], candCos[i]);
 
 		// get first few harmonics for colour coding and info
-		if (currHarmonic < FFTHARMONICCOLOURS - 1 && hypotenuse > 50000) {
+		if (currHarmonic < fftHarmonicColours - 1 && hypotenuse > 50000) {
 			if (currHarmonic == -1 || i > smearHarmonic + 1) {
 				currHarmonic++;
 			}
@@ -301,7 +301,7 @@ void FFT::displayFFT(const float* candSin)
 			if (h >= top) {
 				badFFT++;					// every so often the FFT fails with extremely large numbers in all positions - just abort the draw and resample
 				if (badFFT > 10000) {
-					FFTErrors++;
+					fftErrors++;
 					dataAvailable[drawBufferNumber] = false;
 					return;
 				}
@@ -323,8 +323,10 @@ void FFT::displayFFT(const float* candSin)
 			if (i > DRAWWIDTH - DRAWBUFFERWIDTH) {
 				sampleCapture(true);			// Signal to Interrupt that new capture can start
 
-				for (uint8_t h = 0; h < FFTHARMONICCOLOURS; ++h) {
-					if (harmonic[h] == 0)	break;
+				for (uint8_t h = 0; h < fftHarmonicColours; ++h) {
+					if (harmonic[h] == 0) {
+						break;
+					}
 
 					uint16_t harmonicNumber = round((float)harmonic[h] / harmonic[0]);
 					std::string harmonicInfo = ui.intToString(harmonicNumber) + " " + ui.floatToString(harmonicFreq(harmonic[h]), false) + "Hz";
@@ -342,6 +344,7 @@ void FFT::displayFFT(const float* candSin)
 
 		// work out which harmonic we want the fundamental to be - to adjust the sampling rate so a change in ARR affects the tuning of the FFT proportionally
 		uint16_t targFund = std::max(std::round(freqFund / 10), 8.0f);
+		uint16_t newARR = 0;
 
 		// take the timer ARR, divide by fundamental to get new ARR setting tuned fundamental to target harmonic
 		if (std::abs(targFund - harmonic[0]) > 1)	newARR = targFund * TIM3->ARR / harmonic[0];
