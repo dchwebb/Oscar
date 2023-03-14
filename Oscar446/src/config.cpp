@@ -65,7 +65,7 @@ void Config::RestoreConfig()
 {
 	// create temporary copy of settings from memory to check if they are valid
 	configValues cv;
-	memcpy(&cv, (uint32_t*)ADDR_FLASH_SECTOR_7, sizeof(cv));
+	memcpy((uint32_t*)&cv, (uint32_t*)ADDR_FLASH_SECTOR_7, sizeof(cv));
 
 	if (strcmp(cv.StartMarker, "CFG") == 0 && strcmp(cv.EndMarker, "END") == 0 && cv.Version == 2) {
 		displayMode = cv.gen_displayMode;

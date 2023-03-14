@@ -37,7 +37,7 @@ public:
 
 	// FFT working variables
 	float FFTBuffer[2][FFTSAMPLES];						// holds raw samples captured in interrupt for FFT analysis
-	volatile uint16_t samples = FFTSAMPLES;				// specifies number of samples depending on whether in FFT or Waterfall mode
+	uint16_t samples = FFTSAMPLES;				// specifies number of samples depending on whether in FFT or Waterfall mode
 	std::array<uint16_t, FFTHARMONICCOLOURS> harmonic;	// holds harmonics found in FFT
 	volatile bool dataAvailable[2] {false, false};		// stores which sample buffers contain data
 	float SineLUT[LUTSIZE];
@@ -56,8 +56,8 @@ private:
 	uint8_t waterfallBuffer = 0;
 
 	void calcFFT(volatile float candSin[]);
-	void displayFFT(volatile float candSin[]);
-	void displayWaterfall(volatile float candSin[]);
+	void displayFFT(const float* candSin);
+	void displayWaterfall(const float* candSin);
 	float harmonicFreq(uint16_t harmonicNumber);
 	void sampleCapture(bool clearBuffer);
 

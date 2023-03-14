@@ -169,8 +169,8 @@ void InitADC(void) {
 //	Setup Timer 3 on an interrupt to trigger sample acquisition
 void InitSampleAcquisition() {
 	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;				// Enable Timer 3
-	TIM3->PSC = 9;									// Set prescaler: 84MHz (APB1 Timer Clock) / 26 (PSC + 1) = 3,230,769 Hz
-	TIM3->ARR = 600; 								// Set auto reload register (3,230,769 / 280 = 11,764 Hz)
+	TIM3->PSC = 0;									// Set prescaler: 84MHz (APB1 Timer Clock) / 26 (PSC + 1) = 3,230,769 Hz
+	TIM3->ARR = 7000; 								// Set auto reload register (3,230,769 / 280 = 11,764 Hz)
 
 	TIM3->DIER |= TIM_DIER_UIE;						// DMA/interrupt enable register
 	NVIC_EnableIRQ(TIM3_IRQn);

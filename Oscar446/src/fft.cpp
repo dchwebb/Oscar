@@ -1,7 +1,7 @@
 #include <fft.h>
-//#define M_PI		3.14159265358979323846
 
-FFT::FFT() {
+FFT::FFT()
+{
 	for (int s = 0; s < LUTSIZE; s++){
 		SineLUT[s] = sin(s * 2.0f * M_PI / LUTSIZE);
 	}
@@ -22,15 +22,13 @@ void FFT::Run() {
 	if (dataAvailable[0] || dataAvailable[1]) {
 
 		drawBufferNumber = dataAvailable[0] ? 0 : 1;		// select correct draw buffer based on whether buffer 0 or 1 contains data
-
-		CP_CAP
-		CP_ON
 		calcFFT(FFTBuffer[drawBufferNumber]);
 
-		if (displayMode == Fourier)
+		if (displayMode == Fourier) {
 			displayFFT(FFTBuffer[drawBufferNumber]);
-		else
+		} else {
 			displayWaterfall(FFTBuffer[drawBufferNumber]);
+		}
 	}
 }
 
@@ -38,8 +36,8 @@ void FFT::Run() {
 
 
 // Carry out Fast fourier transform
-void FFT::displayWaterfall(volatile float candSin[]) {
-
+void FFT::displayWaterfall(const float* candSin)
+{
 	uint16_t badFFT = 0, top, mult, div, sPos = 0, hypPos = 0;
 	uint16_t smoothVals[WATERFALLSMOOTH];
 
@@ -123,7 +121,7 @@ void FFT::displayWaterfall(volatile float candSin[]) {
 					} else {
 						DrawBuffer[FFTDrawBufferNumber][buffPos] = colourShade;
 					}
-					vPos--;
+					--vPos;
 				}
 			}
 		}
@@ -142,11 +140,12 @@ void FFT::displayWaterfall(volatile float candSin[]) {
 	}
 }
 
-// Carry out Fast fourier transform
-void FFT::calcFFT(volatile float candSin[]) {
 
+// Carry out Fast fourier transform
+void FFT::calcFFT(volatile float candSin[])
+{
 	uint16_t bitReverse = 0;
-	uint16_t FFTbits = log2(samples);
+	const uint16_t fftbits = log2(samples);
 
 	// Populate draw buffer to overlay sample view
 	if (traceOverlay) {
@@ -163,7 +162,7 @@ void FFT::calcFFT(volatile float candSin[]) {
 			t = 4 * (2047 - candSin[p]);
 		}
 
-		for ( uint16_t p = 0; p <= DRAWWIDTH ; p++) {
+		for ( uint16_t p = 0; p < DRAWWIDTH ; p++) {
 			adcA = 4 * (2047 - candSin[s + p]);
 			osc.OscBufferA[0][p] = osc.CalcVertOffset(adcA) + (DRAWHEIGHT / 4);
 		}
@@ -175,7 +174,7 @@ void FFT::calcFFT(volatile float candSin[]) {
 		// assembly bit reverses i and then rotates right to correct bit length
 		asm("rbit %[result], %[value]\n\t"
 			"ror %[result], %[shift]"
-			: [result] "=r" (bitReverse) : [value] "r" (i), [shift] "r" (32 - FFTbits));
+			: [result] "=r" (bitReverse) : [value] "r" (i), [shift] "r" (32 - fftbits));
 
 		if (bitReverse > i) {
 			// bit reverse samples
@@ -256,8 +255,8 @@ void FFT::calcFFT(volatile float candSin[]) {
 
 
 // Display results of FFT: Combine sine and cosines to get amplitudes and store in buffers, transmitting as each buffer is completed
-void FFT::displayFFT(volatile float candSin[]) {
-
+void FFT::displayFFT(const float* candSin)
+{
 	harmonic.fill(0);
 	int16_t badFFT = 0, currHarmonic = -1, smearHarmonic = 0;
 	maxHyp = 0;
@@ -271,8 +270,9 @@ void FFT::displayFFT(volatile float candSin[]) {
 
 		// get first few harmonics for colour coding and info
 		if (currHarmonic < FFTHARMONICCOLOURS - 1 && hypotenuse > 50000) {
-			if (currHarmonic == -1 || i > smearHarmonic + 1)
+			if (currHarmonic == -1 || i > smearHarmonic + 1) {
 				currHarmonic++;
+			}
 
 			smearHarmonic = i;			// used to display 'smeared' harmonics in the same colour -also avoids smeared harmonics showing as multiple harmonics
 			harmColour = harmColours[currHarmonic];
@@ -366,13 +366,15 @@ void FFT::displayFFT(volatile float candSin[]) {
 	}
 }
 
-inline float FFT::harmonicFreq(uint16_t harmonicNumber) {
+
+inline float FFT::harmonicFreq(uint16_t harmonicNumber)
+{
 	return ((float)SystemCoreClock * harmonicNumber) / (2 * FFTSAMPLES * (TIM3->PSC + 1) * (TIM3->ARR + 1));
 }
 
 
-void FFT::sampleCapture(bool clearBuffer) {
-
+void FFT::sampleCapture(bool clearBuffer)
+{
 	if (clearBuffer)
 		dataAvailable[drawBufferNumber] = false;
 
