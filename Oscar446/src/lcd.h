@@ -25,36 +25,48 @@
 
 
 // LCD command definitions
-#define ILI9341_RESET				0x01
-#define ILI9341_SLEEP_MODE			0x11
-#define ILI9341_GAMMA				0x26
-#define ILI9341_DISPLAY_OFF			0x28
-#define ILI9341_DISPLAY_ON			0x29
-#define ILI9341_COLUMN_ADDR			0x2A
-#define ILI9341_PAGE_ADDR			0x2B
-#define ILI9341_GRAM				0x2C
-#define ILI9341_MAC					0x36
-#define ILI9341_PIXEL_FORMAT		0x3A
-#define ILI9341_WDB					0x51
-#define ILI9341_WCD					0x53
-#define ILI9341_RGB_INTERFACE		0xB0
-#define ILI9341_FRC					0xB1
-#define ILI9341_BPC					0xB5
-#define ILI9341_DFC					0xB6
-#define ILI9341_POWER1				0xC0
-#define ILI9341_POWER2				0xC1
-#define ILI9341_VCOM1				0xC5
-#define ILI9341_VCOM2				0xC7
-#define ILI9341_POWERA				0xCB
-#define ILI9341_POWERB				0xCF
-#define ILI9341_PGAMMA				0xE0
-#define ILI9341_NGAMMA				0xE1
-#define ILI9341_DTCA				0xE8
-#define ILI9341_DTCB				0xEA
-#define ILI9341_POWER_SEQ			0xED
-#define ILI9341_3GAMMA_EN			0xF2
-#define ILI9341_INTERFACE			0xF6
-#define ILI9341_PRC					0xF7
+enum class cmdILI9341 : uint8_t {RESET = 0x01,
+	SLEEP_MODE		= 0x11,
+	GAMMA			= 0x26,
+	DISPLAY_OFF		= 0x28,
+	DISPLAY_ON		= 0x29,
+	COLUMN_ADDR		= 0x2A,
+	PAGE_ADDR		= 0x2B,
+	GRAM			= 0x2C,
+	MAC				= 0x36,
+	PIXEL_FORMAT	= 0x3A,
+	WDB				= 0x51,
+	WCD				= 0x53,
+	RGB_INTERFACE	= 0xB0,
+	FRC				= 0xB1,
+	BPC				= 0xB5,
+	DFC				= 0xB6,
+	POWER1			= 0xC0,
+	POWER2			= 0xC1,
+	VCOM1			= 0xC5,
+	VCOM2			= 0xC7,
+	POWERA			= 0xCB,
+	POWERB			= 0xCF,
+	PGAMMA			= 0xE0,
+	NGAMMA			= 0xE1,
+	DTCA			= 0xE8,
+	DTCB			= 0xEA,
+	POWER_SEQ		= 0xED,
+	THREEGAMMA_EN	= 0xF2,
+	INTERFACE		= 0xF6,
+	PRC				= 0xF7
+};
+
+// Define LCD DMA and SPI registers
+#define LCD_DMA_STREAM			DMA1_Stream5
+#define LCD_SPI 				SPI3
+#define LCD_CLEAR_DMA_FLAGS		DMA1->HIFCR = DMA_HIFCR_CHTIF5 | DMA_HIFCR_CTCIF5 | DMA_HIFCR_CTEIF5;
+
+// Define macros for setting and clearing GPIO SPI pins
+#define LCD_RST_RESET	GPIOC->BSRR |= GPIO_BSRR_BR_14
+#define LCD_RST_SET 	GPIOC->BSRR |= GPIO_BSRR_BS_14
+#define LCD_DCX_RESET	GPIOC->BSRR |= GPIO_BSRR_BR_13
+#define LCD_DCX_SET		GPIOC->BSRR |= GPIO_BSRR_BS_13
 
 // Macro for creating arguments to CommandData function
 typedef std::vector<uint8_t> cdArgs_t;
@@ -89,7 +101,7 @@ public:
 
 	void Init(void);
 	void Rotate(LCD_Orientation_t orientation);
-	void ScreenFill(const uint16_t& colour);
+	void ScreenFill(const uint16_t colour);
 	void ColourFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t& colour);
 	void PatternFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t* PixelData);
 	void DrawPixel(uint16_t x, uint16_t y, const uint16_t& colour);
@@ -100,7 +112,8 @@ public:
 	void DrawString(uint16_t x0, uint16_t y0, std::string_view s, const FontData *font, const uint32_t& foreground, const uint32_t& background);
 	void DrawStringMem(uint16_t x0, uint16_t y0, uint16_t memWidth, uint16_t* memBuffer, std::string_view s, const FontData *font, const uint32_t& foreground, const uint32_t& background);
 
-	void Command(const uint8_t& data);
+//	void Command(const uint8_t& data);
+	void Command(const cmdILI9341 data);
 	void Delay(volatile uint32_t delay);
 private:
 
@@ -109,7 +122,7 @@ private:
 
 	void Data(const uint8_t& data);
 	void Data16b(const uint16_t& data);
-	void CommandData(cdArgs_t);
+	void CommandData(const cmdILI9341 cmd, cdArgs_t data);
 	void SetCursorPosition(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
 
 	inline void SPISendByte(const uint8_t data);

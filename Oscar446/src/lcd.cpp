@@ -9,35 +9,35 @@ void LCD::Init(void) {
 	Delay(20000);
 
 	// Software reset
-	Command(ILI9341_RESET);
+	Command(cmdILI9341::RESET);
 	Delay(50000);
 
-	CommandData(cdArgs_t {ILI9341_POWERA, 0x39, 0x2C, 0x00, 0x34, 0x02});
-	CommandData(cdArgs_t {ILI9341_POWERB, 0x00, 0xC1, 0x30});
-	CommandData(cdArgs_t {ILI9341_DTCA, 0x85, 0x00, 0x78});		// default is  0x85, 0x00, 0x78
-	CommandData(cdArgs_t {ILI9341_DTCB, 0x00,	0x00});			// default is  0x66, 0x00
-	CommandData(cdArgs_t {ILI9341_POWER_SEQ, 0x64, 0x03, 0x12, 0x81});		// default is 0x55 0x01 0x23 0x01
-	CommandData(cdArgs_t {ILI9341_PRC, 0x20});					// 0x20: DDVDH = 2xVCI  (Pump ratio control)
-	CommandData(cdArgs_t {ILI9341_POWER1,	0x23});				// 0x23: GVDD level = 4.6V (reference level for VCOM level and grayscale voltage level)
-	CommandData(cdArgs_t {ILI9341_POWER2,	0x10});				// Appears to be invalid - should be 0b000 - 0b011
-	CommandData(cdArgs_t {ILI9341_VCOM1, 0x3E, 0x28});			// 0x3E: VCOMH = 4.250V; 0x28: VCOML = 3.700V
-	CommandData(cdArgs_t {ILI9341_VCOM2, 0x86});				// 0x86: VCOM offset voltage = VMH - 58 VML � 58;
-	CommandData(cdArgs_t {ILI9341_MAC, 0x48});					// Memory access control: MX = Column Address Order, RGB-BGR Order control
-	CommandData(cdArgs_t {ILI9341_PIXEL_FORMAT, 0x55});			// 16 bit format
-	CommandData(cdArgs_t {ILI9341_FRC, 0x00, 0x18});
-	CommandData(cdArgs_t {ILI9341_DFC, 0x08, 0x82, 0x27});
-	CommandData(cdArgs_t {ILI9341_3GAMMA_EN, 0x00});
-	CommandData(cdArgs_t {ILI9341_COLUMN_ADDR, 0x00, 0x00, 0x00, 0xEF});
-	CommandData(cdArgs_t {ILI9341_PAGE_ADDR, 0x00, 0x00, 0x01, 0x3F});
-	CommandData(cdArgs_t {ILI9341_GAMMA, 0x01});
-	CommandData(cdArgs_t {ILI9341_PGAMMA, 0x0F, 0x31, 0x2B, 0x0C, 0x0E, 0x08, 0x4E, 0xF1, 0x37, 0x07, 0x10, 0x03, 0x0E, 0x09, 0x00});
-	CommandData(cdArgs_t {ILI9341_NGAMMA, 0x00, 0x0E, 0x14, 0x03, 0x11, 0x07, 0x31, 0xC1, 0x48, 0x08, 0x0F, 0x0C, 0x31, 0x36, 0x0F});
-	Command(ILI9341_SLEEP_MODE);
+	CommandData(cmdILI9341::POWERA, cdArgs_t {0x39, 0x2C, 0x00, 0x34, 0x02});
+	CommandData(cmdILI9341::POWERB, cdArgs_t {0x00, 0xC1, 0x30});
+	CommandData(cmdILI9341::DTCA, cdArgs_t {0x85, 0x00, 0x78});		// default is  0x85, 0x00, 0x78
+	CommandData(cmdILI9341::DTCB, cdArgs_t {0x00,	0x00});			// default is  0x66, 0x00
+	CommandData(cmdILI9341::POWER_SEQ, cdArgs_t {0x64, 0x03, 0x12, 0x81});		// default is 0x55 0x01 0x23 0x01
+	CommandData(cmdILI9341::PRC, cdArgs_t {0x20});					// 0x20: DDVDH = 2xVCI  (Pump ratio control)
+	CommandData(cmdILI9341::POWER1, cdArgs_t {0x23});				// 0x23: GVDD level = 4.6V (reference level for VCOM level and grayscale voltage level)
+	CommandData(cmdILI9341::POWER2, cdArgs_t {0x10});				// Appears to be invalid - should be 0b000 - 0b011
+	CommandData(cmdILI9341::VCOM1, cdArgs_t {0x3E, 0x28});			// 0x3E: VCOMH = 4.250V; 0x28: VCOML = 3.700V
+	CommandData(cmdILI9341::VCOM2, cdArgs_t {0x86});				// 0x86: VCOM offset voltage = VMH - 58 VML � 58;
+	CommandData(cmdILI9341::MAC, cdArgs_t {0x48});					// Memory access control: MX = Column Address Order, RGB-BGR Order control
+	CommandData(cmdILI9341::PIXEL_FORMAT, cdArgs_t {0x55});			// 16 bit format
+	CommandData(cmdILI9341::FRC, cdArgs_t {0x00, 0x18});
+	CommandData(cmdILI9341::DFC, cdArgs_t {0x08, 0x82, 0x27});
+	CommandData(cmdILI9341::THREEGAMMA_EN, cdArgs_t {0x00});
+	CommandData(cmdILI9341::COLUMN_ADDR, cdArgs_t {0x00, 0x00, 0x00, 0xEF});
+	CommandData(cmdILI9341::PAGE_ADDR, cdArgs_t {0x00, 0x00, 0x01, 0x3F});
+	CommandData(cmdILI9341::GAMMA, cdArgs_t {0x01});
+	CommandData(cmdILI9341::PGAMMA, cdArgs_t {0x0F, 0x31, 0x2B, 0x0C, 0x0E, 0x08, 0x4E, 0xF1, 0x37, 0x07, 0x10, 0x03, 0x0E, 0x09, 0x00});
+	CommandData(cmdILI9341::NGAMMA, cdArgs_t {0x00, 0x0E, 0x14, 0x03, 0x11, 0x07, 0x31, 0xC1, 0x48, 0x08, 0x0F, 0x0C, 0x31, 0x36, 0x0F});
+	Command(cmdILI9341::SLEEP_MODE);
 
 	Delay(1000000);
 
-	Command(ILI9341_DISPLAY_ON);
-	Command(ILI9341_GRAM);
+	Command(cmdILI9341::DISPLAY_ON);
+	Command(cmdILI9341::GRAM);
 
 #if defined(STM32F42_43xxx) || defined(STM32F446xx)
 	Rotate(LCD_Landscape_Flipped);
@@ -47,11 +47,13 @@ void LCD::Init(void) {
 	ScreenFill(LCD_BLACK);
 };
 
-void LCD::CommandData(cdArgs_t cmds) {
-	Command(cmds[0]);
+void LCD::CommandData(const cmdILI9341 cmd, cdArgs_t data)
+{
+	Command(cmd);
 	LCD_DCX_SET;
-	for (uint8_t i = 1; i < cmds.size(); ++i)
-		SPISendByte(cmds[i]);
+	for (uint8_t d : data) {
+		SPISendByte(d);
+	}
 }
 
 void LCD::Delay(volatile uint32_t delay)
@@ -59,10 +61,12 @@ void LCD::Delay(volatile uint32_t delay)
 	for (; delay != 0; delay--);
 }
 
-void LCD::Command(const uint8_t& data) {
+
+void LCD::Command(const cmdILI9341 cmd)
+{
 	while (SPI_DMA_Working);
 	LCD_DCX_RESET;
-	SPISendByte(data);
+	SPISendByte(static_cast<uint8_t>(cmd));
 }
 
 //	Send data in either 8 or 16 bit modes
@@ -80,18 +84,18 @@ void LCD::Data16b(const uint16_t& data)
 }
 
 void LCD::SetCursorPosition(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) {
-	Command(ILI9341_COLUMN_ADDR);
+	Command(cmdILI9341::COLUMN_ADDR);
 	Data16b(x1);
 	Data16b(x2);
 
-	Command(ILI9341_PAGE_ADDR);
+	Command(cmdILI9341::PAGE_ADDR);
 	Data16b(y1);
 	Data16b(y2);
 }
 
 
 void LCD::Rotate(LCD_Orientation_t o) {
-	Command(ILI9341_MAC);
+	Command(cmdILI9341::MAC);
 	switch (o) {
 		case LCD_Portrait :				Data(0x58); break;
 		case LCD_Portrait_Flipped : 	Data(0x88); break;
@@ -109,7 +113,7 @@ void LCD::Rotate(LCD_Orientation_t o) {
 	}
 }
 
-void LCD::ScreenFill(const uint16_t& colour) {
+void LCD::ScreenFill(const uint16_t colour) {
 	ColourFill(0, 0, width - 1, height - 1, colour);
 }
 
@@ -120,7 +124,7 @@ void LCD::ColourFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const u
 
 	SetCursorPosition(x0, y0, x1, y1);
 	DMAint16 = colour;								// data to transfer - set early to avoid problem where F722 doesn't update buffer until midway through send
-	Command(ILI9341_GRAM);
+	Command(cmdILI9341::GRAM);
 
 	LCD_DCX_SET;
 
@@ -146,7 +150,7 @@ void LCD::PatternFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const 
 	uint32_t pixelCount = (x1 - x0 + 1) * (y1 - y0 + 1);
 
 	SetCursorPosition(x0, y0, x1, y1);
-	Command(ILI9341_GRAM);
+	Command(cmdILI9341::GRAM);
 	LCD_DCX_SET;
 	SPISetDataSize(SPIDataSize_16b);				// 16-bit SPI mode
 
@@ -161,7 +165,7 @@ void LCD::PatternFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const 
 void LCD::DrawPixel(uint16_t x, uint16_t y, const uint16_t& colour) {
 	SetCursorPosition(x, y, x, y);
 
-	Command(ILI9341_GRAM);
+	Command(cmdILI9341::GRAM);
 	Data16b(colour);
 }
 
