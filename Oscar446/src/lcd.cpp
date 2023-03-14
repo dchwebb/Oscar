@@ -54,7 +54,8 @@ void LCD::CommandData(cdArgs_t cmds) {
 		SPISendByte(cmds[i]);
 }
 
-void LCD::Delay(volatile uint32_t delay) {
+void LCD::Delay(volatile uint32_t delay)
+{
 	for (; delay != 0; delay--);
 }
 
@@ -65,13 +66,14 @@ void LCD::Command(const uint8_t& data) {
 }
 
 //	Send data in either 8 or 16 bit modes
-void LCD::Data(const uint8_t& data) {
+void LCD::Data(const uint8_t& data)
+{
 	LCD_DCX_SET;
 	SPISendByte(data);
 }
 
-void LCD::Data16b(const uint16_t& data) {
-
+void LCD::Data16b(const uint16_t& data)
+{
 	LCD_DCX_SET;
 	SPISendByte(data >> 8);
 	SPISendByte(data & 0xFF);
@@ -111,7 +113,9 @@ void LCD::ScreenFill(const uint16_t& colour) {
 	ColourFill(0, 0, width - 1, height - 1, colour);
 }
 
-void LCD::ColourFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t& colour) {
+
+void LCD::ColourFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t& colour)
+{
 	uint32_t pixelCount = (x1 - x0 + 1) * (y1 - y0 + 1);
 
 	SetCursorPosition(x0, y0, x1, y1);
@@ -285,16 +289,16 @@ void LCD::DrawCharMem(uint16_t x, uint16_t y, uint16_t memWidth, uint16_t* memBu
 
 }
 
-void LCD::DrawString(uint16_t x0, uint16_t y0, std::string s, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
-	for (char& c : s) {
+void LCD::DrawString(uint16_t x0, uint16_t y0, std::string_view s, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
+	for (const char& c : s) {
 		DrawChar(x0, y0, c, font, foreground, background);
 		x0 += font->Width;
 	}
 }
 
 
-void LCD::DrawStringMem(uint16_t x0, uint16_t y0, uint16_t memWidth, uint16_t* memBuffer, std::string s, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
-	for (char& c : s) {
+void LCD::DrawStringMem(uint16_t x0, uint16_t y0, uint16_t memWidth, uint16_t* memBuffer, std::string_view s, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
+	for (const char& c : s) {
 		DrawCharMem(x0, y0, memWidth, memBuffer, c, font, foreground, background);
 		x0 += font->Width;
 	}

@@ -42,14 +42,14 @@ void TIM3_IRQHandler(void)
 				// calculate the drawing offset based on the current capture position minus the horizontal trigger position
 				osc.drawOffset[captureBufferNumber] = capturePos - osc.TriggerX;
 				if (osc.drawOffset[captureBufferNumber] < 0)
-					osc.drawOffset[captureBufferNumber] += DRAWWIDTH;
+					osc.drawOffset[captureBufferNumber] += lcd.drawWidth;
 
 				osc.capturedSamples[captureBufferNumber] = osc.TriggerX - 1;	// used to check if a sample is ready to be drawn
 			}
 		}
 
 		// if capturing check if write buffer is full and switch to next buffer if so; if not full store current reading
-		if (osc.capturing && osc.capturedSamples[captureBufferNumber] == DRAWWIDTH - 1) {
+		if (osc.capturing && osc.capturedSamples[captureBufferNumber] == lcd.drawWidth - 1) {
 			captureBufferNumber = captureBufferNumber == 1 ? 0 : 1;		// switch the capture buffer
 			osc.bufferSamples = 0;			// stores number of samples captured since switching buffers to ensure triggered mode works correctly
 			osc.capturing = false;
@@ -63,7 +63,7 @@ void TIM3_IRQHandler(void)
 			osc.OscBufferC[captureBufferNumber][capturePos] = adcC;
 			oldAdc = *osc.TriggerTest;
 
-			if (capturePos == DRAWWIDTH - 1)	capturePos = 0;
+			if (capturePos == lcd.drawWidth - 1)	capturePos = 0;
 			else								capturePos++;
 
 			osc.capturedSamples[captureBufferNumber]++;
@@ -123,7 +123,7 @@ void TIM3_IRQHandler(void)
 				}
 
 			// reached end  of buffer and zero crossing not found - increase timer size to get longer sample
-			} else if (capturePos == DRAWWIDTH - 1) {
+			} else if (capturePos == lcd.drawWidth - 1) {
 				osc.capturing = false;
 				TIM3->ARR += 30;
 

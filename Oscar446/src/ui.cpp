@@ -1,24 +1,25 @@
 #include <ui.h>
 
-void UI::DrawUI() {
+void UI::DrawUI()
+{
 	if (displayMode == MIDI) {
-		lcd.DrawString(120, DRAWHEIGHT + 8, "MIDI Events", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
+		lcd.DrawString(120, lcd.drawHeight + 8, "MIDI Events", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 		return;
 	}
 
 	// Draw UI
-	lcd.DrawRect(0, DRAWHEIGHT + 1, 319, 239, LCD_GREY);
-	lcd.ColourFill(90, DRAWHEIGHT + 1, 90, 239, LCD_GREY);
-	lcd.ColourFill(230, DRAWHEIGHT + 1, 230, 239, LCD_GREY);
+	lcd.DrawRect(0, lcd.drawHeight + 1, 319, 239, LCD_GREY);
+	lcd.ColourFill(90, lcd.drawHeight + 1, 90, 239, LCD_GREY);
+	lcd.ColourFill(230, lcd.drawHeight + 1, 230, 239, LCD_GREY);
 
-	lcd.ColourFill(91, DRAWHEIGHT + 2, 229, 238, LCD_BLACK);
+	lcd.ColourFill(91, lcd.drawHeight + 2, 229, 238, LCD_BLACK);
 
-	lcd.DrawString(10, DRAWHEIGHT + 8, EncoderLabel(EncoderModeL), &lcd.Font_Small, LCD_GREY, LCD_BLACK);
-	lcd.DrawString(240, DRAWHEIGHT + 8, EncoderLabel(EncoderModeR), &lcd.Font_Small, LCD_GREY, LCD_BLACK);
+	lcd.DrawString(10, lcd.drawHeight + 8, EncoderLabel(EncoderModeL), &lcd.Font_Small, LCD_GREY, LCD_BLACK);
+	lcd.DrawString(240, lcd.drawHeight + 8, EncoderLabel(EncoderModeR), &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 
 	if (displayMode == Oscilloscope) {
 		std::string s = floatToString(640000.0f * (TIM3->PSC + 1) * (TIM3->ARR + 1) / SystemCoreClock, false) + "ms    ";
-		lcd.DrawString(140, DRAWHEIGHT + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+		lcd.DrawString(140, lcd.drawHeight + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 	}
 }
 
@@ -62,8 +63,8 @@ void UI::EncoderAction(encoderType type, const int8_t& val) {
 	int16_t adj;
 	switch (type) {
 	case HorizScale :
-		adj = TIM3->ARR + (TIM3->ARR < 500 ? 20 : TIM3->ARR < 2000 ? 40 : TIM3->ARR < 5000 ? 400 : 800) * -val;
-		if (adj > MINSAMPLETIMER && adj < 56000) {
+		adj = TIM3->ARR + (TIM3->ARR < 5000 ? 200 : TIM3->ARR < 20000 ? 400 : TIM3->ARR < 50000 ? 4000 : 8000) * -val;
+		if (adj > MINSAMPLETIMER && adj < 560000) {
 			TIM3->ARR = adj;
 			if (displayMode == Oscilloscope)		osc.sampleTimer = adj;
 			DrawUI();
@@ -143,8 +144,8 @@ void UI::EncoderAction(encoderType type, const int8_t& val) {
 	}
 }
 
-void UI::DrawMenu() {
-
+void UI::DrawMenu()
+{
 	lcd.DrawString(10, 6, "L", &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
 	lcd.DrawString(80, 6, "Encoder Action", &lcd.Font_Large, LCD_ORANGE, LCD_BLACK);
 	lcd.DrawString(303, 6, "R", &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
@@ -169,7 +170,9 @@ void UI::DrawMenu() {
 	}
 }
 
-void UI::handleEncoders() {
+
+void UI::handleEncoders()
+{
 	// encoders count in fours with the zero point set to 100
 	if (std::abs((int16_t)32000 - (int16_t)L_ENC_CNT) > 3) {
 		int8_t v = L_ENC_CNT > 32000 ? 1 : -1;
@@ -217,7 +220,7 @@ void UI::handleEncoders() {
 		case Waterfall :	displayMode = Circular;			break;
 		case Circular :		displayMode = MIDI;				break;
 		case MIDI :
-			TIM3->ARR = osc.sampleTimer;
+			TIM3->ARR = std::max(osc.sampleTimer, (uint16_t)MINSAMPLETIMER);
 			displayMode = Oscilloscope;
 			break;
 		}
@@ -228,7 +231,9 @@ void UI::handleEncoders() {
 
 }
 
-void UI::ResetMode() {
+
+void UI::ResetMode()
+{
 	TIM3->CR1 &= ~TIM_CR1_CEN;				// Disable the sample acquisiton timer
 	UART4->CR1 &= ~USART_CR1_UE;			// Disable MIDI capture on UART4
 
@@ -274,7 +279,8 @@ void UI::ResetMode() {
 }
 
 
-std::string UI::EncoderLabel(encoderType type) {
+std::string UI::EncoderLabel(encoderType type)
+{
 	switch (type) {
 	case HorizScale :
 		return "Zoom Horiz";

@@ -90,9 +90,9 @@ void FFT::displayWaterfall(const float* candSin)
 	int16_t h0, h1;
 
 	// Cycle through each column in the display and draw
-	for (uint16_t col = 1; col <= DRAWWIDTH; ++col) {
+	for (uint16_t col = 1; col <= lcd.drawWidth; ++col) {
 		uint8_t FFTDrawBufferNumber = (((col - 1) / DRAWBUFFERWIDTH) % 2 == 0) ? 0 : 1;
-		int16_t vPos = DRAWHEIGHT;		// track the vertical position to apply blanking or skip drawing rows as required
+		int16_t vPos = lcd.drawHeight;		// track the vertical position to apply blanking or skip drawing rows as required
 
 		// work forwards through the buffers so the oldest buffer is drawn first at the front, newer buffers move forward
 		for (uint16_t w = 0; w < waterfallBuffers; ++w) {
@@ -135,7 +135,7 @@ void FFT::displayWaterfall(const float* candSin)
 
 		// check if ready to draw next buffer
 		if ((col % DRAWBUFFERWIDTH) == 0) {
-			lcd.PatternFill(col - DRAWBUFFERWIDTH, 0, col - 1, DRAWHEIGHT, DrawBuffer[FFTDrawBufferNumber]);
+			lcd.PatternFill(col - DRAWBUFFERWIDTH, 0, col - 1, lcd.drawHeight, DrawBuffer[FFTDrawBufferNumber]);
 		}
 	}
 }
@@ -154,7 +154,7 @@ void FFT::calcFFT(float* candSin)
 		// attempt to find if there is a trigger point
 		uint16_t s = 0;
 		uint16_t t = 4 * (2047 - candSin[0]);
-		for (uint16_t p = 0; p < samples - DRAWWIDTH; p++) {
+		for (uint16_t p = 0; p < samples - lcd.drawWidth; p++) {
 			if (t > osc.TriggerY && (4 * (2047 - candSin[p])) < osc.TriggerY) {
 				s = p;
 				break;
@@ -162,9 +162,9 @@ void FFT::calcFFT(float* candSin)
 			t = 4 * (2047 - candSin[p]);
 		}
 
-		for ( uint16_t p = 0; p < DRAWWIDTH ; p++) {
+		for ( uint16_t p = 0; p < lcd.drawWidth ; p++) {
 			adcA = 4 * (2047 - candSin[s + p]);
-			osc.OscBufferA[0][p] = osc.CalcVertOffset(adcA) + (DRAWHEIGHT / 4);
+			osc.OscBufferA[0][p] = osc.CalcVertOffset(adcA) + (lcd.drawHeight / 4);
 		}
 		osc.prevPixelA = osc.OscBufferA[0][0];
 	}
@@ -249,7 +249,7 @@ void FFT::calcFFT(float* candSin)
 	}
 
 	// display frequency spread
-	lcd.DrawString(115, DRAWHEIGHT + 8, ui.floatToString(harmonicFreq(1), true) + " - " + ui.floatToString(harmonicFreq(319), true) + "Hz  ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+	lcd.DrawString(115, lcd.drawHeight + 8, ui.floatToString(harmonicFreq(1), true) + " - " + ui.floatToString(harmonicFreq(319), true) + "Hz  ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 
 }
 
@@ -264,7 +264,7 @@ void FFT::displayFFT(const float* candSin)
 	const uint16_t overlayColour = fft.channel == channelA ? LCD_DULLGREEN : fft.channel == channelB ? LCD_DULLBLUE : LCD_DULLORANGE;
 
 	// Cycle through each column in the display and draw
-	for (uint16_t i = 1; i <= DRAWWIDTH; i++) {
+	for (uint16_t i = 1; i <= lcd.drawWidth; i++) {
 		uint16_t harmColour = LCD_BLUE;
 		float hypotenuse = std::hypot(candSin[i], candCos[i]);
 
@@ -286,13 +286,13 @@ void FFT::displayFFT(const float* candSin)
 			smearHarmonic = 0;
 		}
 
-		uint16_t top = std::min(DRAWHEIGHT * (1 - (hypotenuse / (512 * fftSamples))), (float)DRAWHEIGHT);
+		uint16_t top = std::min(lcd.drawHeight * (1 - (hypotenuse / (512 * fftSamples))), (float)lcd.drawHeight);
 
 		uint8_t FFTDrawBufferNumber = (((i - 1) / DRAWBUFFERWIDTH) % 2 == 0) ? 0 : 1;
 
 		// draw column into memory buffer
 		volatile int h = 0;
-		for (h = 0; h <= DRAWHEIGHT; ++h) {
+		for (h = 0; h <= lcd.drawHeight; ++h) {
 			uint16_t buffPos = h * DRAWBUFFERWIDTH + ((i - 1) % DRAWBUFFERWIDTH);
 
 			std::pair<uint16_t, uint16_t> AY = std::minmax((uint16_t)osc.OscBufferA[0][i], osc.prevPixelA);
@@ -320,7 +320,7 @@ void FFT::displayFFT(const float* candSin)
 		if ((i % DRAWBUFFERWIDTH) == 0) {
 
 			// if drawing the last buffer display the harmonic frequencies at the top right
-			if (i > DRAWWIDTH - DRAWBUFFERWIDTH) {
+			if (i > lcd.drawWidth - DRAWBUFFERWIDTH) {
 				sampleCapture(true);			// Signal to Interrupt that new capture can start
 
 				for (uint8_t h = 0; h < fftHarmonicColours; ++h) {
@@ -333,7 +333,7 @@ void FFT::displayFFT(const float* candSin)
 					lcd.DrawStringMem(0, 20 + 20 * h, DRAWBUFFERWIDTH, DrawBuffer[FFTDrawBufferNumber], harmonicInfo, &lcd.Font_Small, harmColours[h], LCD_BLACK);
 				}
 			}
-			lcd.PatternFill(i - DRAWBUFFERWIDTH, 0, i - 1, DRAWHEIGHT, DrawBuffer[FFTDrawBufferNumber]);
+			lcd.PatternFill(i - DRAWBUFFERWIDTH, 0, i - 1, lcd.drawHeight, DrawBuffer[FFTDrawBufferNumber]);
 		}
 
 	}

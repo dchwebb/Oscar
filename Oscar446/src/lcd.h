@@ -2,9 +2,8 @@
 
 #include "initialisation.h"
 #include "fontData.h"
+#include <string_view>
 
-#define DRAWWIDTH 320
-#define DRAWHEIGHT 216
 
 // RGB565 colours
 #define LCD_WHITE		0xFFFF
@@ -12,7 +11,6 @@
 #define LCD_GREY		0x528A
 #define LCD_RED			0xF800
 #define LCD_GREEN		0x07E0
-//#define LCD_GREEN2		0xB723
 #define LCD_DULLGREEN	0x02E0
 #define LCD_BLUE		0x001F
 #define LCD_LIGHTBLUE	0x051D
@@ -79,6 +77,10 @@ public:
 	LCD_Orientation_t orientation = LCD_Portrait;
 	uint16_t width = 240;
 	uint16_t height = 320;
+
+	static constexpr uint16_t drawWidth = 320;
+	static constexpr uint16_t drawHeight = 216;
+
 	uint16_t DMAint16;
 	FontData Font_Small {7, 10, Font7x10};
 	FontData Font_Large {11, 18, Font11x18};
@@ -95,8 +97,8 @@ public:
 	void DrawRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint32_t& colour);
 	void DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const uint32_t& foreground, const uint32_t& background);
 	void DrawCharMem(uint16_t x, uint16_t y, uint16_t memWidth, uint16_t* memBuffer, char c, const FontData *font, const uint32_t& foreground, const uint32_t& background);
-	void DrawString(uint16_t x0, uint16_t y0, std::string s, const FontData *font, const uint32_t& foreground, const uint32_t& background);
-	void DrawStringMem(uint16_t x0, uint16_t y0, uint16_t memWidth, uint16_t* memBuffer, std::string s, const FontData *font, const uint32_t& foreground, const uint32_t& background);
+	void DrawString(uint16_t x0, uint16_t y0, std::string_view s, const FontData *font, const uint32_t& foreground, const uint32_t& background);
+	void DrawStringMem(uint16_t x0, uint16_t y0, uint16_t memWidth, uint16_t* memBuffer, std::string_view s, const FontData *font, const uint32_t& foreground, const uint32_t& background);
 
 	void Command(const uint8_t& data);
 	void Delay(volatile uint32_t delay);

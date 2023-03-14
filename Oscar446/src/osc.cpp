@@ -11,15 +11,15 @@ void Osc::OscRun()
 
 		//	If in multi-lane mode get lane count from number of displayed channels and calculate vertical offset of channels B and C
 		laneCount = (multiLane && oscDisplay == 0b111 ? 3 : multiLane && oscDisplay > 2 && oscDisplay != 4 ? 2 : 1);
-		calculatedOffsetYB = (laneCount > 1 && oscDisplay & 0b001 ? DRAWHEIGHT / laneCount : 0);
-		calculatedOffsetYC = (laneCount == 2 ? DRAWHEIGHT / 2 : laneCount == 3 ? DRAWHEIGHT * 2 / 3 : 0);
+		calculatedOffsetYB = (laneCount > 1 && oscDisplay & 0b001 ? lcd.drawHeight / laneCount : 0);
+		calculatedOffsetYC = (laneCount == 2 ? lcd.drawHeight / 2 : laneCount == 3 ? lcd.drawHeight * 2 / 3 : 0);
 		//CP_ON
 	}
 
 	// Check if drawing and that the sample capture is at or ahead of the draw position
 	if (drawing && (drawBufferNumber != captureBufferNumber || capturedSamples[captureBufferNumber] >= drawPos || noTriggerDraw)) {
 		// Calculate offset between capture and drawing positions to display correct sample
-		uint16_t calculatedOffsetX = (drawOffset[drawBufferNumber] + drawPos) % DRAWWIDTH;
+		uint16_t calculatedOffsetX = (drawOffset[drawBufferNumber] + drawPos) % lcd.drawWidth;
 
 
 		uint16_t pixelA = CalcVertOffset(OscBufferA[drawBufferNumber][calculatedOffsetX]);
@@ -61,7 +61,7 @@ void Osc::OscRun()
 		std::pair<uint16_t, uint16_t> CY = std::minmax(pixelC, (uint16_t)prevPixelC);
 
 		uint8_t vOffset = (drawPos < 27 || drawPos > 250) ? 11 : 0;		// offset draw area so as not to overwrite voltage and freq labels
-		for (uint8_t h = 0; h <= DRAWHEIGHT - (drawPos < 27 ? 12 : 0); ++h) {
+		for (uint8_t h = 0; h <= lcd.drawHeight - (drawPos < 27 ? 12 : 0); ++h) {
 
 			if (h < vOffset) {
 				// do not draw
@@ -71,7 +71,7 @@ void Osc::OscRun()
 				DrawBuffer[DrawBufferNumber][h - vOffset] = LCD_LIGHTBLUE;
 			} else if (oscDisplay & 4 && h >= CY.first && h <= CY.second) {
 				DrawBuffer[DrawBufferNumber][h - vOffset] = LCD_ORANGE;
-			} else if (drawPos % 4 == 0 && (h + (DRAWHEIGHT / (laneCount * 2))) % (DRAWHEIGHT / (laneCount)) == 0) {						// 0v center mark
+			} else if (drawPos % 4 == 0 && (h + (lcd.drawHeight / (laneCount * 2))) % (lcd.drawHeight / (laneCount)) == 0) {						// 0v center mark
 				DrawBuffer[DrawBufferNumber][h - vOffset] = LCD_GREY;
 			} else {
 				DrawBuffer[DrawBufferNumber][h - vOffset] = LCD_BLACK;
@@ -81,12 +81,12 @@ void Osc::OscRun()
 		// Draw grey lines indicating voltage range for one channel or channel divisions for 2 or 3 channels
 		if (drawPos < 5) {
 			for (int m = 1; m < (laneCount == 1 ? voltScale * 2 : (laneCount * 2)); ++m) {
-				int test = m * DRAWHEIGHT / (laneCount == 1 ? voltScale * 2 : (laneCount * 2)) - 11;
+				int test = m * lcd.drawHeight / (laneCount == 1 ? voltScale * 2 : (laneCount * 2)) - 11;
 				DrawBuffer[DrawBufferNumber][test] = LCD_GREY;
 			}
 		}
 
-		lcd.PatternFill(drawPos, vOffset, drawPos, DRAWHEIGHT - (drawPos < 27 ? 12 : 0), DrawBuffer[DrawBufferNumber]);
+		lcd.PatternFill(drawPos, vOffset, drawPos, lcd.drawHeight - (drawPos < 27 ? 12 : 0), DrawBuffer[DrawBufferNumber]);
 		DrawBufferNumber = DrawBufferNumber == 0 ? 1 : 0;
 
 		// Store previous sample so next sample can be drawn as a line from old to new
@@ -95,7 +95,7 @@ void Osc::OscRun()
 		prevPixelC = pixelC;
 
 		drawPos ++;
-		if (drawPos == DRAWWIDTH){
+		if (drawPos == lcd.drawWidth){
 			drawing = false;
 			noTriggerDraw = false;
 			//CP_CAP
@@ -104,7 +104,7 @@ void Osc::OscRun()
 		// Draw trigger as a yellow cross
 		if (drawPos == TriggerX + 4) {
 			uint16_t vo = CalcVertOffset(TriggerY) + (TriggerTest == &adcB ? calculatedOffsetYB : TriggerTest == &adcC ? calculatedOffsetYC : 0);
-			if (vo > 4 && vo < DRAWHEIGHT - 4) {
+			if (vo > 4 && vo < lcd.drawHeight - 4) {
 				lcd.DrawLine(TriggerX, vo - 4, TriggerX, vo + 4, LCD_YELLOW);
 				lcd.DrawLine(std::max(TriggerX - 4, 0), vo, TriggerX + 4, vo, LCD_YELLOW);
 			}
@@ -113,7 +113,7 @@ void Osc::OscRun()
 		if (drawPos == 1) {
 			// Write voltage
 			lcd.DrawString(0, 1, " " + ui.intToString(voltScale) + "v ", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
-			lcd.DrawString(0, DRAWHEIGHT - 10, "-" + ui.intToString(voltScale) + "v ", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
+			lcd.DrawString(0, lcd.drawHeight - 10, "-" + ui.intToString(voltScale) + "v ", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 
 			// Write frequency
 			if (noTriggerDraw) {
@@ -138,7 +138,7 @@ void Osc::CircRun(){
 		drawBufferNumber = (!circDrawing[0] && circDataAvailable[0] && (circDrawPos[1] == zeroCrossings[1] || !circDrawing[1])) ? 0 : 1;
 		circDrawing[drawBufferNumber] = true;
 		circDrawPos[drawBufferNumber] = 0;
-		lcd.DrawString(140, DRAWHEIGHT + 8, ui.floatToString(captureFreq[drawBufferNumber], true) + "Hz  ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+		lcd.DrawString(140, lcd.drawHeight + 8, ui.floatToString(captureFreq[drawBufferNumber], true) + "Hz  ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 		laneCount = 1;
 	}
 
@@ -171,7 +171,7 @@ void Osc::CircRun(){
 				lcd.DrawLine(x, pixelA, x, prevPixelA, frontColour);
 
 				// Draw normal osc
-				uint16_t oscPos = pos * DRAWWIDTH / zeroCrossings[drawBufferNumber];
+				uint16_t oscPos = pos * lcd.drawWidth / zeroCrossings[drawBufferNumber];
 				lcd.DrawLine(oscPos, pixelA, oscPos, prevPixelA, backColour);
 
 				prevPixelA = pixelA;
@@ -191,7 +191,7 @@ void Osc::CircRun(){
 // Calculates vertical offset of oscilloscope trace from raw ADC value
 uint16_t Osc::CalcVertOffset(volatile const uint16_t& vPos)
 {
-	return std::max(std::min(((((float)(vPos * vCalibScale + vCalibOffset) / (4 * 4096) - 0.5f) * (8.0f / voltScale)) + 0.5f) / laneCount * DRAWHEIGHT, (float)((DRAWHEIGHT - 1) / laneCount)), 1.0f);
+	return std::max(std::min(((((float)(vPos * vCalibScale + vCalibOffset) / (4 * 4096) - 0.5f) * (8.0f / voltScale)) + 0.5f) / laneCount * lcd.drawHeight, (float)((lcd.drawHeight - 1) / laneCount)), 1.0f);
 }
 
 

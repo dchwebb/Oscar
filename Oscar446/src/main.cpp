@@ -14,7 +14,7 @@ int16_t vCalibOffset = -3590;			// Dev board with 14k resistors: -3940, 1.499999
 float vCalibScale = 1.46f;
 uint16_t CalibZeroPos = 9985;
 
-uint16_t DrawBuffer[2][(DRAWHEIGHT + 1) * DRAWBUFFERWIDTH];
+uint16_t DrawBuffer[2][(lcd.drawHeight + 1) * DRAWBUFFERWIDTH];
 uint16_t adcA, adcB, adcC, oldAdc, capturePos = 0;
 bool drawing = false;
 volatile uint8_t captureBufferNumber = 0, drawBufferNumber = 0;
