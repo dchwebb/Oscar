@@ -200,12 +200,15 @@ void UI::handleEncoders()
 	}
 
 	// Menu mode
-	if (encoderBtnR && (displayMode == Oscilloscope || displayMode == Circular || displayMode == Fourier)) {
+	if (encoderBtnR) {
 		encoderBtnR = false;
-		menuMode = true;
-		lcd.ScreenFill(LCD_BLACK);
-		DrawMenu();
-		return;
+
+		if (displayMode == Oscilloscope || displayMode == Circular || displayMode == Fourier) {
+			menuMode = true;
+			lcd.ScreenFill(LCD_BLACK);
+			DrawMenu();
+			return;
+		}
 	}
 
 	// Change display mode (note recheck menuMode as interrupts can alter this mid-routine)
