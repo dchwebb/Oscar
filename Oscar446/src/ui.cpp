@@ -14,26 +14,21 @@ void UI::DrawUI()
 
 	lcd.ColourFill(91, lcd.drawHeight + 2, 229, 238, LCD_BLACK);
 
-	lcd.DrawString(10, lcd.drawHeight + 8, EncoderLabel(EncoderModeL), &lcd.Font_Small, LCD_GREY, LCD_BLACK);
-	lcd.DrawString(240, lcd.drawHeight + 8, EncoderLabel(EncoderModeR), &lcd.Font_Small, LCD_GREY, LCD_BLACK);
+	lcd.DrawString(10, lcd.drawHeight + 8, EncoderLabel(encoderModeL), &lcd.Font_Small, LCD_GREY, LCD_BLACK);
+	lcd.DrawString(240, lcd.drawHeight + 8, EncoderLabel(encoderModeR), &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 
 	if (displayMode == Oscilloscope) {
-		std::string s = floatToString(640000.0f * (TIM3->PSC + 1) * (TIM3->ARR + 1) / SystemCoreClock, false) + "ms    ";
+		std::string s = FloatToString(640000.0f * (TIM3->PSC + 1) * (TIM3->ARR + 1) / SystemCoreClock, false) + "ms    ";
 		lcd.DrawString(140, lcd.drawHeight + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 	}
 }
 
 
-void UI::MenuAction(encoderType* et, volatile const int8_t& val) {
-
-	std::vector<MenuItem>* currentMenu;
-	if (displayMode == Oscilloscope)
-		currentMenu = &OscMenu;
-	else if (displayMode == Fourier || displayMode == Waterfall)
-		currentMenu = &FftMenu;
-	else if (displayMode == Circular)
-		currentMenu = &CircMenu;
-	else if (displayMode == MIDI) {}
+void UI::MenuAction(encoderType* et, volatile const int8_t& val)
+{
+	const std::vector<MenuItem>* currentMenu = displayMode == Oscilloscope? &oscMenu :
+			displayMode == Fourier || displayMode == Waterfall ? &fftMenu :
+			displayMode == Circular ? &circMenu : nullptr;
 
 	//	Move the selected menu item one forwards or one back based on value of encoder
 	auto mi = std::find_if(currentMenu->cbegin(), currentMenu->cend(), [=] (MenuItem m) { return m.selected == *et; } );
@@ -44,14 +39,14 @@ void UI::MenuAction(encoderType* et, volatile const int8_t& val) {
 
 
 	if (displayMode == Oscilloscope) {
-		osc.encModeL = EncoderModeL;
-		osc.encModeR = EncoderModeR;
+		osc.encModeL = encoderModeL;
+		osc.encModeR = encoderModeR;
 	} else if (displayMode == Circular) {
-		osc.circEncModeL = EncoderModeL;
-		osc.circEncModeR = EncoderModeR;
+		osc.circEncModeL = encoderModeL;
+		osc.circEncModeR = encoderModeR;
 	} else if (displayMode == Fourier) {
-		fft.EncModeL = EncoderModeL;
-		fft.EncModeR = EncoderModeR;
+		fft.EncModeL = encoderModeL;
+		fft.EncModeR = encoderModeR;
 	}
 
 	DrawMenu();
@@ -155,18 +150,14 @@ void UI::DrawMenu()
 	lcd.DrawLine(294, 1, 294, 27, LCD_WHITE);
 	lcd.DrawLine(159, 27, 159, 239, LCD_WHITE);
 
-	std::vector<MenuItem>* currentMenu;
-	if (displayMode == Oscilloscope)
-		currentMenu = &OscMenu;
-	else if (displayMode == Circular)
-		currentMenu = &CircMenu;
-	else if (displayMode == Fourier || displayMode == Waterfall)
-		currentMenu = &FftMenu;
+	const std::vector<MenuItem>* currentMenu = displayMode == Oscilloscope? &oscMenu :
+			displayMode == Fourier || displayMode == Waterfall ? &fftMenu :
+			displayMode == Circular ? &circMenu : nullptr;
 
 	uint8_t pos = 0;
 	for (auto m = currentMenu->cbegin(); m != currentMenu->cend(); m++, pos++) {
-		lcd.DrawString(10, 32 + pos * 20, m->name, &lcd.Font_Large, (m->selected == EncoderModeL) ? LCD_BLACK : LCD_WHITE, (m->selected == EncoderModeL) ? LCD_WHITE : LCD_BLACK);
-		lcd.DrawString(170, 32 + pos * 20, m->name, &lcd.Font_Large, (m->selected == EncoderModeR) ? LCD_BLACK : LCD_WHITE, (m->selected == EncoderModeR) ? LCD_WHITE : LCD_BLACK);
+		lcd.DrawString(10, 32 + pos * 20, m->name, &lcd.Font_Large, (m->selected == encoderModeL) ? LCD_BLACK : LCD_WHITE, (m->selected == encoderModeL) ? LCD_WHITE : LCD_BLACK);
+		lcd.DrawString(170, 32 + pos * 20, m->name, &lcd.Font_Large, (m->selected == encoderModeR) ? LCD_BLACK : LCD_WHITE, (m->selected == encoderModeR) ? LCD_WHITE : LCD_BLACK);
 	}
 }
 
@@ -176,8 +167,8 @@ void UI::handleEncoders()
 	// encoders count in fours with the zero point set to 100
 	if (std::abs((int16_t)32000 - (int16_t)L_ENC_CNT) > 3) {
 		int8_t v = L_ENC_CNT > 32000 ? 1 : -1;
-		if (menuMode)	MenuAction(&EncoderModeL, v);
-		else			EncoderAction(EncoderModeL, v);
+		if (menuMode)	MenuAction(&encoderModeL, v);
+		else			EncoderAction(encoderModeL, v);
 
 		L_ENC_CNT -= L_ENC_CNT > 32000 ? 4 : -4;
 		cfg.ScheduleSave();
@@ -185,8 +176,8 @@ void UI::handleEncoders()
 
 	if (std::abs((int16_t)32000 - (int16_t)R_ENC_CNT) > 3) {
 		int8_t v = R_ENC_CNT > 32000 ? 1 : -1;
-		if (menuMode)	MenuAction(&EncoderModeR, v);
-		else			EncoderAction(EncoderModeR, v);
+		if (menuMode)	MenuAction(&encoderModeR, v);
+		else			EncoderAction(encoderModeR, v);
 
 		R_ENC_CNT -= R_ENC_CNT > 32000 ? 4 : -4;
 		cfg.ScheduleSave();
@@ -243,22 +234,22 @@ void UI::ResetMode()
 	lcd.ScreenFill(LCD_BLACK);
 	switch (displayMode) {
 	case Oscilloscope :
-		EncoderModeL = osc.encModeL;
-		EncoderModeR = osc.encModeR;
+		encoderModeL = osc.encModeL;
+		encoderModeR = osc.encModeR;
 		if (osc.sampleTimer > MINSAMPLETIMER)
 			TIM3->ARR = osc.sampleTimer;
 		break;
 	case Fourier :
-		EncoderModeL = fft.EncModeL;
-		EncoderModeR = fft.EncModeR;
+		encoderModeL = fft.EncModeL;
+		encoderModeR = fft.EncModeR;
 		break;
 	case Waterfall :
-		EncoderModeL = fft.wfallEncModeL;
-		EncoderModeR = fft.wfallEncModeR;
+		encoderModeL = fft.wfallEncModeL;
+		encoderModeR = fft.wfallEncModeR;
 		break;
 	case Circular :
-		EncoderModeL = osc.circEncModeL;
-		EncoderModeR = osc.circEncModeR;
+		encoderModeL = osc.circEncModeL;
+		encoderModeR = osc.circEncModeR;
 		break;
 	case MIDI :
 		break;
@@ -298,7 +289,7 @@ std::string UI::EncoderLabel(encoderType type)
 	case VoltScale :
 		return "Zoom Vert";
 	case ZeroCross :
-		return "Zero X: " + intToString(osc.CircZeroCrossings);
+		return "Zero X: " + IntToString(osc.CircZeroCrossings);
 	case Trigger_X :
 		return "Trigger X";
 	case Trigger_Y :
@@ -319,31 +310,23 @@ std::string UI::EncoderLabel(encoderType type)
 }
 
 
-std::string UI::floatToString(float f, bool smartFormat) {
-	std::string s;
-	std::stringstream ss;
-
+std::string UI::FloatToString(float f, bool smartFormat)
+{
 	if (smartFormat && f > 10000) {
-		ss << (int16_t)std::round(f / 100);
-		s = ss.str();
-		s.insert(s.length() - 1, ".");
-		s+= "k";
+		sprintf(charBuff, "%.1fk", std::round(f / 100.0f) / 10.0f);
 	} else if (smartFormat && f > 1000) {
-		ss << (int16_t)std::round(f);
-		s = ss.str();
+		sprintf(charBuff, "%.0f", std::round(f));
 	} else	{
-		ss << (int32_t)std::round(f * 10);
-		s = ss.str();
-		s.insert(s.length() - 1, ".");
+		sprintf(charBuff, "%.1f", std::round(f * 10.0f) / 10.0f);
 	}
-	return s;
+	return std::string(charBuff);
 }
 
 
-std::string UI::intToString(uint16_t v) {
-	std::stringstream ss;
-	ss << v;
-	return ss.str();
+std::string UI::IntToString(const uint16_t v)
+{
+	sprintf(charBuff, "%u", v);
+	return std::string(charBuff);
 }
 
 //	Takes an RGB colour and darkens by the specified amount

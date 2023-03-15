@@ -246,7 +246,7 @@ void FFT::calcFFT(float* candSin)
 	}
 
 	// Display frequency spread
-	lcd.DrawString(115, lcd.drawHeight + 8, ui.floatToString(harmonicFreq(1), true) + " - " + ui.floatToString(harmonicFreq(319), true) + "Hz  ",
+	lcd.DrawString(115, lcd.drawHeight + 8, ui.FloatToString(harmonicFreq(1), true) + " - " + ui.FloatToString(harmonicFreq(319), true) + "Hz  ",
 			&lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 
 }
@@ -328,7 +328,7 @@ void FFT::displayFFT(const float* candSin)
 
 					uint16_t harmonicNumber = round((float)harmonic[h] / harmonic[0]);
 					float freq = harmonicFreq(harmonic[h]);
-					std::string harmonicInfo = ui.intToString(harmonicNumber) + " " + ui.floatToString(freq, false) + "Hz";
+					std::string harmonicInfo = ui.IntToString(harmonicNumber) + " " + ui.FloatToString(freq, false) + "Hz";
 					lcd.DrawStringMem(0, 20 + 20 * h, lcd.drawBufferWidth, lcd.drawBuffer[fftDrawBufferNumber], harmonicInfo, &lcd.Font_Small, harmColours[h], LCD_BLACK);
 				}
 			}

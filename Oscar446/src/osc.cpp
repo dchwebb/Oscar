@@ -111,14 +111,14 @@ void Osc::OscRun()
 
 		if (drawPos == 1) {
 			// Write voltage
-			lcd.DrawString(0, 1, " " + ui.intToString(voltScale) + "v ", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
-			lcd.DrawString(0, lcd.drawHeight - 10, "-" + ui.intToString(voltScale) + "v ", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
+			lcd.DrawString(0, 1, " " + ui.IntToString(voltScale) + "v ", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
+			lcd.DrawString(0, lcd.drawHeight - 10, "-" + ui.IntToString(voltScale) + "v ", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 
 			// Write frequency
 			if (noTriggerDraw) {
 				lcd.DrawString(250, 1, "No Trigger " , &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 			} else {
-				lcd.DrawString(250, 1, freq != 0 ? ui.floatToString(freq, false) + "Hz    " : "          ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+				lcd.DrawString(250, 1, freq != 0 ? ui.FloatToString(freq, false) + "Hz    " : "          ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 				freq = 0;
 			}
 		}
@@ -136,7 +136,7 @@ void Osc::CircRun()
 		oscBufferNumber = (!circDrawing[0] && circDataAvailable[0] && (circDrawPos[1] == zeroCrossings[1] || !circDrawing[1])) ? 0 : 1;
 		circDrawing[oscBufferNumber] = true;
 		circDrawPos[oscBufferNumber] = 0;
-		lcd.DrawString(140, lcd.drawHeight + 8, ui.floatToString(captureFreq[oscBufferNumber], true) + "Hz  ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+		lcd.DrawString(140, lcd.drawHeight + 8, ui.FloatToString(captureFreq[oscBufferNumber], true) + "Hz  ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 		laneCount = 1;
 	}
 
