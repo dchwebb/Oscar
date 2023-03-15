@@ -81,9 +81,6 @@ int main(void) {
 		} else if (displayMode == Fourier || displayMode == Waterfall) {
 			fft.Run();
 
-		} else if (displayMode == Circular) {
-			osc.CircRun();
-
 		} else if (displayMode == MIDI) {
 			midi.ProcessMidi();
 

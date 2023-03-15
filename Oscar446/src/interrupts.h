@@ -3,9 +3,6 @@ void TIM3_IRQHandler(void)
 {
 	TIM3->SR &= ~TIM_SR_UIF;					// clear UIF flag
 
-	// Debug code for using right encoder button as GPIO output
-	//GPIOB->ODR |= GPIO_ODR_ODR_13;
-
 	if (displayMode == Fourier || displayMode == Waterfall) {
 		if (capturePos == fft.samples && fft.capturing) {
 			fft.dataAvailable[captureBufferNumber] = true;
@@ -22,12 +19,11 @@ void TIM3_IRQHandler(void)
 				fft.fftBuffer[captureBufferNumber][capturePos] = 2047 - ((float)(ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11]) / 4);
 			capturePos ++;
 		}
+
 	} else if (displayMode == Oscilloscope) {
 		// Average the last four ADC readings to smooth noise
 		adcA = ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9];
-		//adcB = ADC_array[1] + ADC_array[4] + ADC_array[7] + ADC_array[10];
-		// Kludge to fix odd memory problem where ADC_array[1] occasionally jumps to 21130
-		adcB = (ADC_array[1] > 16000 ? ADC_array[4] : ADC_array[1]) + ADC_array[4] + ADC_array[7] + ADC_array[10];
+		adcB = ADC_array[1] + ADC_array[4] + ADC_array[7] + ADC_array[10];
 		adcC = ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11];
 
 		// check if we should start capturing - ie not drawing from the capture buffer and crossed over the trigger threshold (or in free mode)
@@ -80,64 +76,7 @@ void TIM3_IRQHandler(void)
 			}
 		}
 
-	} else if (displayMode == Circular) {
-		// Average the last four ADC readings to smooth noise
-		if (fft.channel == channelA)
-			adcA = ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9];
-		else if (fft.channel == channelB)
-			adcA = ADC_array[1] + ADC_array[4] + ADC_array[7] + ADC_array[10];
-		else
-			adcA = ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11];
-
-
-		// check if we should start capturing - ie there is a buffer spare and a zero crossing has occured
-		if (!osc.capturing && oldAdc < CalibZeroPos && adcA >= CalibZeroPos && (!osc.circDataAvailable[0] || !osc.circDataAvailable[1])) {
-			osc.capturing = true;
-			captureBufferNumber = osc.circDataAvailable[0] ? 1 : 0;		// select correct capture buffer based on whether buffer 0 or 1 contains data
-			capturePos = 0;				// used to check if a sample is ready to be drawn
-			osc.CircZeroCrossCnt = 0;
-			osc.zeroCrossings[captureBufferNumber] = 0;
-		}
-
-		// If capturing store current readings in buffer and increment counters
-		if (osc.capturing) {
-			osc.OscBufferA[captureBufferNumber][capturePos] = adcA;
-
-			// store array of zero crossing points
-			if (capturePos > 0 && oldAdc < CalibZeroPos && adcA >= CalibZeroPos) {
-				osc.CircZeroCrossCnt++;
-
-				if (osc.CircZeroCrossCnt == osc.CircZeroCrossings) {
-					osc.zeroCrossings[captureBufferNumber] = capturePos;
-					osc.circDataAvailable[captureBufferNumber] = true;
-
-					osc.captureFreq[captureBufferNumber] = osc.FreqFromPos(capturePos);		// get frequency here before potentially altering sampling speed
-					osc.capturing = false;
-
-					// auto adjust sample time to try and get the longest sample for the display (280 is number of pixels wide we ideally want the captured wave to be)
-					if (capturePos < 280) {
-						int16_t newARR = capturePos * (TIM3->ARR + 1) / 280;
-						if (newARR > 0)
-							TIM3->ARR = newARR;
-					}
-				}
-
-			// reached end  of buffer and zero crossing not found - increase timer size to get longer sample
-			} else if (capturePos == lcd.drawWidth - 1) {
-				osc.capturing = false;
-				TIM3->ARR += 30;
-
-			} else {
-				capturePos++;
-			}
-		}
-		oldAdc = adcA;
-
-
 	}
-
-	// Debug code for using right encoder button as GPIO output
-	//GPIOB->ODR &= ~GPIO_ODR_ODR_13;
 }
 
 

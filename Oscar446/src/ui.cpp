@@ -27,8 +27,7 @@ void UI::DrawUI()
 void UI::MenuAction(encoderType* et, volatile const int8_t& val)
 {
 	const std::vector<MenuItem>* currentMenu = displayMode == Oscilloscope? &oscMenu :
-			displayMode == Fourier || displayMode == Waterfall ? &fftMenu :
-			displayMode == Circular ? &circMenu : nullptr;
+			displayMode == Fourier || displayMode == Waterfall ? &fftMenu : nullptr;
 
 	//	Move the selected menu item one forwards or one back based on value of encoder
 	auto mi = std::find_if(currentMenu->cbegin(), currentMenu->cend(), [=] (MenuItem m) { return m.selected == *et; } );
@@ -40,9 +39,6 @@ void UI::MenuAction(encoderType* et, volatile const int8_t& val)
 	if (displayMode == Oscilloscope) {
 		osc.encModeL = encoderModeL;
 		osc.encModeR = encoderModeR;
-	} else if (displayMode == Circular) {
-		osc.circEncModeL = encoderModeL;
-		osc.circEncModeR = encoderModeR;
 	} else if (displayMode == Fourier) {
 		fft.EncModeL = encoderModeL;
 		fft.EncModeR = encoderModeR;
@@ -74,17 +70,9 @@ void UI::EncoderAction(encoderType type, const int8_t& val)
 	case CalibVertScale :
 		vCalibScale += val * .01;
 		break;
-	case ZeroCross :
-		osc.CircZeroCrossings = std::max(std::min(osc.CircZeroCrossings + val, 8), 1);
-		DrawUI();
-		break;
 	case VoltScale :
 		osc.voltScale -= val;
 		osc.voltScale = std::max(std::min((int)osc.voltScale, 12), 1);
-		if (displayMode == Circular) {
-			lcd.ScreenFill(LCD_BLACK);
-			DrawUI();
-		}
 		break;
 	case ChannelSelect :
 		osc.oscDisplay += val;
@@ -151,8 +139,7 @@ void UI::DrawMenu()
 	lcd.DrawLine(159, 27, 159, 239, LCD_WHITE);
 
 	const std::vector<MenuItem>* currentMenu = displayMode == Oscilloscope? &oscMenu :
-			displayMode == Fourier || displayMode == Waterfall ? &fftMenu :
-			displayMode == Circular ? &circMenu : nullptr;
+			displayMode == Fourier || displayMode == Waterfall ? &fftMenu : nullptr;
 
 	uint8_t pos = 0;
 	for (auto m = currentMenu->cbegin(); m != currentMenu->cend(); m++, pos++) {
@@ -217,7 +204,7 @@ void UI::handleEncoders()
 	if (encoderBtnR) {
 		encoderBtnR = false;
 
-		if (displayMode == Oscilloscope || displayMode == Circular || displayMode == Fourier) {
+		if (displayMode == Oscilloscope || displayMode == Fourier) {
 			menuMode = true;
 			lcd.ScreenFill(LCD_BLACK);
 			DrawMenu();
@@ -234,8 +221,7 @@ void UI::handleEncoders()
 			displayMode = Fourier;
 			break;
 		case Fourier :		displayMode = Waterfall;	break;
-		case Waterfall :	displayMode = MIDI;			break;		// Disable circular mode
-		case Circular :		displayMode = MIDI;			break;
+		case Waterfall :	displayMode = MIDI;			break;
 		case MIDI :
 			TIM3->ARR = std::max(osc.sampleTimer, (uint16_t)MINSAMPLETIMER);
 			displayMode = Oscilloscope;
@@ -270,17 +256,12 @@ void UI::ResetMode()
 		encoderModeL = fft.wfallEncModeL;
 		encoderModeR = fft.wfallEncModeR;
 		break;
-	case Circular :
-		encoderModeL = osc.circEncModeL;
-		encoderModeR = osc.circEncModeR;
-		break;
 	case MIDI :
 		break;
 	}
 
 	fft.capturing = osc.capturing = drawing = false;
 	osc.bufferSamples = capturePos = oldAdc = 0;
-	osc.circDrawing[0] = osc.circDrawing[1] = false;
 	osc.setTriggerChannel();
 	fft.dataAvailable[0] = fft.dataAvailable[1] = false;
 	fft.samples = displayMode == Fourier ? fft.fftSamples : fft.WATERFALLSAMPLES;
@@ -311,8 +292,6 @@ std::string UI::EncoderLabel(encoderType type)
 		return "Calib Offs";
 	case VoltScale :
 		return "Zoom Vert";
-	case ZeroCross :
-		return "Zero X: " + IntToString(osc.CircZeroCrossings);
 	case Trigger_X :
 		return "Trigger X";
 	case Trigger_Y :

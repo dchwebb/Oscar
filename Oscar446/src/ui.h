@@ -63,11 +63,6 @@ private:
 		{ 3, "AutoTune", FFTAutoTune },
 		{ 4, "Trace overlay", TraceOverlay } };
 
-	const std::vector<MenuItem> circMenu{
-		{ 0, "Vert scale", VoltScale },
-		{ 1, "Channel", ActiveChannel },
-		{ 2, "Zero cross", ZeroCross } };
-
 	char charBuff[100];
 };
 

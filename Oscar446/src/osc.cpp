@@ -127,65 +127,6 @@ void Osc::OscRun()
 }
 
 
-void Osc::CircRun()
-{
-	// Main loop to display circular oscilloscope trace
-	if ((!circDrawing[0] && circDataAvailable[0] && (circDrawPos[1] >= zeroCrossings[1] || !circDrawing[1])) ||
-		(!circDrawing[1] && circDataAvailable[1] && (circDrawPos[0] >= zeroCrossings[0] || !circDrawing[0]))) {								// check if we should start drawing
-
-		oscBufferNumber = (!circDrawing[0] && circDataAvailable[0] && (circDrawPos[1] == zeroCrossings[1] || !circDrawing[1])) ? 0 : 1;
-		circDrawing[oscBufferNumber] = true;
-		circDrawPos[oscBufferNumber] = 0;
-		lcd.DrawString(140, lcd.drawHeight + 8, ui.FloatToString(captureFreq[oscBufferNumber], true) + "Hz  ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
-		laneCount = 1;
-	}
-
-	// to have a continuous display drawing next sample as old sample is finishing
-	for (oscBufferNumber = 0; oscBufferNumber < 2; oscBufferNumber++) {
-		if (circDrawing[oscBufferNumber]) {
-
-			// each of these loops will draw a trail from one draw buffer from current position (pos) up to end of previous draw position: circDrawPos[oscBufferNumber]
-			for (int pos = std::max((int)circDrawPos[oscBufferNumber] - CIRCLENGTH, 0); pos <= circDrawPos[oscBufferNumber] && pos <= zeroCrossings[oscBufferNumber]; pos++) {
-
-				int b = (int)std::round(pos * LUTSIZE / zeroCrossings[oscBufferNumber] + LUTSIZE / 4) % LUTSIZE;
-				int x = fft.SineLUT[b] * 70 + 160;
-
-				// draw a line getting fainter as it goes from current position backwards
-				int pixelA = CalcVertOffset(OscBufferA[oscBufferNumber][pos]);
-				if (pos == std::max((int)circDrawPos[oscBufferNumber] - CIRCLENGTH, 0)) {
-					prevPixelA = pixelA;
-				}
-
-				uint16_t frontColour = ui.DarkenColour(fft.channel == channelA ? LCD_GREEN : fft.channel == channelB ? LCD_LIGHTBLUE : LCD_ORANGE,
-						(circDrawPos[oscBufferNumber] - pos) / (fft.channel == channelA ? 3 : 4));
-				uint16_t backColour = ui.DarkenColour(LCD_GREY, (circDrawPos[oscBufferNumber] - pos) / 8);
-
-				if (pos < (int)circDrawPos[oscBufferNumber] - CIRCLENGTH + 2) {
-					frontColour = LCD_BLACK;
-					backColour = LCD_BLACK;
-				}
-
-				// Draw 'circle'
-				lcd.DrawLine(x, pixelA, x, prevPixelA, frontColour);
-
-				// Draw normal osc
-				uint16_t oscPos = pos * lcd.drawWidth / zeroCrossings[oscBufferNumber];
-				lcd.DrawLine(oscPos, pixelA, oscPos, prevPixelA, backColour);
-
-				prevPixelA = pixelA;
-			}
-
-			circDrawPos[oscBufferNumber] ++;
-			if (circDrawPos[oscBufferNumber] == zeroCrossings[oscBufferNumber] + CIRCLENGTH){
-				circDrawing[oscBufferNumber] = false;
-				circDataAvailable[oscBufferNumber] = false;
-			}
-		}
-	}
-
-}
-
-
 uint16_t Osc::CalcVertOffset(const uint16_t& vPos)
 {
 	// Calculates vertical offset of oscilloscope trace from raw ADC value

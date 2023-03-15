@@ -8,7 +8,7 @@ extern UI ui;
 extern LCD lcd;
 
 
-// Class to store settings and working variables for oscilloscope and circular mode
+// Class to store settings and working variables for oscilloscope mode
 
 class Osc {
 public:
@@ -31,11 +31,6 @@ public:
 	bool multiLane = true;
 	int8_t voltScale = 8;
 
-	// Circular Mode settings
-	encoderType circEncModeL = ZeroCross;
-	encoderType circEncModeR = ActiveChannel;
-	uint8_t CircZeroCrossings = 2;					// number of zero crossings captured for each 'frame'
-
 	// Oscilloscope working variables
 	uint16_t OscBufferA[2][lcd.drawWidth], OscBufferB[2][lcd.drawWidth], OscBufferC[2][lcd.drawWidth];
 	uint8_t oscBufferNumber = 0;
@@ -50,13 +45,6 @@ public:
 	uint16_t prevPixelA = 0, prevPixelB = 0, prevPixelC = 0, drawPos = 0;
 	uint16_t calculatedOffsetYB = 0, calculatedOffsetYC = 0;	// Pre-Calculated offsets when in multi-lane mode
 
-	// Circular mode working variables
-	volatile uint16_t zeroCrossings[2] {0, 0};		// Used in circular mode
-	uint8_t CircZeroCrossCnt = 0;					// used by interrupt to count zero crossings
-	bool circDrawing[2] {false, false};
-	volatile uint16_t circDrawPos[2] {0, 0};
-	volatile bool circDataAvailable[2] {false, false};
-	volatile float captureFreq[2] {0, 0};
 
 };
 
