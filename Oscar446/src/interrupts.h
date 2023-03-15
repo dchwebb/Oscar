@@ -31,20 +31,20 @@ void TIM3_IRQHandler(void)
 		adcC = ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11];
 
 		// check if we should start capturing - ie not drawing from the capture buffer and crossed over the trigger threshold (or in free mode)
-		if (!osc.capturing && (!drawing || captureBufferNumber != drawBufferNumber) && (osc.TriggerTest == nullptr || (osc.bufferSamples > osc.TriggerX && oldAdc < osc.TriggerY && *osc.TriggerTest >= osc.TriggerY))) {
+		if (!osc.capturing && (!drawing || captureBufferNumber != drawBufferNumber) && (osc.triggerTest == nullptr || (osc.bufferSamples > osc.triggerX && oldAdc < osc.triggerY && *osc.triggerTest >= osc.triggerY))) {
 			osc.capturing = true;
 
-			if (osc.TriggerTest == nullptr) {									// free running mode
+			if (osc.triggerTest == nullptr) {									// free running mode
 				capturePos = 0;
 				osc.drawOffset[captureBufferNumber] = 0;
 				osc.capturedSamples[captureBufferNumber] = -1;
 			} else {
 				// calculate the drawing offset based on the current capture position minus the horizontal trigger position
-				osc.drawOffset[captureBufferNumber] = capturePos - osc.TriggerX;
+				osc.drawOffset[captureBufferNumber] = capturePos - osc.triggerX;
 				if (osc.drawOffset[captureBufferNumber] < 0)
 					osc.drawOffset[captureBufferNumber] += lcd.drawWidth;
 
-				osc.capturedSamples[captureBufferNumber] = osc.TriggerX - 1;	// used to check if a sample is ready to be drawn
+				osc.capturedSamples[captureBufferNumber] = osc.triggerX - 1;	// used to check if a sample is ready to be drawn
 			}
 		}
 
@@ -61,7 +61,7 @@ void TIM3_IRQHandler(void)
 			osc.OscBufferA[captureBufferNumber][capturePos] = adcA;
 			osc.OscBufferB[captureBufferNumber][capturePos] = adcB;
 			osc.OscBufferC[captureBufferNumber][capturePos] = adcC;
-			oldAdc = *osc.TriggerTest;
+			oldAdc = *osc.triggerTest;
 
 			if (capturePos == lcd.drawWidth - 1)	capturePos = 0;
 			else								capturePos++;

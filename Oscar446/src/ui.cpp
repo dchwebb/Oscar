@@ -44,8 +44,8 @@ void UI::MenuAction(encoderType* et, volatile const int8_t& val) {
 
 
 	if (displayMode == Oscilloscope) {
-		osc.EncModeL = EncoderModeL;
-		osc.EncModeR = EncoderModeR;
+		osc.encModeL = EncoderModeL;
+		osc.encModeR = EncoderModeR;
 	} else if (displayMode == Circular) {
 		osc.circEncModeL = EncoderModeL;
 		osc.circEncModeR = EncoderModeR;
@@ -101,24 +101,24 @@ void UI::EncoderAction(encoderType type, const int8_t& val) {
 		break;
 
 	case TriggerChannel :
-		if ((osc.TriggerChannel == channelNone && val > 0) || (osc.TriggerChannel == channelB && val < 0))
-			osc.TriggerChannel = channelA;
-		else if ((osc.TriggerChannel == channelA && val > 0) || (osc.TriggerChannel == channelC && val < 0))
-			osc.TriggerChannel = channelB;
-		else if ((osc.TriggerChannel == channelB && val > 0) || (osc.TriggerChannel == channelNone && val < 0))
-			osc.TriggerChannel = channelC;
-		else if ((osc.TriggerChannel == channelC && val > 0) || (osc.TriggerChannel == channelA && val < 0))
-			osc.TriggerChannel = channelNone;
+		if ((osc.triggerChannel == channelNone && val > 0) || (osc.triggerChannel == channelB && val < 0))
+			osc.triggerChannel = channelA;
+		else if ((osc.triggerChannel == channelA && val > 0) || (osc.triggerChannel == channelC && val < 0))
+			osc.triggerChannel = channelB;
+		else if ((osc.triggerChannel == channelB && val > 0) || (osc.triggerChannel == channelNone && val < 0))
+			osc.triggerChannel = channelC;
+		else if ((osc.triggerChannel == channelC && val > 0) || (osc.triggerChannel == channelA && val < 0))
+			osc.triggerChannel = channelNone;
 
 		osc.setTriggerChannel();
 
 		DrawUI();
 		break;
 	case Trigger_Y :
-		osc.TriggerY = std::min(std::max((int32_t)osc.TriggerY + 100 * val, (int32_t)3800), (int32_t)16000);
+		osc.triggerY = std::min(std::max((int32_t)osc.triggerY + 100 * val, (int32_t)3800), (int32_t)16000);
 		break;
 	case Trigger_X :
-		osc.TriggerX = std::min(std::max(osc.TriggerX + 2 * val, 0), 316);
+		osc.triggerX = std::min(std::max(osc.triggerX + 2 * val, 0), 316);
 		break;
 	case FFTAutoTune :
 		fft.autoTune = !fft.autoTune;
@@ -243,8 +243,8 @@ void UI::ResetMode()
 	lcd.ScreenFill(LCD_BLACK);
 	switch (displayMode) {
 	case Oscilloscope :
-		EncoderModeL = osc.EncModeL;
-		EncoderModeR = osc.EncModeR;
+		EncoderModeL = osc.encModeL;
+		EncoderModeR = osc.encModeR;
 		if (osc.sampleTimer > MINSAMPLETIMER)
 			TIM3->ARR = osc.sampleTimer;
 		break;
@@ -304,7 +304,7 @@ std::string UI::EncoderLabel(encoderType type)
 	case Trigger_Y :
 		return "Trigger Y";
 	case TriggerChannel :
-		return std::string(osc.TriggerChannel == channelA ? "Trigger A " : osc.TriggerChannel == channelB ? "Trigger B " : osc.TriggerChannel == channelC ? "Trigger C " : "No Trigger");
+		return std::string(osc.triggerChannel == channelA ? "Trigger A " : osc.triggerChannel == channelB ? "Trigger B " : osc.triggerChannel == channelC ? "Trigger C " : "No Trigger");
 	case FFTAutoTune :
 		return "Tune: " + std::string(fft.autoTune ? "auto" : "off ");
 	case TraceOverlay :

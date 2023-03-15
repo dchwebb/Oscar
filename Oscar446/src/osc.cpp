@@ -100,11 +100,11 @@ void Osc::OscRun()
 		}
 
 		// Draw trigger as a yellow cross
-		if (drawPos == TriggerX + 4) {
-			uint16_t vo = CalcVertOffset(TriggerY) + (TriggerTest == &adcB ? calculatedOffsetYB : TriggerTest == &adcC ? calculatedOffsetYC : 0);
+		if (drawPos == triggerX + 4) {
+			uint16_t vo = CalcVertOffset(triggerY) + (triggerTest == &adcB ? calculatedOffsetYB : triggerTest == &adcC ? calculatedOffsetYC : 0);
 			if (vo > 4 && vo < lcd.drawHeight - 4) {
-				lcd.DrawLine(TriggerX, vo - 4, TriggerX, vo + 4, LCD_YELLOW);
-				lcd.DrawLine(std::max(TriggerX - 4, 0), vo, TriggerX + 4, vo, LCD_YELLOW);
+				lcd.DrawLine(triggerX, vo - 4, triggerX, vo + 4, LCD_YELLOW);
+				lcd.DrawLine(std::max(triggerX - 4, 0), vo, triggerX + 4, vo, LCD_YELLOW);
 			}
 		}
 
@@ -202,8 +202,8 @@ float Osc::FreqFromPos(const uint16_t pos)
 // Choose the trigger channel based on config preference and channel visibility
 void Osc::setTriggerChannel()
 {
-	osc.TriggerTest = 	osc.TriggerChannel == channelNone ? nullptr :
-						(osc.TriggerChannel == channelC && (osc.oscDisplay & 4)) || osc.oscDisplay == 4 ? &adcC :
-						(osc.TriggerChannel == channelB || !(osc.oscDisplay & 1)) && (osc.oscDisplay & 2) ? &adcB : &adcA;
+	osc.triggerTest = 	osc.triggerChannel == channelNone ? nullptr :
+						(osc.triggerChannel == channelC && (osc.oscDisplay & 4)) || osc.oscDisplay == 4 ? &adcC :
+						(osc.triggerChannel == channelB || !(osc.oscDisplay & 1)) && (osc.oscDisplay & 2) ? &adcB : &adcA;
 
 }

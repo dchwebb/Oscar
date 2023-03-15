@@ -42,11 +42,11 @@ void Config::SetConfig(configValues &cv) {
 	cv.gen_vCalibOffset = vCalibOffset;
 	cv.gen_vCalibScale = vCalibScale;
 
-	cv.osc_TriggerX = osc.TriggerX;
-	cv.osc_TriggerY = osc.TriggerY;
-	cv.osc_TriggerChannel = (osc.TriggerChannel == channelA ? 1 : osc.TriggerChannel == channelB ? 2 : osc.TriggerChannel == channelC ? 3 : 0);
-	cv.osc_EncModeL = osc.EncModeL;
-	cv.osc_EncModeR = osc.EncModeR;
+	cv.osc_TriggerX = osc.triggerX;
+	cv.osc_TriggerY = osc.triggerY;
+	cv.osc_TriggerChannel = (osc.triggerChannel == channelA ? 1 : osc.triggerChannel == channelB ? 2 : osc.triggerChannel == channelC ? 3 : 0);
+	cv.osc_EncModeL = osc.encModeL;
+	cv.osc_EncModeR = osc.encModeR;
 	cv.osc_SampleTimer = osc.sampleTimer;
 	cv.osc_oscDisplay = osc.oscDisplay;
 	cv.osc_multiLane = osc.multiLane;
@@ -72,11 +72,11 @@ void Config::RestoreConfig()
 		vCalibOffset = cv.gen_vCalibOffset;
 		vCalibScale = cv.gen_vCalibScale;
 
-		osc.TriggerX = cv.osc_TriggerX;
-		osc.TriggerY = cv.osc_TriggerY;
-		osc.TriggerChannel = (cv.osc_TriggerChannel == 1 ? channelA : cv.osc_TriggerChannel == 2 ? channelB : cv.osc_TriggerChannel == 3 ? channelC : channelNone);
-		osc.EncModeL = cv.osc_EncModeL;
-		osc.EncModeR = cv.osc_EncModeR;
+		osc.triggerX = cv.osc_TriggerX;
+		osc.triggerY = cv.osc_TriggerY;
+		osc.triggerChannel = (cv.osc_TriggerChannel == 1 ? channelA : cv.osc_TriggerChannel == 2 ? channelB : cv.osc_TriggerChannel == 3 ? channelC : channelNone);
+		osc.encModeL = cv.osc_EncModeL;
+		osc.encModeR = cv.osc_EncModeR;
 		osc.sampleTimer = cv.osc_SampleTimer;
 		osc.oscDisplay = cv.osc_oscDisplay;
 		osc.multiLane = cv.osc_multiLane;

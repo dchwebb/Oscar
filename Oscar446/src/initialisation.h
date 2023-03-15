@@ -30,21 +30,11 @@
 #define R_BTN_NO(a, b) a ## 13 ## b
 #define R_BTN_GPIO	GPIOB
 
-// Define LCD DMA and SPI registers
-#define LCD_DMA_STREAM			DMA1_Stream5
-#define LCD_SPI 				SPI3
-#define LCD_CLEAR_DMA_FLAGS		DMA1->HIFCR = DMA_HIFCR_CHTIF5 | DMA_HIFCR_CTCIF5 | DMA_HIFCR_CTEIF5;
 
-// Define macros for setting and clearing GPIO SPI pins
-#define LCD_RST_RESET	GPIOC->BSRR |= GPIO_BSRR_BR_14
-#define LCD_RST_SET 	GPIOC->BSRR |= GPIO_BSRR_BS_14
-#define LCD_DCX_RESET	GPIOC->BSRR |= GPIO_BSRR_BR_13
-#define LCD_DCX_SET		GPIOC->BSRR |= GPIO_BSRR_BS_13
 
 #define ADC_BUFFER_LENGTH 12
-//#define DRAWBUFFERWIDTH 80
 #define CIRCLENGTH 160
-#define MINSAMPLETIMER 10
+#define MINSAMPLETIMER 200
 
 enum encoderType { HorizScale, HorizScaleFine, CalibVertScale, CalibVertOffset, VoltScale, TriggerChannel, Trigger_X, Trigger_Y, FFTAutoTune, ActiveChannel, ChannelSelect, ZeroCross, MultiLane, TraceOverlay };
 enum mode { Oscilloscope, Fourier, Waterfall, Circular, MIDI };
