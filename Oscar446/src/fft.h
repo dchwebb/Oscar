@@ -5,21 +5,13 @@
 #include "ui.h"
 
 #define LUTSIZE 1024
-//#define FFTSAMPLES 1024
-#define FFTHARMONICCOLOURS 5
-
-#define WATERFALLDRAWHEIGHT 80
-//#define WATERFALLSAMPLES 512
-#define WATERFALLSIZE 256
-#define WATERFALLBUFFERS 26
-#define WATERFALLSMOOTH 4
 
 class UI;		// forward reference to handle circular dependency
 extern UI ui;
 extern LCD lcd;
 
 extern volatile uint8_t captureBufferNumber, drawBufferNumber;
-extern uint16_t DrawBuffer[2][(lcd.drawHeight + 1) * DRAWBUFFERWIDTH];
+extern uint16_t DrawBuffer[2][(lcd.drawHeight + 1) * lcd.drawBufferWidth];
 
 class FFT {
 public:

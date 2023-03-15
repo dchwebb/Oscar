@@ -91,7 +91,7 @@ void FFT::displayWaterfall(const float* candSin)
 
 	// Cycle through each column in the display and draw
 	for (uint16_t col = 1; col <= lcd.drawWidth; ++col) {
-		uint8_t FFTDrawBufferNumber = (((col - 1) / DRAWBUFFERWIDTH) % 2 == 0) ? 0 : 1;
+		uint8_t fftDrawBufferNumber = (((col - 1) / lcd.drawBufferWidth) % 2 == 0) ? 0 : 1;
 		int16_t vPos = lcd.drawHeight;		// track the vertical position to apply blanking or skip drawing rows as required
 
 		// work forwards through the buffers so the oldest buffer is drawn first at the front, newer buffers move forward
@@ -113,13 +113,13 @@ void FFT::displayWaterfall(const float* candSin)
 				while (vPos > 0 && (vPos >= h1 || vPos >= h0)) {
 
 					// draw column into memory buffer
-					uint16_t buffPos = vPos * DRAWBUFFERWIDTH + ((col - 1) % DRAWBUFFERWIDTH);
+					uint16_t buffPos = vPos * lcd.drawBufferWidth + ((col - 1) % lcd.drawBufferWidth);
 
 					// depending on harmonic height draw either green or black, using darker shades of green at the back
 					if (vPos > h1 && vPos > h0) {
-						DrawBuffer[FFTDrawBufferNumber][buffPos] = LCD_BLACK;
+						DrawBuffer[fftDrawBufferNumber][buffPos] = LCD_BLACK;
 					} else {
-						DrawBuffer[FFTDrawBufferNumber][buffPos] = colourShade;
+						DrawBuffer[fftDrawBufferNumber][buffPos] = colourShade;
 					}
 					--vPos;
 				}
@@ -129,13 +129,13 @@ void FFT::displayWaterfall(const float* candSin)
 		// black out any remaining pixels
 		for (; vPos >= 0; --vPos) {
 
-			uint16_t buffPos = vPos * DRAWBUFFERWIDTH + ((col - 1) % DRAWBUFFERWIDTH);
-			DrawBuffer[FFTDrawBufferNumber][buffPos] = LCD_BLACK;
+			uint16_t buffPos = vPos * lcd.drawBufferWidth + ((col - 1) % lcd.drawBufferWidth);
+			DrawBuffer[fftDrawBufferNumber][buffPos] = LCD_BLACK;
 		}
 
 		// check if ready to draw next buffer
-		if ((col % DRAWBUFFERWIDTH) == 0) {
-			lcd.PatternFill(col - DRAWBUFFERWIDTH, 0, col - 1, lcd.drawHeight, DrawBuffer[FFTDrawBufferNumber]);
+		if ((col % lcd.drawBufferWidth) == 0) {
+			lcd.PatternFill(col - lcd.drawBufferWidth, 0, col - 1, lcd.drawHeight, DrawBuffer[fftDrawBufferNumber]);
 		}
 	}
 }
@@ -288,12 +288,12 @@ void FFT::displayFFT(const float* candSin)
 
 		uint16_t top = std::min(lcd.drawHeight * (1 - (hypotenuse / (512 * fftSamples))), (float)lcd.drawHeight);
 
-		uint8_t FFTDrawBufferNumber = (((i - 1) / DRAWBUFFERWIDTH) % 2 == 0) ? 0 : 1;
+		uint8_t fftDrawBufferNumber = (((i - 1) / lcd.drawBufferWidth) % 2 == 0) ? 0 : 1;
 
 		// draw column into memory buffer
 		volatile int h = 0;
 		for (h = 0; h <= lcd.drawHeight; ++h) {
-			uint16_t buffPos = h * DRAWBUFFERWIDTH + ((i - 1) % DRAWBUFFERWIDTH);
+			uint16_t buffPos = h * lcd.drawBufferWidth + ((i - 1) % lcd.drawBufferWidth);
 
 			std::pair<uint16_t, uint16_t> AY = std::minmax((uint16_t)osc.OscBufferA[0][i], osc.prevPixelA);
 
@@ -306,21 +306,21 @@ void FFT::displayFFT(const float* candSin)
 					return;
 				}
 
-				DrawBuffer[FFTDrawBufferNumber][buffPos] = harmColour;
+				DrawBuffer[fftDrawBufferNumber][buffPos] = harmColour;
 			} else if (traceOverlay && h >= AY.first && h <= AY.second) {		// Draw oscilloscope trace as overlay
-				DrawBuffer[FFTDrawBufferNumber][buffPos] = overlayColour;
+				DrawBuffer[fftDrawBufferNumber][buffPos] = overlayColour;
 			} else {
-				DrawBuffer[FFTDrawBufferNumber][buffPos] = LCD_BLACK;
+				DrawBuffer[fftDrawBufferNumber][buffPos] = LCD_BLACK;
 			}
 		}
 
 		osc.prevPixelA = osc.OscBufferA[0][i];
 
 		// check if ready to draw next buffer
-		if ((i % DRAWBUFFERWIDTH) == 0) {
+		if ((i % lcd.drawBufferWidth) == 0) {
 
 			// if drawing the last buffer display the harmonic frequencies at the top right
-			if (i > lcd.drawWidth - DRAWBUFFERWIDTH) {
+			if (i > lcd.drawWidth - lcd.drawBufferWidth) {
 				sampleCapture(true);			// Signal to Interrupt that new capture can start
 
 				for (uint8_t h = 0; h < fftHarmonicColours; ++h) {
@@ -331,10 +331,10 @@ void FFT::displayFFT(const float* candSin)
 					uint16_t harmonicNumber = round((float)harmonic[h] / harmonic[0]);
 					float freq = harmonicFreq(harmonic[h]);
 					std::string harmonicInfo = ui.intToString(harmonicNumber) + " " + ui.floatToString(freq, false) + "Hz";
-					lcd.DrawStringMem(0, 20 + 20 * h, DRAWBUFFERWIDTH, DrawBuffer[FFTDrawBufferNumber], harmonicInfo, &lcd.Font_Small, harmColours[h], LCD_BLACK);
+					lcd.DrawStringMem(0, 20 + 20 * h, lcd.drawBufferWidth, DrawBuffer[fftDrawBufferNumber], harmonicInfo, &lcd.Font_Small, harmColours[h], LCD_BLACK);
 				}
 			}
-			lcd.PatternFill(i - DRAWBUFFERWIDTH, 0, i - 1, lcd.drawHeight, DrawBuffer[FFTDrawBufferNumber]);
+			lcd.PatternFill(i - lcd.drawBufferWidth, 0, i - 1, lcd.drawHeight, DrawBuffer[fftDrawBufferNumber]);
 		}
 
 	}
@@ -368,33 +368,6 @@ void FFT::displayFFT(const float* candSin)
 		if (newARR > 0.0f) {
 			TIM3->ARR = std::round(newARR);
 		}
-		/*
-
-		// work out which harmonic we want the fundamental to be - to adjust the sampling rate so a change in ARR affects the tuning of the FFT proportionally
-		uint16_t targFund = std::max(std::round(freqFund / 10), 8.0f);
-		uint16_t newARR = 0;
-
-		// take the timer ARR, divide by fundamental to get new ARR setting tuned fundamental to target harmonic
-		if (std::abs(targFund - harmonic[0]) > 1)	newARR = targFund * TIM3->ARR / harmonic[0];
-		else										newARR = TIM3->ARR;
-
-		//	fine tune - check the sample before and after the fundamental and adjust to center around the fundamental
-		int sampleBefore = std::sqrt(pow(candSin[harmonic[0] - 1], 2) + pow(candCos[harmonic[0] - 1], 2));
-		int sampleAfter  = std::sqrt(pow(candSin[harmonic[0] + 1], 2) + pow(candCos[harmonic[0] + 1], 2));
-
-		// apply some hysteresis to avoid jumping around the target - the hysteresis needs to be scaled to the frequency
-		if (sampleAfter + sampleBefore > 20000) {
-			if (sampleAfter > sampleBefore + 0.3f * freqFund * targFund) {
-				newARR -= 1;
-			} else if (sampleBefore > sampleAfter + 0.3f * freqFund * targFund) {
-				newARR += 1;
-			}
-		}
-
-		if (newARR > 0 && newARR < 25000 && TIM3->ARR != newARR) {
-			TIM3->ARR = newARR;
-		}
-		*/
 	}
 }
 
