@@ -326,9 +326,18 @@ void FFT::displayFFT(const float* candSin)
 					}
 
 					uint16_t harmonicNumber = round((float)harmonic[h] / harmonic[0]);
-					float freq = harmonicFreq(harmonic[h]);
-					std::string harmonicInfo = ui.IntToString(harmonicNumber) + " " + ui.FloatToString(freq, false) + "Hz";
-					lcd.DrawStringMem(0, 20 + 20 * h, lcd.drawBufferWidth, lcd.drawBuffer[fftDrawBufferNumber], harmonicInfo, &lcd.Font_Small, harmColours[h], LCD_BLACK);
+					const float freq = harmonicFreq(harmonic[h]);
+					//std::string harmonicInfo = ui.IntToString(harmonicNumber) + " " + ui.FloatToString(freq, false) + "Hz";
+					//lcd.DrawStringMem(0, 20 + 20 * h, lcd.drawBufferWidth, lcd.drawBuffer[fftDrawBufferNumber], harmonicInfo, &lcd.Font_Small, harmColours[h], LCD_BLACK);
+
+
+					if (h == 0) {
+						std::string harmonicInfo = ui.FloatToString(freq, false) + "Hz";
+						lcd.DrawStringMem(0, 20, lcd.drawBufferWidth, lcd.drawBuffer[fftDrawBufferNumber], harmonicInfo, &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
+					} else {
+						std::string harmonicInfo = ui.IntToString(harmonicNumber) + " " + ui.FloatToString(freq, false) + "Hz";
+						lcd.DrawStringMem(0, 30 + 20 * h, lcd.drawBufferWidth, lcd.drawBuffer[fftDrawBufferNumber], harmonicInfo, &lcd.Font_Small, harmColours[h], LCD_BLACK);
+					}
 				}
 			}
 			lcd.PatternFill(i - lcd.drawBufferWidth, 0, i - 1, lcd.drawHeight, lcd.drawBuffer[fftDrawBufferNumber]);

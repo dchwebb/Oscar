@@ -92,7 +92,7 @@ public:
 
 	static constexpr uint16_t drawWidth = 320;
 	static constexpr uint16_t drawHeight = 216;
-	static constexpr uint16_t drawBufferWidth = 80;		// Maximum width of draw buffer (3 * 106 = 318 which is two short of full width but used in FFT for convenience
+	static constexpr uint16_t drawBufferWidth = 106;		// Maximum width of draw buffer (3 * 106 = 318 which is two short of full width but used in FFT for convenience
 
 	uint16_t DMAint16;
 	FontData Font_Small {7, 10, Font7x10};
