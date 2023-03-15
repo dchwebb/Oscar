@@ -48,7 +48,6 @@ int main(void) {
 	SystemClock_Config();					// Configure the clock and PLL - NB Currently done in SystemInit but will need updating for production board
 	SystemCoreClockUpdate();				// Update SystemCoreClock (system clock frequency) derived from settings of oscillators, prescalers and PLL
 	InitCoverageTimer();					// Timer 4 only activated/deactivated when CP_ON/CP_CAP macros are used
-	InitDebounceTimer();					// Timer 5 used to count button press bounces
 	InitLCDHardware();
 	InitADC();
 	InitEncoders();
@@ -58,8 +57,9 @@ int main(void) {
 	lcd.Init();								// Initialize ILI9341 LCD
 
 	// check if resetting config by holding left encoder button while resetting
-	if (L_BTN_GPIO->IDR & L_BTN_NO(GPIO_IDR_IDR_,))
+	if (GPIOA->IDR & GPIO_IDR_IDR_10) {		// If button is NOT pressed reload config
 		cfg.RestoreConfig();
+	}
 
 	InitSampleAcquisition();
 	ui.ResetMode();

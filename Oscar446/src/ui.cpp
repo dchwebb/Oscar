@@ -183,6 +183,29 @@ void UI::handleEncoders()
 		cfg.ScheduleSave();
 	}
 
+
+
+	// Check if encoder buttons are pressed with debounce (L: PA10; R: PB13) 0 = pressed
+	if (GPIOA->IDR & GPIO_IDR_IDR_10 && leftBtnReleased == 0) {		// button released
+		leftBtnReleased = SysTickVal;
+	}
+	if ((GPIOA->IDR & GPIO_IDR_IDR_10) == 0) {
+		if (leftBtnReleased > 0 && leftBtnReleased < SysTickVal - 100) {
+			encoderBtnL = true;
+		}
+		leftBtnReleased = 0;
+	}
+	if (GPIOB->IDR & GPIO_IDR_IDR_13 && rightBtnReleased == 0) {		// button released
+		rightBtnReleased = SysTickVal;
+	}
+	if ((GPIOB->IDR & GPIO_IDR_IDR_13) == 0) {
+		if (rightBtnReleased > 0 && rightBtnReleased < SysTickVal - 100) {
+			encoderBtnR = true;
+		}
+		rightBtnReleased = 0;
+	}
+
+
 	if ((encoderBtnL || encoderBtnR) && menuMode) {
 		encoderBtnL = encoderBtnR = menuMode = false;
 		lcd.ScreenFill(LCD_BLACK);

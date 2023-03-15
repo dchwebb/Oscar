@@ -35,6 +35,8 @@ private:
 	std::string EncoderLabel(encoderType type);
 
 	encoderType encoderModeL, encoderModeR;
+	uint32_t leftBtnReleased = 0;		// Debounce counters
+	uint32_t rightBtnReleased = 0;
 
 	struct MenuItem {
 		int8_t pos;

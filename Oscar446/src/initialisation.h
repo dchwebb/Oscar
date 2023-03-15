@@ -22,13 +22,6 @@
 #define L_ENC_CNT	TIM4->CNT
 #define R_ENC_CNT	TIM8->CNT
 
-#define L_BTN_NO(a, b) a ## 10 ## b
-#define L_BTN_GPIO	GPIOA
-
-#define R_BTN_NO(a, b) a ## 13 ## b
-#define R_BTN_GPIO	GPIOB
-
-
 
 #define ADC_BUFFER_LENGTH 12
 #define CIRCLENGTH 160
@@ -56,7 +49,6 @@ void InitLCDHardware(void);
 void InitADC(void);
 void InitSampleAcquisition();
 void InitCoverageTimer();
-void InitDebounceTimer();
 void InitEncoders();
 void InitUART();
 

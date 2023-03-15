@@ -6,7 +6,7 @@
 #define PLL_P 2		//  Main PLL (PLL) division factor for main system clock can be 2 (PLL_P = 0), 4 (PLL_P = 1), 6 (PLL_P = 2), 8 (PLL_P = 3)
 #define PLL_Q 7
 
-void SystemClock_Config(void) {
+void SystemClock_Config() {
 
 	RCC->APB1ENR |= RCC_APB1ENR_PWREN;			// Enable Power Control clock
 	PWR->CR |= PWR_CR_VOS_0;					// Enable VOS voltage scaling - allows maximum clock speed
@@ -43,24 +43,26 @@ void SystemClock_Config(void) {
 
 }
 
+
 void InitSysTick()
 {
-
 	// Register macros found in core_cm4.h
-	SysTick->CTRL = 0;									// Disable SysTick
-	SysTick->LOAD = 0xFFFF - 1;							// Set reload register to maximum 2^24
+	SysTick->CTRL = 0;								// Disable SysTick
+	SysTick->LOAD = 0xFFFF - 1;						// Set reload register to maximum 2^24
 
 	// Set priority of Systick interrupt to least urgency (ie largest priority value)
 	NVIC_SetPriority (SysTick_IRQn, (1 << __NVIC_PRIO_BITS) - 1);
 
-	SysTick->VAL = 0;									// Reset the SysTick counter value
+	SysTick->VAL = 0;								// Reset the SysTick counter value
 
-	SysTick->CTRL |= SysTick_CTRL_CLKSOURCE_Msk;		// Select processor clock: 1 = processor clock; 0 = external clock
-	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;			// Enable SysTick interrupt
-	SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;			// Enable SysTick
+	SysTick->CTRL |= SysTick_CTRL_CLKSOURCE_Msk;	// Select processor clock: 1 = processor clock; 0 = external clock
+	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;		// Enable SysTick interrupt
+	SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;		// Enable SysTick
 }
 
-void InitLCDHardware(void) {
+
+void InitLCDHardware()
+{
 	//	Enable GPIO and SPI clocks
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;			// reset and clock control - advanced high performance bus - GPIO port B
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;			// reset and clock control - advanced high performance bus - GPIO port C
@@ -105,7 +107,8 @@ void InitLCDHardware(void) {
 }
 
 
-void InitADC(void) {
+void InitADC()
+{
 	//	Setup Timer 2 to trigger ADC
 	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;				// Enable Timer 2 clock
 	TIM2->CR2 |= TIM_CR2_MMS_2;						// 100: Compare - OC1REF signal is used as trigger output (TRGO)
@@ -167,7 +170,8 @@ void InitADC(void) {
 }
 
 //	Setup Timer 3 on an interrupt to trigger sample acquisition
-void InitSampleAcquisition() {
+void InitSampleAcquisition()
+{
 	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;				// Enable Timer 3
 	TIM3->PSC = 0;									// Set prescaler: 84MHz (APB1 Timer Clock) / 26 (PSC + 1) = 3,230,769 Hz
 	TIM3->ARR = 7000; 								// Set auto reload register (3,230,769 / 280 = 11,764 Hz)
@@ -180,8 +184,10 @@ void InitSampleAcquisition() {
 	TIM3->EGR |= TIM_EGR_UG;						// Re-initializes counter and generates update of registers
 }
 
+
 //	Setup Timer 9 to count clock cycles for coverage profiling
-void InitCoverageTimer() {
+void InitCoverageTimer()
+{
 	RCC->APB2ENR |= RCC_APB2ENR_TIM9EN;				// Enable Timer
 	TIM9->PSC = 100;
 	TIM9->ARR = 65535;
@@ -189,14 +195,6 @@ void InitCoverageTimer() {
 	TIM9->DIER |= TIM_DIER_UIE;						// DMA/interrupt enable register
 	NVIC_EnableIRQ(TIM1_BRK_TIM9_IRQn);
 	NVIC_SetPriority(TIM1_BRK_TIM9_IRQn, 2);		// Lower is higher priority
-
-}
-
-//	Setup Timer 5 to count time between bounces
-void InitDebounceTimer() {
-	RCC->APB1ENR |= RCC_APB1ENR_TIM5EN;				// Enable Timer
-	TIM5->PSC = 10000;
-	TIM5->ARR = 65535;
 }
 
 
@@ -209,23 +207,15 @@ void InitEncoders() {
 
 	// 00: Input (reset state); 01: Output; 10: Alternate function; 11: Analog
 
-	// configure PA10 button to fire on an interrupt
+	// configure PA10 Left encoder button
 	GPIOA->PUPDR |= GPIO_PUPDR_PUPDR10_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
-	SYSCFG->EXTICR[2] |= SYSCFG_EXTICR3_EXTI10_PA;	// Select Pin PA10 which uses External interrupt 2
-	EXTI->RTSR |= EXTI_RTSR_TR10;					// Enable rising edge trigger
-	EXTI->FTSR |= EXTI_FTSR_TR10;					// Enable falling edge trigger
-	EXTI->IMR |= EXTI_IMR_MR10;						// Activate interrupt using mask register
 
 
-	// configure PB13 button to fire on an interrupt
+	// configure PB13 right encoder button
 	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR13_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
-	SYSCFG->EXTICR[3] |= SYSCFG_EXTICR4_EXTI13_PB;	// Select Pin PB13
-	EXTI->RTSR |= EXTI_RTSR_TR13;					// Enable rising edge trigger
-	EXTI->FTSR |= EXTI_FTSR_TR13;					// Enable falling edge trigger
-	EXTI->IMR |= EXTI_IMR_MR13;						// Activate interrupt using mask register
-/*  // Debug code for using right encoder button as GPIO output
-	GPIOB->MODER |= GPIO_MODER_MODER13_0;			// For debug set pin to output
-*/
+
+	// Debug code for using right encoder button as GPIO output
+	//GPIOB->MODER |= GPIO_MODER_MODER13_0;			// For debug set pin to output
 
 	// L Encoder using timer functionality - PB6 and PB7
 	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR6_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
@@ -261,12 +251,11 @@ void InitEncoders() {
 	TIM8->CNT = 32000;								// Start counter at mid way point
 	TIM8->CR1 |= TIM_CR1_CEN;
 
-	NVIC_SetPriority(EXTI15_10_IRQn, 4);			// Lower is higher priority
-	NVIC_EnableIRQ(EXTI15_10_IRQn);
-
 }
 
-void InitUART() {
+
+void InitUART()
+{
 	// PC11 UART4_RX 79
 	// [PA1  UART4_RX 24 (AF8) ** NB Dev board seems to have something pulling this pin to ground so can't use]
 
@@ -290,18 +279,7 @@ void InitUART() {
 }
 
 
-void InitDAC()
-{
-	// Once the DAC channelx is enabled, the corresponding GPIO pin (PA4 or PA5) is automatically connected to the analog converter output (DAC_OUTx).
-	// Enable DAC and GPIO Clock
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;			// Enable GPIO Clock
-	RCC->APB1ENR |= RCC_APB1ENR_DACEN;				// Enable DAC Clock
 
-	DAC->CR |= DAC_CR_EN1;							// Enable DAC using PA4 (DAC_OUT1)
-	DAC->CR |= DAC_CR_BOFF1;						// Enable DAC channel output buffer to reduce the output impedance
-
-	// output triggered with DAC->DHR12R1 = x;
-}
 
 
 
