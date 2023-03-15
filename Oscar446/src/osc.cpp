@@ -13,7 +13,6 @@ void Osc::OscRun()
 		laneCount = (multiLane && oscDisplay == 0b111 ? 3 : multiLane && oscDisplay > 2 && oscDisplay != 4 ? 2 : 1);
 		calculatedOffsetYB = (laneCount > 1 && oscDisplay & 0b001 ? lcd.drawHeight / laneCount : 0);
 		calculatedOffsetYC = (laneCount == 2 ? lcd.drawHeight / 2 : laneCount == 3 ? lcd.drawHeight * 2 / 3 : 0);
-		//CP_ON
 	}
 
 	// Check if drawing and that the sample capture is at or ahead of the draw position
@@ -66,15 +65,15 @@ void Osc::OscRun()
 			if (h < vOffset) {
 				// do not draw
 			} else if (oscDisplay & 1 && h >= AY.first && h <= AY.second) {
-				DrawBuffer[DrawBufferNumber][h - vOffset] = LCD_GREEN;
+				lcd.drawBuffer[DrawBufferNumber][h - vOffset] = LCD_GREEN;
 			} else if (oscDisplay & 2 && h >= BY.first && h <= BY.second) {
-				DrawBuffer[DrawBufferNumber][h - vOffset] = LCD_LIGHTBLUE;
+				lcd.drawBuffer[DrawBufferNumber][h - vOffset] = LCD_LIGHTBLUE;
 			} else if (oscDisplay & 4 && h >= CY.first && h <= CY.second) {
-				DrawBuffer[DrawBufferNumber][h - vOffset] = LCD_ORANGE;
+				lcd.drawBuffer[DrawBufferNumber][h - vOffset] = LCD_ORANGE;
 			} else if (drawPos % 4 == 0 && (h + (lcd.drawHeight / (laneCount * 2))) % (lcd.drawHeight / (laneCount)) == 0) {						// 0v center mark
-				DrawBuffer[DrawBufferNumber][h - vOffset] = LCD_GREY;
+				lcd.drawBuffer[DrawBufferNumber][h - vOffset] = LCD_GREY;
 			} else {
-				DrawBuffer[DrawBufferNumber][h - vOffset] = LCD_BLACK;
+				lcd.drawBuffer[DrawBufferNumber][h - vOffset] = LCD_BLACK;
 			}
 		}
 
@@ -82,11 +81,11 @@ void Osc::OscRun()
 		if (drawPos < 5) {
 			for (int m = 1; m < (laneCount == 1 ? voltScale * 2 : (laneCount * 2)); ++m) {
 				int test = m * lcd.drawHeight / (laneCount == 1 ? voltScale * 2 : (laneCount * 2)) - 11;
-				DrawBuffer[DrawBufferNumber][test] = LCD_GREY;
+				lcd.drawBuffer[DrawBufferNumber][test] = LCD_GREY;
 			}
 		}
 
-		lcd.PatternFill(drawPos, vOffset, drawPos, lcd.drawHeight - (drawPos < 27 ? 12 : 0), DrawBuffer[DrawBufferNumber]);
+		lcd.PatternFill(drawPos, vOffset, drawPos, lcd.drawHeight - (drawPos < 27 ? 12 : 0), lcd.drawBuffer[DrawBufferNumber]);
 		DrawBufferNumber = DrawBufferNumber == 0 ? 1 : 0;
 
 		// Store previous sample so next sample can be drawn as a line from old to new
@@ -98,7 +97,6 @@ void Osc::OscRun()
 		if (drawPos == lcd.drawWidth){
 			drawing = false;
 			noTriggerDraw = false;
-			//CP_CAP
 		}
 
 		// Draw trigger as a yellow cross

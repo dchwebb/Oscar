@@ -97,8 +97,8 @@ public:
 	uint16_t DMAint16;
 	FontData Font_Small {7, 10, Font7x10};
 	FontData Font_Large {11, 18, Font11x18};
-	//FontData Font_Medium {12, 12, Font12x12};
-	//FontData Font_XLarge {16, 26, Font16x26};
+
+	uint16_t drawBuffer[2][(drawHeight + 1) * drawBufferWidth];
 
 	void Init(void);
 	void Rotate(LCD_Orientation_t orientation);

@@ -11,7 +11,7 @@ extern UI ui;
 extern LCD lcd;
 
 extern volatile uint8_t captureBufferNumber, drawBufferNumber;
-extern uint16_t DrawBuffer[2][(lcd.drawHeight + 1) * lcd.drawBufferWidth];
+
 
 class FFT {
 public:
