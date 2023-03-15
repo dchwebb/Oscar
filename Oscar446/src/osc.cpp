@@ -5,7 +5,7 @@ void Osc::OscRun()
 {
 	// check if we should start drawing
 	if (!drawing && (capturing || noTriggerDraw)) {
-		drawBufferNumber = noTriggerDraw ? !(bool)captureBufferNumber : captureBufferNumber;
+		oscBufferNumber = noTriggerDraw ? !(bool)captureBufferNumber : captureBufferNumber;
 		drawing = true;
 		drawPos = 0;
 
@@ -16,14 +16,14 @@ void Osc::OscRun()
 	}
 
 	// Check if drawing and that the sample capture is at or ahead of the draw position
-	if (drawing && (drawBufferNumber != captureBufferNumber || capturedSamples[captureBufferNumber] >= drawPos || noTriggerDraw)) {
+	if (drawing && (oscBufferNumber != captureBufferNumber || capturedSamples[captureBufferNumber] >= drawPos || noTriggerDraw)) {
 		// Calculate offset between capture and drawing positions to display correct sample
-		uint16_t calculatedOffsetX = (drawOffset[drawBufferNumber] + drawPos) % lcd.drawWidth;
+		uint16_t calculatedOffsetX = (drawOffset[oscBufferNumber] + drawPos) % lcd.drawWidth;
 
 
-		uint16_t pixelA = CalcVertOffset(OscBufferA[drawBufferNumber][calculatedOffsetX]);
-		uint16_t pixelB = CalcVertOffset(OscBufferB[drawBufferNumber][calculatedOffsetX]) + calculatedOffsetYB;
-		uint16_t pixelC = CalcVertOffset(OscBufferC[drawBufferNumber][calculatedOffsetX]) + calculatedOffsetYC;
+		uint16_t pixelA = CalcVertOffset(OscBufferA[oscBufferNumber][calculatedOffsetX]);
+		uint16_t pixelB = CalcVertOffset(OscBufferB[oscBufferNumber][calculatedOffsetX]) + calculatedOffsetYB;
+		uint16_t pixelC = CalcVertOffset(OscBufferC[oscBufferNumber][calculatedOffsetX]) + calculatedOffsetYC;
 
 		// Starting a new screen: Set previous pixel to current pixel and clear frequency calculations
 		if (drawPos == 0) {
@@ -35,9 +35,9 @@ void Osc::OscRun()
 		}
 
 		//	frequency calculation - detect upwards zero crossings
-		uint16_t currentChannelY = 	(oscDisplay & 1) ? OscBufferA[drawBufferNumber][calculatedOffsetX] :
-									(oscDisplay & 2) ? OscBufferB[drawBufferNumber][calculatedOffsetX] :
-									OscBufferC[drawBufferNumber][calculatedOffsetX];
+		uint16_t currentChannelY = 	(oscDisplay & 1) ? OscBufferA[oscBufferNumber][calculatedOffsetX] :
+									(oscDisplay & 2) ? OscBufferB[oscBufferNumber][calculatedOffsetX] :
+									OscBufferC[oscBufferNumber][calculatedOffsetX];
 
 		if (!freqBelowZero && currentChannelY < CalibZeroPos) {		// first time reading goes below zero
 			freqBelowZero = true;
@@ -55,9 +55,9 @@ void Osc::OscRun()
 		}
 
 		// create draw buffer
-		std::pair<uint16_t, uint16_t> AY = std::minmax(pixelA, (uint16_t)prevPixelA);
-		std::pair<uint16_t, uint16_t> BY = std::minmax(pixelB, (uint16_t)prevPixelB);
-		std::pair<uint16_t, uint16_t> CY = std::minmax(pixelC, (uint16_t)prevPixelC);
+		std::pair<uint16_t, uint16_t> AY = std::minmax(pixelA, prevPixelA);
+		std::pair<uint16_t, uint16_t> BY = std::minmax(pixelB, prevPixelB);
+		std::pair<uint16_t, uint16_t> CY = std::minmax(pixelC, prevPixelC);
 
 		uint8_t vOffset = (drawPos < 27 || drawPos > 250) ? 11 : 0;		// offset draw area so as not to overwrite voltage and freq labels
 		for (uint8_t h = 0; h <= lcd.drawHeight - (drawPos < 27 ? 12 : 0); ++h) {
@@ -133,34 +133,34 @@ void Osc::CircRun(){
 	if ((!circDrawing[0] && circDataAvailable[0] && (circDrawPos[1] >= zeroCrossings[1] || !circDrawing[1])) ||
 		(!circDrawing[1] && circDataAvailable[1] && (circDrawPos[0] >= zeroCrossings[0] || !circDrawing[0]))) {								// check if we should start drawing
 
-		drawBufferNumber = (!circDrawing[0] && circDataAvailable[0] && (circDrawPos[1] == zeroCrossings[1] || !circDrawing[1])) ? 0 : 1;
-		circDrawing[drawBufferNumber] = true;
-		circDrawPos[drawBufferNumber] = 0;
-		lcd.DrawString(140, lcd.drawHeight + 8, ui.floatToString(captureFreq[drawBufferNumber], true) + "Hz  ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+		oscBufferNumber = (!circDrawing[0] && circDataAvailable[0] && (circDrawPos[1] == zeroCrossings[1] || !circDrawing[1])) ? 0 : 1;
+		circDrawing[oscBufferNumber] = true;
+		circDrawPos[oscBufferNumber] = 0;
+		lcd.DrawString(140, lcd.drawHeight + 8, ui.floatToString(captureFreq[oscBufferNumber], true) + "Hz  ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 		laneCount = 1;
 	}
 
 	// to have a continuous display drawing next sample as old sample is finishing
-	for (drawBufferNumber = 0; drawBufferNumber < 2; drawBufferNumber++) {
-		if (circDrawing[drawBufferNumber]) {
+	for (oscBufferNumber = 0; oscBufferNumber < 2; oscBufferNumber++) {
+		if (circDrawing[oscBufferNumber]) {
 
-			// each of these loops will draw a trail from one draw buffer from current position (pos) up to end of previous draw position: circDrawPos[drawBufferNumber]
-			for (int pos = std::max((int)circDrawPos[drawBufferNumber] - CIRCLENGTH, 0); pos <= circDrawPos[drawBufferNumber] && pos <= zeroCrossings[drawBufferNumber]; pos++) {
+			// each of these loops will draw a trail from one draw buffer from current position (pos) up to end of previous draw position: circDrawPos[oscBufferNumber]
+			for (int pos = std::max((int)circDrawPos[oscBufferNumber] - CIRCLENGTH, 0); pos <= circDrawPos[oscBufferNumber] && pos <= zeroCrossings[oscBufferNumber]; pos++) {
 
-				int b = (int)std::round(pos * LUTSIZE / zeroCrossings[drawBufferNumber] + LUTSIZE / 4) % LUTSIZE;
+				int b = (int)std::round(pos * LUTSIZE / zeroCrossings[oscBufferNumber] + LUTSIZE / 4) % LUTSIZE;
 				int x = fft.SineLUT[b] * 70 + 160;
 
 				// draw a line getting fainter as it goes from current position backwards
-				int pixelA = CalcVertOffset(OscBufferA[drawBufferNumber][pos]);
-				if (pos == std::max((int)circDrawPos[drawBufferNumber] - CIRCLENGTH, 0)) {
+				int pixelA = CalcVertOffset(OscBufferA[oscBufferNumber][pos]);
+				if (pos == std::max((int)circDrawPos[oscBufferNumber] - CIRCLENGTH, 0)) {
 					prevPixelA = pixelA;
 				}
 
 				uint16_t frontColour = ui.DarkenColour(fft.channel == channelA ? LCD_GREEN : fft.channel == channelB ? LCD_LIGHTBLUE : LCD_ORANGE,
-						(circDrawPos[drawBufferNumber] - pos) / (fft.channel == channelA ? 3 : 4));
-				uint16_t backColour = ui.DarkenColour(LCD_GREY, (circDrawPos[drawBufferNumber] - pos) / 8);
+						(circDrawPos[oscBufferNumber] - pos) / (fft.channel == channelA ? 3 : 4));
+				uint16_t backColour = ui.DarkenColour(LCD_GREY, (circDrawPos[oscBufferNumber] - pos) / 8);
 
-				if (pos < (int)circDrawPos[drawBufferNumber] - CIRCLENGTH + 2) {
+				if (pos < (int)circDrawPos[oscBufferNumber] - CIRCLENGTH + 2) {
 					frontColour = LCD_BLACK;
 					backColour = LCD_BLACK;
 				}
@@ -169,16 +169,16 @@ void Osc::CircRun(){
 				lcd.DrawLine(x, pixelA, x, prevPixelA, frontColour);
 
 				// Draw normal osc
-				uint16_t oscPos = pos * lcd.drawWidth / zeroCrossings[drawBufferNumber];
+				uint16_t oscPos = pos * lcd.drawWidth / zeroCrossings[oscBufferNumber];
 				lcd.DrawLine(oscPos, pixelA, oscPos, prevPixelA, backColour);
 
 				prevPixelA = pixelA;
 			}
 
-			circDrawPos[drawBufferNumber] ++;
-			if (circDrawPos[drawBufferNumber] == zeroCrossings[drawBufferNumber] + CIRCLENGTH){
-				circDrawing[drawBufferNumber] = false;
-				circDataAvailable[drawBufferNumber] = false;
+			circDrawPos[oscBufferNumber] ++;
+			if (circDrawPos[oscBufferNumber] == zeroCrossings[oscBufferNumber] + CIRCLENGTH){
+				circDrawing[oscBufferNumber] = false;
+				circDataAvailable[oscBufferNumber] = false;
 			}
 		}
 	}
@@ -193,15 +193,16 @@ uint16_t Osc::CalcVertOffset(volatile const uint16_t& vPos)
 }
 
 
-// returns frequency of signal based on number of samples wide the signal is in the screen
 float Osc::FreqFromPos(const uint16_t pos)
 {
-	return (float)SystemCoreClock / (2.0f * pos * (TIM3->PSC + 1) * (TIM3->ARR + 1));
+	// returns frequency of signal based on number of samples wide the signal is in the screen
+	return static_cast<float>(SystemCoreClock) / (2.0f * pos * (TIM3->PSC + 1) * (TIM3->ARR + 1));
 }
 
-// Choose the trigger channel based on config preference and channel visibility
+
 void Osc::setTriggerChannel()
 {
+	// Choose the trigger channel based on config preference and channel visibility
 	osc.triggerTest = 	osc.triggerChannel == channelNone ? nullptr :
 						(osc.triggerChannel == channelC && (osc.oscDisplay & 4)) || osc.oscDisplay == 4 ? &adcC :
 						(osc.triggerChannel == channelB || !(osc.oscDisplay & 1)) && (osc.oscDisplay & 2) ? &adcB : &adcA;

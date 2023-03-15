@@ -21,13 +21,13 @@ void FFT::Run()
 	sampleCapture(false);									// checks if ready to start new capture
 
 	if (dataAvailable[0] || dataAvailable[1]) {
-		drawBufferNumber = dataAvailable[0] ? 0 : 1;		// select correct draw buffer based on whether buffer 0 or 1 contains data
-		calcFFT(fftBuffer[drawBufferNumber]);
+		fftBufferNumber = dataAvailable[0] ? 0 : 1;		// select correct draw buffer based on whether buffer 0 or 1 contains data
+		calcFFT(fftBuffer[fftBufferNumber]);
 
 		if (displayMode == Fourier) {
-			displayFFT(fftBuffer[drawBufferNumber]);
+			displayFFT(fftBuffer[fftBufferNumber]);
 		} else {
-			displayWaterfall(fftBuffer[drawBufferNumber]);
+			displayWaterfall(fftBuffer[fftBufferNumber]);
 		}
 	}
 }
@@ -51,7 +51,7 @@ void FFT::displayWaterfall(const float* candSin)
 				badFFT++;					// every so often the FFT fails with extremely large numbers in all positions - just abort the draw and resample
 				if (badFFT > 200) {
 					fftErrors++;
-					dataAvailable[drawBufferNumber] = false;
+					dataAvailable[fftBufferNumber] = false;
 					return;
 				}
 			}
@@ -299,7 +299,7 @@ void FFT::displayFFT(const float* candSin)
 				badFFT++;					// every so often the FFT fails with extremely large numbers in all positions - just abort the draw and resample
 				if (badFFT > 10000) {
 					fftErrors++;
-					dataAvailable[drawBufferNumber] = false;
+					dataAvailable[fftBufferNumber] = false;
 					return;
 				}
 				lcd.drawBuffer[fftDrawBufferNumber][buffPos] = harmColour;
@@ -377,7 +377,7 @@ inline float FFT::harmonicFreq(const uint16_t harmonicNumber)
 void FFT::sampleCapture(const bool clearBuffer)
 {
 	if (clearBuffer) {
-		dataAvailable[drawBufferNumber] = false;
+		dataAvailable[fftBufferNumber] = false;
 	}
 
 	if (!capturing && (!dataAvailable[0] || !dataAvailable[1])) {
