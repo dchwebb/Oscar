@@ -6,7 +6,6 @@
 #include "osc.h"
 #include "config.h"
 
-extern void ResetMode();
 
 class FFT;		// forward reference to handle circular dependency
 class Osc;
@@ -15,8 +14,6 @@ extern FFT fft;
 extern LCD lcd;
 extern Osc osc;
 extern Config cfg;
-
-
 
 
 class UI {

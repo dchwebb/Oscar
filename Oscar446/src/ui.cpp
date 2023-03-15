@@ -37,7 +37,6 @@ void UI::MenuAction(encoderType* et, volatile const int8_t& val)
 		*et = mi->selected;
 	}
 
-
 	if (displayMode == Oscilloscope) {
 		osc.encModeL = encoderModeL;
 		osc.encModeR = encoderModeR;
@@ -53,8 +52,8 @@ void UI::MenuAction(encoderType* et, volatile const int8_t& val)
 }
 
 
-void UI::EncoderAction(encoderType type, const int8_t& val) {
-
+void UI::EncoderAction(encoderType type, const int8_t& val)
+{
 	int16_t adj;
 	switch (type) {
 	case HorizScale :
@@ -139,6 +138,7 @@ void UI::EncoderAction(encoderType type, const int8_t& val) {
 	}
 }
 
+
 void UI::DrawMenu()
 {
 	lcd.DrawString(10, 6, "L", &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
@@ -210,9 +210,9 @@ void UI::handleEncoders()
 			osc.sampleTimer = TIM3->ARR;
 			displayMode = Fourier;
 			break;
-		case Fourier :		displayMode = Waterfall;		break;
-		case Waterfall :	displayMode = Circular;			break;
-		case Circular :		displayMode = MIDI;				break;
+		case Fourier :		displayMode = Waterfall;	break;
+		case Waterfall :	displayMode = MIDI;			break;		// Disable circular mode
+		case Circular :		displayMode = MIDI;			break;
 		case MIDI :
 			TIM3->ARR = std::max(osc.sampleTimer, (uint16_t)MINSAMPLETIMER);
 			displayMode = Oscilloscope;
