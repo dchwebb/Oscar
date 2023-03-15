@@ -30,6 +30,7 @@ Osc osc;
 Config cfg;
 
 
+
 inline uint16_t CalcZeroSize() {					// returns ADC size that corresponds to 0v
 	return (8192 - vCalibOffset) / vCalibScale;
 }
