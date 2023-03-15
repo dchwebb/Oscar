@@ -15,7 +15,7 @@ public:
 	void setDrawBuffer(uint16_t* buff1, uint16_t* buff2);
 	void OscRun();
 	void CircRun();
-	uint16_t CalcVertOffset(volatile const uint16_t& vPos);
+	uint16_t CalcVertOffset(const uint16_t& vPos);
 	float FreqFromPos(const uint16_t pos);
 	void setTriggerChannel();
 
@@ -37,12 +37,12 @@ public:
 	uint8_t CircZeroCrossings = 2;					// number of zero crossings captured for each 'frame'
 
 	// Oscilloscope working variables
-	volatile uint16_t OscBufferA[2][lcd.drawWidth], OscBufferB[2][lcd.drawWidth], OscBufferC[2][lcd.drawWidth];
+	uint16_t OscBufferA[2][lcd.drawWidth], OscBufferB[2][lcd.drawWidth], OscBufferC[2][lcd.drawWidth];
 	uint8_t oscBufferNumber = 0;
 	uint8_t DrawBufferNumber = 0;
 	uint16_t noTriggerDraw = 0;						// set to true if no trigger signal but a draw buffer is available
 	uint8_t laneCount = 1;							// holds current number of lanes to display based on number of visible channels and multi lane setting
-	float Freq;										// Displays frequency of current capture based on zero crossings
+	float freq;										// Displays frequency of current capture based on zero crossings
 	bool freqBelowZero, capturing;
 	uint16_t freqCrossZero;
 	uint16_t capturedSamples[2] {0, 0}, bufferSamples;

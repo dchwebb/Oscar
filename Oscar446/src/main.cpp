@@ -14,10 +14,9 @@ int16_t vCalibOffset = -3590;			// Dev board with 14k resistors: -3940, 1.499999
 float vCalibScale = 1.46f;
 uint16_t CalibZeroPos = 9985;
 
-//uint16_t DrawBuffer[2][(lcd.drawHeight + 1) * lcd.drawBufferWidth];
 uint16_t adcA, adcB, adcC, oldAdc, capturePos = 0;
 bool drawing = false;
-volatile uint8_t captureBufferNumber = 0, drawBufferNumber = 0;
+volatile uint8_t captureBufferNumber = 0;
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 mode displayMode = Oscilloscope;
 uint32_t debugCount = 0, coverageTimer = 0, coverageTotal = 0;

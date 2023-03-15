@@ -10,7 +10,7 @@ class UI;		// forward reference to handle circular dependency
 extern UI ui;
 extern LCD lcd;
 
-extern volatile uint8_t captureBufferNumber, drawBufferNumber;
+extern volatile uint8_t captureBufferNumber;
 
 
 class FFT {

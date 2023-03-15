@@ -18,12 +18,12 @@ void Osc::OscRun()
 	// Check if drawing and that the sample capture is at or ahead of the draw position
 	if (drawing && (oscBufferNumber != captureBufferNumber || capturedSamples[captureBufferNumber] >= drawPos || noTriggerDraw)) {
 		// Calculate offset between capture and drawing positions to display correct sample
-		uint16_t calculatedOffsetX = (drawOffset[oscBufferNumber] + drawPos) % lcd.drawWidth;
+		const uint16_t calculatedOffsetX = (drawOffset[oscBufferNumber] + drawPos) % lcd.drawWidth;
 
 
-		uint16_t pixelA = CalcVertOffset(OscBufferA[oscBufferNumber][calculatedOffsetX]);
-		uint16_t pixelB = CalcVertOffset(OscBufferB[oscBufferNumber][calculatedOffsetX]) + calculatedOffsetYB;
-		uint16_t pixelC = CalcVertOffset(OscBufferC[oscBufferNumber][calculatedOffsetX]) + calculatedOffsetYC;
+		const uint16_t pixelA = CalcVertOffset(OscBufferA[oscBufferNumber][calculatedOffsetX]);
+		const uint16_t pixelB = CalcVertOffset(OscBufferB[oscBufferNumber][calculatedOffsetX]) + calculatedOffsetYB;
+		const uint16_t pixelC = CalcVertOffset(OscBufferC[oscBufferNumber][calculatedOffsetX]) + calculatedOffsetYC;
 
 		// Starting a new screen: Set previous pixel to current pixel and clear frequency calculations
 		if (drawPos == 0) {
@@ -35,9 +35,9 @@ void Osc::OscRun()
 		}
 
 		//	frequency calculation - detect upwards zero crossings
-		uint16_t currentChannelY = 	(oscDisplay & 1) ? OscBufferA[oscBufferNumber][calculatedOffsetX] :
-									(oscDisplay & 2) ? OscBufferB[oscBufferNumber][calculatedOffsetX] :
-									OscBufferC[oscBufferNumber][calculatedOffsetX];
+		const uint16_t currentChannelY = (oscDisplay & 1) ? OscBufferA[oscBufferNumber][calculatedOffsetX] :
+										 (oscDisplay & 2) ? OscBufferB[oscBufferNumber][calculatedOffsetX] :
+										  OscBufferC[oscBufferNumber][calculatedOffsetX];
 
 		if (!freqBelowZero && currentChannelY < CalibZeroPos) {		// first time reading goes below zero
 			freqBelowZero = true;
@@ -45,21 +45,22 @@ void Osc::OscRun()
 		if (freqBelowZero && currentChannelY >= CalibZeroPos) {		// zero crossing
 			//	second zero crossing - calculate frequency averaged over a number passes to smooth
 			if (freqCrossZero > 0 && drawPos - freqCrossZero > 3) {
-				if (Freq > 0)
-					Freq = (3 * Freq + FreqFromPos(drawPos - freqCrossZero)) / 4;
-				else
-					Freq = FreqFromPos(drawPos - freqCrossZero);
+				if (freq > 0) {
+					freq = (3 * freq + FreqFromPos(drawPos - freqCrossZero)) / 4;
+				} else {
+					freq = FreqFromPos(drawPos - freqCrossZero);
+				}
 			}
 			freqCrossZero = drawPos;
 			freqBelowZero = false;
 		}
 
 		// create draw buffer
-		std::pair<uint16_t, uint16_t> AY = std::minmax(pixelA, prevPixelA);
-		std::pair<uint16_t, uint16_t> BY = std::minmax(pixelB, prevPixelB);
-		std::pair<uint16_t, uint16_t> CY = std::minmax(pixelC, prevPixelC);
+		const std::pair<uint16_t, uint16_t> AY = std::minmax(pixelA, prevPixelA);
+		const std::pair<uint16_t, uint16_t> BY = std::minmax(pixelB, prevPixelB);
+		const std::pair<uint16_t, uint16_t> CY = std::minmax(pixelC, prevPixelC);
 
-		uint8_t vOffset = (drawPos < 27 || drawPos > 250) ? 11 : 0;		// offset draw area so as not to overwrite voltage and freq labels
+		const uint8_t vOffset = (drawPos < 27 || drawPos > 250) ? 11 : 0;		// offset draw area so as not to overwrite voltage and freq labels
 		for (uint8_t h = 0; h <= lcd.drawHeight - (drawPos < 27 ? 12 : 0); ++h) {
 
 			if (h < vOffset) {
@@ -80,8 +81,8 @@ void Osc::OscRun()
 		// Draw grey lines indicating voltage range for one channel or channel divisions for 2 or 3 channels
 		if (drawPos < 5) {
 			for (int m = 1; m < (laneCount == 1 ? voltScale * 2 : (laneCount * 2)); ++m) {
-				int test = m * lcd.drawHeight / (laneCount == 1 ? voltScale * 2 : (laneCount * 2)) - 11;
-				lcd.drawBuffer[DrawBufferNumber][test] = LCD_GREY;
+				int vPos = m * lcd.drawHeight / (laneCount == 1 ? voltScale * 2 : (laneCount * 2)) - 11;
+				lcd.drawBuffer[DrawBufferNumber][vPos] = LCD_GREY;
 			}
 		}
 
@@ -101,7 +102,7 @@ void Osc::OscRun()
 
 		// Draw trigger as a yellow cross
 		if (drawPos == triggerX + 4) {
-			uint16_t vo = CalcVertOffset(triggerY) + (triggerTest == &adcB ? calculatedOffsetYB : triggerTest == &adcC ? calculatedOffsetYC : 0);
+			const uint16_t vo = CalcVertOffset(triggerY) + (triggerTest == &adcB ? calculatedOffsetYB : triggerTest == &adcC ? calculatedOffsetYC : 0);
 			if (vo > 4 && vo < lcd.drawHeight - 4) {
 				lcd.DrawLine(triggerX, vo - 4, triggerX, vo + 4, LCD_YELLOW);
 				lcd.DrawLine(std::max(triggerX - 4, 0), vo, triggerX + 4, vo, LCD_YELLOW);
@@ -117,19 +118,18 @@ void Osc::OscRun()
 			if (noTriggerDraw) {
 				lcd.DrawString(250, 1, "No Trigger " , &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 			} else {
-				lcd.DrawString(250, 1, Freq != 0 ? ui.floatToString(Freq, false) + "Hz    " : "          ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
-				Freq = 0;
+				lcd.DrawString(250, 1, freq != 0 ? ui.floatToString(freq, false) + "Hz    " : "          ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
+				freq = 0;
 			}
-
 		}
 
 	}
 }
 
 
-// Main loop to display circular oscilloscope trace
-void Osc::CircRun(){
-
+void Osc::CircRun()
+{
+	// Main loop to display circular oscilloscope trace
 	if ((!circDrawing[0] && circDataAvailable[0] && (circDrawPos[1] >= zeroCrossings[1] || !circDrawing[1])) ||
 		(!circDrawing[1] && circDataAvailable[1] && (circDrawPos[0] >= zeroCrossings[0] || !circDrawing[0]))) {								// check if we should start drawing
 
@@ -186,10 +186,12 @@ void Osc::CircRun(){
 }
 
 
-// Calculates vertical offset of oscilloscope trace from raw ADC value
-uint16_t Osc::CalcVertOffset(volatile const uint16_t& vPos)
+uint16_t Osc::CalcVertOffset(const uint16_t& vPos)
 {
-	return std::max(std::min(((((float)(vPos * vCalibScale + vCalibOffset) / (4 * 4096) - 0.5f) * (8.0f / voltScale)) + 0.5f) / laneCount * lcd.drawHeight, (float)((lcd.drawHeight - 1) / laneCount)), 1.0f);
+	// Calculates vertical offset of oscilloscope trace from raw ADC value
+	const float vOffset = (((static_cast<float>(vPos * vCalibScale + vCalibOffset) / (4.0f * 4096.0f) - 0.5f) * (8.0f / voltScale)) + 0.5f) / laneCount * lcd.drawHeight;
+	return std::clamp(vOffset, 1.0f, static_cast<float>((lcd.drawHeight - 1) / laneCount));
+
 }
 
 
@@ -203,8 +205,8 @@ float Osc::FreqFromPos(const uint16_t pos)
 void Osc::setTriggerChannel()
 {
 	// Choose the trigger channel based on config preference and channel visibility
-	osc.triggerTest = 	osc.triggerChannel == channelNone ? nullptr :
-						(osc.triggerChannel == channelC && (osc.oscDisplay & 4)) || osc.oscDisplay == 4 ? &adcC :
-						(osc.triggerChannel == channelB || !(osc.oscDisplay & 1)) && (osc.oscDisplay & 2) ? &adcB : &adcA;
+	osc.triggerTest = osc.triggerChannel == channelNone ? nullptr :
+					 (osc.triggerChannel == channelC && (osc.oscDisplay & 4)) || osc.oscDisplay == 4 ? &adcC :
+					 (osc.triggerChannel == channelB || !(osc.oscDisplay & 1)) && (osc.oscDisplay & 2) ? &adcB : &adcA;
 
 }
