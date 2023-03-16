@@ -5,18 +5,18 @@ void TIM3_IRQHandler(void)
 
 	if (displayMode == Fourier || displayMode == Waterfall) {
 		if (capturePos == fft.samples && fft.capturing) {
-			fft.dataAvailable[captureBufferNumber] = true;
+			fft.dataAvailable[fft.captureBufferIndex] = true;
 			fft.capturing = false;
 		}
 
 		if (fft.capturing) {
 			// For FFT Mode we want a value between +- 2047
 			if (fft.channel == channelA)
-				fft.fftBuffer[captureBufferNumber][capturePos] = 2047 - ((float)(ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9]) / 4);
+				fft.fftBuffer[fft.captureBufferIndex][capturePos] = 2047.0f - ((float)(ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9]) / 4.0f);
 			else if (fft.channel == channelB)
-				fft.fftBuffer[captureBufferNumber][capturePos] = 2047 - ((float)(ADC_array[1] + ADC_array[4] + ADC_array[7] + ADC_array[10]) / 4);
+				fft.fftBuffer[fft.captureBufferIndex][capturePos] = 2047.0f - ((float)(ADC_array[1] + ADC_array[4] + ADC_array[7] + ADC_array[10]) / 4.0f);
 			else if (fft.channel == channelC)
-				fft.fftBuffer[captureBufferNumber][capturePos] = 2047 - ((float)(ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11]) / 4);
+				fft.fftBuffer[fft.captureBufferIndex][capturePos] = 2047.0f - ((float)(ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11]) / 4.0f);
 			capturePos ++;
 		}
 

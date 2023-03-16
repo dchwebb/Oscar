@@ -7,6 +7,7 @@ class UI;		// forward reference to handle circular dependency
 extern UI ui;
 extern LCD lcd;
 
+extern volatile uint8_t captureBufferNumber;
 
 // Class to store settings and working variables for oscilloscope mode
 
