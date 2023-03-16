@@ -1,12 +1,13 @@
 #include <midi.h>
 #include <algorithm>
 
-void MIDIHandler::ProcessMidi() {
+void MIDIHandler::ProcessMidi()
+{
 	Timer += 1;
 
 	if (QueueSize > 0) {
 		bool edited = false;
-		volatile uint8_t val1, val2;
+		uint8_t val1, val2;
 
 		MIDIType type = static_cast<MIDIType>(Queue[QueueRead] >> 4);
 		uint8_t channel = Queue[QueueRead] & 0x0F;
@@ -27,30 +28,47 @@ void MIDIHandler::ProcessMidi() {
 
 
 			//	For more efficient display overwrite last event if the type is the same but the value (or note off) has changed
-			if (!MIDIEvents.empty()) {
+			if (eventCount > 0) {
 
-				auto event = MIDIEvents.begin();
+				// Handle note off
+				if (type == NoteOff) {
+					for (auto& me : midiEvents) {
+						if (me.type == NoteOn && me.val1 == val1 && me.channel == channel) {
+							me.type = NoteOff;
+							me.time = Timer;
+							edited = true;
+						}
+					}
 
-				if (type == NoteOff && !(event->type == NoteOn && event->val1 == val1)) {
-					event = std::find_if(MIDIEvents.begin(), MIDIEvents.end(), [&] (MIDIEvent me) { return me.type == NoteOn && me.val1 == val1 && me.channel == channel; } );
-				}
+				} else {
+					auto& event = midiEvents[eventTail];
 
-				if (event->channel == channel && (type == event->type || (type == NoteOff && event->type == NoteOn)) &&
-						((((type == NoteOff || type == ControlChange) && event->val1 == val1) || type == PitchBend || type == ChannelPressure))) {
-					event->type = type;
-					event->time = Timer;
-					event->val1 = val1;
-					event->val2 = val2;
-					edited = true;
+					if (event.channel == channel && (type == event.type) &&
+							( (type == ControlChange && event.val1 == val1) || type == PitchBend || type == ChannelPressure)) {
+						event.type = type;
+						event.time = Timer;
+						event.val1 = val1;
+						event.val2 = val2;
+						edited = true;
+					}
 				}
 			}
 
-			if (!edited)
-				MIDIEvents.push_front({Timer, type, channel, val1, val2});
+			if (!edited) {
+				if (++eventTail > eventSize - 1) {
+					eventTail = 0;
+				}
+				if (eventCount >= eventSize) {		// Once the circular buffer is full each new event will overwrite the current head
+					if (eventHead++ >= eventSize) {
+						eventHead = 0;
+					}
+				} else {
+					++eventCount;
+				}
+				midiEvents[eventTail] = {Timer, type, channel, val1, val2};
 
-			// erase first item if list greater than maximum size
-			if (MIDIEvents.size() > 12)
-				MIDIEvents.erase(MIDIEvents.end());
+			}
+
 
 			type = static_cast<MIDIType>(Queue[QueueRead] >> 4);
 			channel = Queue[QueueRead] & 0x0F;
@@ -82,32 +100,38 @@ void MIDIHandler::ProcessMidi() {
 
 	if (QueueSize < 10) {
 		// Draw midi events one at a time
-		if (MIDIEvents.size() > 0) {
-			if (MIDIPos >= MIDIEvents.size()) {
-				MIDIPos = 0;
+		if (eventCount > 0) {
+			if (drawIndex >= eventCount) {
+				drawIndex = 0;
 			}
-			DrawEvent(MIDIEvents[MIDIPos]);
-			MIDIPos++;
+			int32_t arrayIndex = eventTail - drawIndex;			// Tail is the newest item - work backwards to older entries
+			if (arrayIndex < 0) {
+				arrayIndex += eventSize;
+			}
+			DrawEvent(midiEvents[arrayIndex]);
+			drawIndex++;
 		}
 	}
 }
 
 
-inline void MIDIHandler::QueueInc() {
+inline void MIDIHandler::QueueInc()
+{
 	QueueSize--;
 	QueueRead = (QueueRead + 1) % MIDIQUEUESIZE;
 }
 
-void MIDIHandler::DrawEvent(const MIDIEvent& event) {
 
+void MIDIHandler::DrawEvent(const MIDIEvent& event)
+{
 	// Darken colour based on age
-	uint16_t colour = ui.DarkenColour(MIDIColours[event.channel], (Timer - event.time) >> 6);
+	const uint16_t colour = ui.DarkenColour(MIDIColours[event.channel], (Timer - event.time) >> 6);
+//	const uint16_t colour = LCD_WHITE;
 
-	volatile uint8_t top = MIDIDRAWHEIGHT * MIDIPos;
+	const uint8_t top = MIDIDRAWHEIGHT * drawIndex;
 
 	lcd.DrawString(10, top, ui.IntToString(event.channel + 1) + " ", &lcd.Font_Large, colour, LCD_BLACK);
 	if (event.type == NoteOn || event.type == NoteOff) {
-
 
 		//lcd.ColourFill(40, top + 1, 70, top + MIDIDRAWHEIGHT - 2, (event.type == NoteOn) ? colour : LCD_BLACK);
 		if (event.type == NoteOn) {
@@ -132,11 +156,13 @@ void MIDIHandler::DrawEvent(const MIDIEvent& event) {
 	}
 }
 
-const std::string pitches[] = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
 
-std::string MIDIHandler::NoteName(const uint8_t& n) {
-	uint8_t note = (n % 12);			// 67 = 'C'
-	char octave = (n / 12) + 48;		// 48 = '0'
+std::string MIDIHandler::NoteName(const uint8_t n)
+{
+	static const std::string pitches[] = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
+
+	const uint8_t note = (n % 12);			// 67 = 'C'
+	const char octave = (n / 12) + 48;		// 48 = '0'
 	return pitches[note] + std::string(1, octave);
 
 }
