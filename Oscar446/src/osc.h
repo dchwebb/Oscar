@@ -7,9 +7,6 @@ class UI;		// forward reference to handle circular dependency
 extern UI ui;
 extern LCD lcd;
 
-extern volatile uint8_t captureBufferNumber;
-
-// Class to store settings and working variables for oscilloscope mode
 
 class Osc {
 public:
@@ -23,7 +20,7 @@ public:
 	// Oscilloscope settings
 	int16_t triggerX = 10;
 	uint16_t triggerY = 7000;
-	uint16_t* triggerTest = &adcA;			// store the currently active trigger channel as a reference for faster interrupt performance
+	uint16_t* triggerTest = &adcA;					// store the currently active trigger channel as a reference for faster interrupt performance
 	oscChannel triggerChannel = channelA;			// holds preferred trigger channel for when that channel is not displayed
 	encoderType encModeL = HorizScale;
 	encoderType encModeR = ChannelSelect;
@@ -33,6 +30,7 @@ public:
 	int8_t voltScale = 8;
 
 	// Oscilloscope working variables
+	uint16_t adcA, adcB, adcC, oldAdc;
 	uint16_t OscBufferA[2][lcd.drawWidth], OscBufferB[2][lcd.drawWidth], OscBufferC[2][lcd.drawWidth];
 	uint8_t oscBufferNumber = 0;
 	uint8_t DrawBufferNumber = 0;
@@ -42,6 +40,9 @@ public:
 	bool freqBelowZero, capturing;
 	uint16_t freqCrossZero;
 	uint16_t capturedSamples[2] {0, 0}, bufferSamples;
+	uint8_t captureBufferNumber = 0;
+	uint16_t capturePos = 0;						// Position in capture buffer
+
 	int16_t drawOffset[2] {0, 0};
 	uint16_t prevPixelA = 0, prevPixelB = 0, prevPixelC = 0, drawPos = 0;
 	uint16_t calculatedOffsetYB = 0, calculatedOffsetYC = 0;	// Pre-Calculated offsets when in multi-lane mode

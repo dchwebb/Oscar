@@ -70,8 +70,8 @@ void FFT::calcFFT(float* sinBuffer)
 		}
 
 		for (uint16_t p = 0; p < lcd.drawWidth ; ++p) {
-			adcA = 4 * (2047 - sinBuffer[s + p]);
-			osc.OscBufferA[0][p] = osc.CalcVertOffset(adcA) + (lcd.drawHeight / 4);
+			const uint32_t vPos = 4 * (2047 - sinBuffer[s + p]);
+			osc.OscBufferA[0][p] = osc.CalcVertOffset(vPos) + (lcd.drawHeight / 4);
 		}
 		osc.prevPixelA = osc.OscBufferA[0][0];
 	}

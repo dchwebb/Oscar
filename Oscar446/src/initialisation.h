@@ -36,7 +36,6 @@ extern volatile uint32_t SysTickVal;
 extern int16_t vCalibOffset;
 extern float vCalibScale;
 extern uint16_t CalibZeroPos;
-extern uint16_t oldAdc, capturePos, adcA, adcB, adcC;
 extern mode displayMode;
 extern bool drawing;
 extern uint32_t debugCount, coverageTotal, coverageTimer;

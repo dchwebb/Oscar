@@ -4,73 +4,75 @@ void TIM3_IRQHandler(void)
 	TIM3->SR &= ~TIM_SR_UIF;					// clear UIF flag
 
 	if (displayMode == Fourier || displayMode == Waterfall) {
-		if (capturePos == fft.samples && fft.capturing) {
+		if (fft.capturePos == fft.samples && fft.capturing) {
 			fft.dataAvailable[fft.captureBufferIndex] = true;
 			fft.capturing = false;
 		}
 
 		if (fft.capturing) {
 			// For FFT Mode we want a value between +- 2047
-			if (fft.channel == channelA)
-				fft.fftBuffer[fft.captureBufferIndex][capturePos] = 2047.0f - ((float)(ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9]) / 4.0f);
-			else if (fft.channel == channelB)
-				fft.fftBuffer[fft.captureBufferIndex][capturePos] = 2047.0f - ((float)(ADC_array[1] + ADC_array[4] + ADC_array[7] + ADC_array[10]) / 4.0f);
-			else if (fft.channel == channelC)
-				fft.fftBuffer[fft.captureBufferIndex][capturePos] = 2047.0f - ((float)(ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11]) / 4.0f);
-			capturePos ++;
+			const uint32_t adcSummed =  fft.channel == channelA ? ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9] :
+										fft.channel == channelB ? ADC_array[1] + ADC_array[4] + ADC_array[7] + ADC_array[10] :
+																  ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11];
+
+			fft.fftBuffer[fft.captureBufferIndex][fft.capturePos] = 2047.0f - (static_cast<float>(adcSummed) / 4.0f);
+			++fft.capturePos;
 		}
 
 	} else if (displayMode == Oscilloscope) {
 		// Average the last four ADC readings to smooth noise
-		adcA = ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9];
-		adcB = ADC_array[1] + ADC_array[4] + ADC_array[7] + ADC_array[10];
-		adcC = ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11];
+		osc.adcA = ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9];
+		osc.adcB = ADC_array[1] + ADC_array[4] + ADC_array[7] + ADC_array[10];
+		osc.adcC = ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11];
 
 		// check if we should start capturing - ie not drawing from the capture buffer and crossed over the trigger threshold (or in free mode)
-		if (!osc.capturing && (!drawing || captureBufferNumber != osc.oscBufferNumber) && (osc.triggerTest == nullptr || (osc.bufferSamples > osc.triggerX && oldAdc < osc.triggerY && *osc.triggerTest >= osc.triggerY))) {
+		if (!osc.capturing && (!drawing || osc.captureBufferNumber != osc.oscBufferNumber) && (osc.triggerTest == nullptr || (osc.bufferSamples > osc.triggerX && osc.oldAdc < osc.triggerY && *osc.triggerTest >= osc.triggerY))) {
 			osc.capturing = true;
 
 			if (osc.triggerTest == nullptr) {									// free running mode
-				capturePos = 0;
-				osc.drawOffset[captureBufferNumber] = 0;
-				osc.capturedSamples[captureBufferNumber] = -1;
+				osc.capturePos = 0;
+				osc.drawOffset[osc.captureBufferNumber] = 0;
+				osc.capturedSamples[osc.captureBufferNumber] = -1;
 			} else {
 				// calculate the drawing offset based on the current capture position minus the horizontal trigger position
-				osc.drawOffset[captureBufferNumber] = capturePos - osc.triggerX;
-				if (osc.drawOffset[captureBufferNumber] < 0)
-					osc.drawOffset[captureBufferNumber] += lcd.drawWidth;
+				osc.drawOffset[osc.captureBufferNumber] = osc.capturePos - osc.triggerX;
+				if (osc.drawOffset[osc.captureBufferNumber] < 0)
+					osc.drawOffset[osc.captureBufferNumber] += lcd.drawWidth;
 
-				osc.capturedSamples[captureBufferNumber] = osc.triggerX - 1;	// used to check if a sample is ready to be drawn
+				osc.capturedSamples[osc.captureBufferNumber] = osc.triggerX - 1;	// used to check if a sample is ready to be drawn
 			}
 		}
 
 		// if capturing check if write buffer is full and switch to next buffer if so; if not full store current reading
-		if (osc.capturing && osc.capturedSamples[captureBufferNumber] == lcd.drawWidth - 1) {
-			captureBufferNumber = captureBufferNumber == 1 ? 0 : 1;		// switch the capture buffer
+		if (osc.capturing && osc.capturedSamples[osc.captureBufferNumber] == lcd.drawWidth - 1) {
+			osc.captureBufferNumber = osc.captureBufferNumber == 1 ? 0 : 1;		// switch the capture buffer
 			osc.bufferSamples = 0;			// stores number of samples captured since switching buffers to ensure triggered mode works correctly
 			osc.capturing = false;
 		}
 
 		// If capturing or buffering samples waiting for trigger store current readings in buffer and increment counters
-		if (osc.capturing || !drawing || captureBufferNumber != osc.oscBufferNumber) {
+		if (osc.capturing || !drawing || osc.captureBufferNumber != osc.oscBufferNumber) {
 
-			osc.OscBufferA[captureBufferNumber][capturePos] = adcA;
-			osc.OscBufferB[captureBufferNumber][capturePos] = adcB;
-			osc.OscBufferC[captureBufferNumber][capturePos] = adcC;
-			oldAdc = *osc.triggerTest;
+			osc.OscBufferA[osc.captureBufferNumber][osc.capturePos] = osc.adcA;
+			osc.OscBufferB[osc.captureBufferNumber][osc.capturePos] = osc.adcB;
+			osc.OscBufferC[osc.captureBufferNumber][osc.capturePos] = osc.adcC;
+			osc.oldAdc = *osc.triggerTest;
 
-			if (capturePos == lcd.drawWidth - 1)	capturePos = 0;
-			else								capturePos++;
+			if (osc.capturePos == lcd.drawWidth - 1) {
+				osc.capturePos = 0;
+			} else {
+				++osc.capturePos;
+			}
 
-			osc.capturedSamples[captureBufferNumber]++;
+			osc.capturedSamples[osc.captureBufferNumber]++;
 			if (!osc.capturing) {
-				osc.bufferSamples++;
+				++osc.bufferSamples;
 
 				// if trigger point not activating generate a temporary draw buffer
-				if (osc.bufferSamples > 1000 && capturePos == 0) {
-					captureBufferNumber = captureBufferNumber == 1 ? 0 : 1;		// switch the capture buffer
+				if (osc.bufferSamples > 1000 && osc.capturePos == 0) {
+					osc.captureBufferNumber = osc.captureBufferNumber == 1 ? 0 : 1;		// switch the capture buffer
 					osc.bufferSamples = 0;
-					osc.drawOffset[captureBufferNumber] = 0;
+					osc.drawOffset[osc.captureBufferNumber] = 0;
 					osc.noTriggerDraw = true;
 				}
 			}

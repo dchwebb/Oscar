@@ -9,8 +9,6 @@ class UI;		// forward reference to handle circular dependency
 extern UI ui;
 extern LCD lcd;
 
-//extern volatile uint8_t captureBufferNumber;
-
 
 class FFT {
 public:
@@ -34,6 +32,8 @@ public:
 	uint16_t samples = fftSamples;						// specifies number of samples depending on whether in FFT or Waterfall mode
 	bool dataAvailable[2] {false, false};				// stores which sample buffers contain data
 	uint8_t captureBufferIndex = 0;						// Index of sample buffer being captured
+	uint16_t capturePos = 0;							// Position in capture buffer
+
 	bool capturing;
 
 private:

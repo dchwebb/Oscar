@@ -261,7 +261,7 @@ void UI::ResetMode()
 	}
 
 	fft.capturing = osc.capturing = drawing = false;
-	osc.bufferSamples = capturePos = oldAdc = 0;
+	osc.bufferSamples = osc.capturePos = osc.oldAdc = 0;
 	osc.setTriggerChannel();
 	fft.dataAvailable[0] = fft.dataAvailable[1] = false;
 	fft.samples = displayMode == Fourier ? fft.fftSamples : fft.WATERFALLSAMPLES;
