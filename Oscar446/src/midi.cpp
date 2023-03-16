@@ -3,26 +3,26 @@
 
 void MIDIHandler::ProcessMidi()
 {
-	Timer += 1;
+	timer += 1;
 
-	if (QueueSize > 0) {
+	if (queueCount > 0) {
 		bool edited = false;
 		uint8_t val1, val2;
 
-		MIDIType type = static_cast<MIDIType>(Queue[QueueRead] >> 4);
-		uint8_t channel = Queue[QueueRead] & 0x0F;
+		MIDIType type = static_cast<MIDIType>(queue[queueRead] >> 4);
+		uint8_t channel = queue[queueRead] & 0x0F;
 
 		//NoteOn = 0x9, NoteOff = 0x8, PolyPressure = 0xA, ControlChange = 0xB, ProgramChange = 0xC, ChannelPressure = 0xD, PitchBend = 0xE, System = 0xF
-		while ((QueueSize > 2 && (type == NoteOn || type == NoteOff || type == PolyPressure ||  type == ControlChange ||  type == PitchBend)) ||
-				(QueueSize > 1 && (type == ProgramChange || type == ChannelPressure))) {
+		while ((queueCount > 2 && (type == NoteOn || type == NoteOff || type == PolyPressure ||  type == ControlChange ||  type == PitchBend)) ||
+				(queueCount > 1 && (type == ProgramChange || type == ChannelPressure))) {
 
 			QueueInc();
-			val1 = Queue[QueueRead];
+			val1 = queue[queueRead];
 			QueueInc();
 			if (type == ProgramChange || type == ChannelPressure) {
 				val2 = 0;
 			} else {
-				val2 = Queue[QueueRead];
+				val2 = queue[queueRead];
 				QueueInc();
 			}
 
@@ -35,7 +35,7 @@ void MIDIHandler::ProcessMidi()
 					for (auto& me : midiEvents) {
 						if (me.type == NoteOn && me.val1 == val1 && me.channel == channel) {
 							me.type = NoteOff;
-							me.time = Timer;
+							me.time = timer;
 							edited = true;
 						}
 					}
@@ -46,7 +46,7 @@ void MIDIHandler::ProcessMidi()
 					if (event.channel == channel && (type == event.type) &&
 							( (type == ControlChange && event.val1 == val1) || type == PitchBend || type == ChannelPressure)) {
 						event.type = type;
-						event.time = Timer;
+						event.time = timer;
 						event.val1 = val1;
 						event.val2 = val2;
 						edited = true;
@@ -54,6 +54,7 @@ void MIDIHandler::ProcessMidi()
 				}
 			}
 
+			// MIDI event has not been used to update existing entry - add to circular buffer
 			if (!edited) {
 				if (++eventTail > eventSize - 1) {
 					eventTail = 0;
@@ -65,40 +66,38 @@ void MIDIHandler::ProcessMidi()
 				} else {
 					++eventCount;
 				}
-				midiEvents[eventTail] = {Timer, type, channel, val1, val2};
-
+				midiEvents[eventTail] = {timer, type, channel, val1, val2};
 			}
 
-
-			type = static_cast<MIDIType>(Queue[QueueRead] >> 4);
-			channel = Queue[QueueRead] & 0x0F;
+			type = static_cast<MIDIType>(queue[queueRead] >> 4);
+			channel = queue[queueRead] & 0x0F;
 		}
 
 		// Clock
-		if (QueueSize > 0 && Queue[QueueRead] == 0xF8) {
-			ClockCount++;
+		if (queueCount > 0 && queue[queueRead] == 0xF8) {
+			clockCount++;
 			// MIDI clock triggers at 24 pulses per quarter note
-			if (ClockCount == 6) {
-				Clock = SysTickVal;
-				ClockCount = 0;
+			if (clockCount == 6) {
+				clock = SysTickVal;
+				clockCount = 0;
 			}
 			QueueInc();
 		}
 
 		//	handle unknown data in queue
-		if (QueueSize > 2 && type != 0x9 && type != 0x8 && type != 0xD && type != 0xE) {
+		if (queueCount > 2 && type != 0x9 && type != 0x8 && type != 0xD && type != 0xE) {
 			QueueInc();
 		}
 	}
 
 	// Draw clock
-	if (Clock > 0 && SysTickVal - Clock < 200) {
+	if (clock > 0 && SysTickVal - clock < 200) {
 		lcd.ColourFill(300, 230, 305, 235, LCD_WHITE);
 	} else {
 		lcd.ColourFill(300, 230, 305, 235, LCD_BLACK);
 	}
 
-	if (QueueSize < 10) {
+	if (queueCount < 10) {
 		// Draw midi events one at a time
 		if (eventCount > 0) {
 			if (drawIndex >= eventCount) {
@@ -117,39 +116,41 @@ void MIDIHandler::ProcessMidi()
 
 inline void MIDIHandler::QueueInc()
 {
-	QueueSize--;
-	QueueRead = (QueueRead + 1) % MIDIQUEUESIZE;
+	queueCount--;
+	queueRead = (queueRead + 1) % queueSize;
 }
 
 
 void MIDIHandler::DrawEvent(const MIDIEvent& event)
 {
-	// Darken colour based on age
-	const uint16_t colour = ui.DarkenColour(MIDIColours[event.channel], (Timer - event.time) >> 6);
-//	const uint16_t colour = LCD_WHITE;
+	// Darken colour based on age of event
+	const uint16_t colour = ui.DarkenColour(MIDIColours[event.channel], (timer - event.time) >> 7);
 
-	const uint8_t top = MIDIDRAWHEIGHT * drawIndex;
+	const uint8_t top = drawHeight * drawIndex;
 
-	lcd.DrawString(10, top, ui.IntToString(event.channel + 1) + " ", &lcd.Font_Large, colour, LCD_BLACK);
+	lcd.DrawString(10, top, ui.IntToString(event.channel + 1) + " ", &lcd.Font_Large, colour, LCD_BLACK);		// Print channel number
+
 	if (event.type == NoteOn || event.type == NoteOff) {
-
-		//lcd.ColourFill(40, top + 1, 70, top + MIDIDRAWHEIGHT - 2, (event.type == NoteOn) ? colour : LCD_BLACK);
+		// Draw rectangle - filled if note is still sounding
 		if (event.type == NoteOn) {
-			lcd.ColourFill(40, top + 1, 70, top + MIDIDRAWHEIGHT - 2, colour);
+			lcd.ColourFill(40, top + 1, 70, top + drawHeight - 2, colour);
 		} else {
-			lcd.ColourFill(41, top + 2, 69, top + MIDIDRAWHEIGHT - 3, LCD_BLACK);
-			lcd.DrawRect(40, top + 1, 70, top + MIDIDRAWHEIGHT - 2, colour);
+			lcd.ColourFill(41, top + 2, 69, top + drawHeight - 3, LCD_BLACK);
+			lcd.DrawRect(40, top + 1, 70, top + drawHeight - 2, colour);
 		}
 
 		lcd.DrawString(71, top, " " + NoteName(event.val1) + " ", &lcd.Font_Large, colour, LCD_BLACK);
 		lcd.DrawString(115, top, " vel ", &lcd.Font_Large, colour, LCD_BLACK);
 		lcd.DrawString(170, top, ui.IntToString(event.val2) + "   ", &lcd.Font_Large, colour, LCD_BLACK);
+
 	} else if (event.type == ChannelPressure) {
 		lcd.DrawString(40, top, "Aftertouch ", &lcd.Font_Large, colour, LCD_BLACK);
 		lcd.DrawString(170, top, ui.IntToString(event.val1) + "  ", &lcd.Font_Large, colour, LCD_BLACK);
+
 	} else if (event.type == PitchBend) {
 		lcd.DrawString(40, top, "Pitchbend  ", &lcd.Font_Large, colour, LCD_BLACK);
 		lcd.DrawString(170, top, ui.IntToString(event.val1 + (event.val2 << 7)) + "   ", &lcd.Font_Large, colour, LCD_BLACK);
+
 	} else if (event.type == ControlChange) {
 		lcd.DrawString(40, top, "Control " + ui.IntToString(event.val1) + "  ", &lcd.Font_Large, colour, LCD_BLACK);
 		lcd.DrawString(170, top, ui.IntToString(event.val2) + "    ", &lcd.Font_Large, colour, LCD_BLACK);
