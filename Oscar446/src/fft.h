@@ -16,7 +16,7 @@ public:
 	void Run();
 
 	static constexpr uint16_t fftSamples = 1024;
-	static constexpr uint16_t  WATERFALLSAMPLES = 512;
+	static constexpr uint16_t  waterfallSamples = 512;
 
 	// FFT and Waterfall Settings
 	bool autoTune = true;								// if true will attempt to adjust sample capture time to get sample capture to align to multiple of cycle period

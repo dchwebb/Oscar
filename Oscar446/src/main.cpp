@@ -12,14 +12,11 @@ volatile uint32_t SysTickVal = 0;
 
 int16_t vCalibOffset = -3590;			// Dev board with 14k resistors: -3940, 1.499999
 float vCalibScale = 1.46f;
-uint16_t CalibZeroPos = 9985;
-
-
-bool drawing = false;
+uint16_t calibZeroPos = 9985;
 
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 mode displayMode = Oscilloscope;
-uint32_t debugCount = 0, coverageTimer = 0, coverageTotal = 0;
+uint32_t coverageTimer = 0, coverageTotal = 0;
 
 
 LCD lcd;
@@ -53,7 +50,6 @@ int main(void) {
 	InitEncoders();
 	InitUART();
 	InitSysTick();
-
 	lcd.Init();								// Initialize ILI9341 LCD
 
 	// check if resetting config by holding left encoder button while resetting
@@ -63,7 +59,7 @@ int main(void) {
 
 	InitSampleAcquisition();
 	ui.ResetMode();
-	CalibZeroPos = CalcZeroSize();
+	calibZeroPos = CalcZeroSize();
 
 
 	while (1) {

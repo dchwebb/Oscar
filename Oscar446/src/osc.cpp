@@ -39,10 +39,10 @@ void Osc::OscRun()
 										 (oscDisplay & 2) ? OscBufferB[oscBufferNumber][calculatedOffsetX] :
 										  OscBufferC[oscBufferNumber][calculatedOffsetX];
 
-		if (!freqBelowZero && currentChannelY < CalibZeroPos) {		// first time reading goes below zero
+		if (!freqBelowZero && currentChannelY < calibZeroPos) {		// first time reading goes below zero
 			freqBelowZero = true;
 		}
-		if (freqBelowZero && currentChannelY >= CalibZeroPos) {		// zero crossing
+		if (freqBelowZero && currentChannelY >= calibZeroPos) {		// zero crossing
 			//	second zero crossing - calculate frequency averaged over a number passes to smooth
 			if (freqCrossZero > 0 && drawPos - freqCrossZero > 3) {
 				if (freq > 0) {
@@ -66,15 +66,15 @@ void Osc::OscRun()
 			if (h < vOffset) {
 				// do not draw
 			} else if (oscDisplay & 1 && h >= AY.first && h <= AY.second) {
-				lcd.drawBuffer[DrawBufferNumber][h - vOffset] = LCD_GREEN;
+				lcd.drawBuffer[drawBufferNumber][h - vOffset] = LCD_GREEN;
 			} else if (oscDisplay & 2 && h >= BY.first && h <= BY.second) {
-				lcd.drawBuffer[DrawBufferNumber][h - vOffset] = LCD_LIGHTBLUE;
+				lcd.drawBuffer[drawBufferNumber][h - vOffset] = LCD_LIGHTBLUE;
 			} else if (oscDisplay & 4 && h >= CY.first && h <= CY.second) {
-				lcd.drawBuffer[DrawBufferNumber][h - vOffset] = LCD_ORANGE;
+				lcd.drawBuffer[drawBufferNumber][h - vOffset] = LCD_ORANGE;
 			} else if (drawPos % 4 == 0 && (h + (lcd.drawHeight / (laneCount * 2))) % (lcd.drawHeight / (laneCount)) == 0) {						// 0v center mark
-				lcd.drawBuffer[DrawBufferNumber][h - vOffset] = LCD_GREY;
+				lcd.drawBuffer[drawBufferNumber][h - vOffset] = LCD_GREY;
 			} else {
-				lcd.drawBuffer[DrawBufferNumber][h - vOffset] = LCD_BLACK;
+				lcd.drawBuffer[drawBufferNumber][h - vOffset] = LCD_BLACK;
 			}
 		}
 
@@ -82,12 +82,12 @@ void Osc::OscRun()
 		if (drawPos < 5) {
 			for (int m = 1; m < (laneCount == 1 ? voltScale * 2 : (laneCount * 2)); ++m) {
 				int vPos = m * lcd.drawHeight / (laneCount == 1 ? voltScale * 2 : (laneCount * 2)) - 11;
-				lcd.drawBuffer[DrawBufferNumber][vPos] = LCD_GREY;
+				lcd.drawBuffer[drawBufferNumber][vPos] = LCD_GREY;
 			}
 		}
 
-		lcd.PatternFill(drawPos, vOffset, drawPos, lcd.drawHeight - (drawPos < 27 ? 12 : 0), lcd.drawBuffer[DrawBufferNumber]);
-		DrawBufferNumber = DrawBufferNumber == 0 ? 1 : 0;
+		lcd.PatternFill(drawPos, vOffset, drawPos, lcd.drawHeight - (drawPos < 27 ? 12 : 0), lcd.drawBuffer[drawBufferNumber]);
+		drawBufferNumber = drawBufferNumber == 0 ? 1 : 0;
 
 		// Store previous sample so next sample can be drawn as a line from old to new
 		prevPixelA = pixelA;

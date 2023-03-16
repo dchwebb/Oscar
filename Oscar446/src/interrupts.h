@@ -26,7 +26,8 @@ void TIM3_IRQHandler(void)
 		osc.adcC = ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11];
 
 		// check if we should start capturing - ie not drawing from the capture buffer and crossed over the trigger threshold (or in free mode)
-		if (!osc.capturing && (!drawing || osc.captureBufferNumber != osc.oscBufferNumber) && (osc.triggerTest == nullptr || (osc.bufferSamples > osc.triggerX && osc.oldAdc < osc.triggerY && *osc.triggerTest >= osc.triggerY))) {
+		if (!osc.capturing && (!osc.drawing || osc.captureBufferNumber != osc.oscBufferNumber) &&
+				(osc.triggerTest == nullptr || (osc.bufferSamples > osc.triggerX && osc.oldAdc < osc.triggerY && *osc.triggerTest >= osc.triggerY))) {
 			osc.capturing = true;
 
 			if (osc.triggerTest == nullptr) {									// free running mode
@@ -51,7 +52,7 @@ void TIM3_IRQHandler(void)
 		}
 
 		// If capturing or buffering samples waiting for trigger store current readings in buffer and increment counters
-		if (osc.capturing || !drawing || osc.captureBufferNumber != osc.oscBufferNumber) {
+		if (osc.capturing || !osc.drawing || osc.captureBufferNumber != osc.oscBufferNumber) {
 
 			osc.OscBufferA[osc.captureBufferNumber][osc.capturePos] = osc.adcA;
 			osc.OscBufferB[osc.captureBufferNumber][osc.capturePos] = osc.adcB;

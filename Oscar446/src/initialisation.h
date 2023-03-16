@@ -14,17 +14,8 @@
 #define CP_OFF		TIM9->CR1 &= ~TIM_CR1_CEN;
 #define CP_CAP		TIM9->CR1 &= ~TIM_CR1_CEN; coverageTotal = (coverageTimer * 65536) + TIM9->CNT;
 
-// Button debounce timer
-#define DB_ON		TIM5->EGR |= TIM_EGR_UG; TIM5->CR1 |= TIM_CR1_CEN;
-#define DB_OFF		TIM5->CR1 &= ~TIM_CR1_CEN;
-
-//	Define encoder pins and timers for easier reconfiguring
-#define L_ENC_CNT	TIM4->CNT
-#define R_ENC_CNT	TIM8->CNT
-
 
 #define ADC_BUFFER_LENGTH 12
-#define CIRCLENGTH 160
 #define MINSAMPLETIMER 200
 
 enum encoderType { HorizScale, HorizScaleFine, CalibVertScale, CalibVertOffset, VoltScale, TriggerChannel, Trigger_X, Trigger_Y, FFTAutoTune, ActiveChannel, ChannelSelect, MultiLane, TraceOverlay };
@@ -35,10 +26,9 @@ extern volatile uint16_t ADC_array[];
 extern volatile uint32_t SysTickVal;
 extern int16_t vCalibOffset;
 extern float vCalibScale;
-extern uint16_t CalibZeroPos;
+extern uint16_t calibZeroPos;
 extern mode displayMode;
-extern bool drawing;
-extern uint32_t debugCount, coverageTotal, coverageTimer;
+extern uint32_t coverageTotal, coverageTimer;
 
 
 

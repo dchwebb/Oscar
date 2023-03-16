@@ -152,21 +152,21 @@ void UI::DrawMenu()
 void UI::handleEncoders()
 {
 	// encoders count in fours with the zero point set to 100
-	if (std::abs((int16_t)32000 - (int16_t)L_ENC_CNT) > 3) {
-		int8_t v = L_ENC_CNT > 32000 ? 1 : -1;
+	if (std::abs((int16_t)32000 - (int16_t)TIM4->CNT) > 3) {
+		int8_t v = TIM4->CNT > 32000 ? 1 : -1;
 		if (menuMode)	MenuAction(&encoderModeL, v);
 		else			EncoderAction(encoderModeL, v);
 
-		L_ENC_CNT -= L_ENC_CNT > 32000 ? 4 : -4;
+		TIM4->CNT -= TIM4->CNT > 32000 ? 4 : -4;
 		cfg.ScheduleSave();
 	}
 
-	if (std::abs((int16_t)32000 - (int16_t)R_ENC_CNT) > 3) {
-		int8_t v = R_ENC_CNT > 32000 ? 1 : -1;
+	if (std::abs((int16_t)32000 - (int16_t)TIM8->CNT) > 3) {
+		int8_t v = TIM8->CNT > 32000 ? 1 : -1;
 		if (menuMode)	MenuAction(&encoderModeR, v);
 		else			EncoderAction(encoderModeR, v);
 
-		R_ENC_CNT -= R_ENC_CNT > 32000 ? 4 : -4;
+		TIM8->CNT -= TIM8->CNT > 32000 ? 4 : -4;
 		cfg.ScheduleSave();
 	}
 
@@ -260,11 +260,11 @@ void UI::ResetMode()
 		break;
 	}
 
-	fft.capturing = osc.capturing = drawing = false;
+	fft.capturing = osc.capturing = osc.drawing = false;
 	osc.bufferSamples = osc.capturePos = osc.oldAdc = 0;
 	osc.setTriggerChannel();
 	fft.dataAvailable[0] = fft.dataAvailable[1] = false;
-	fft.samples = displayMode == Fourier ? fft.fftSamples : fft.WATERFALLSAMPLES;
+	fft.samples = displayMode == Fourier ? fft.fftSamples : fft.waterfallSamples;
 
 
 	ui.DrawUI();

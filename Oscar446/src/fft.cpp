@@ -298,7 +298,7 @@ void FFT::displayWaterfall(const float* sinBuffer)
 	for (uint16_t i = 1; i < waterfallSize; i++) {
 		// calculate hypotenuse ahead of draw position to apply smoothing
 		while (hypPos < i + waterfallSmooth && hypPos < waterfallSize) {
-			top = waterfallDrawHeight * (1 - (std::hypot(sinBuffer[hypPos], cosBuffer[hypPos]) / (128 * WATERFALLSAMPLES)));
+			top = waterfallDrawHeight * (1 - (std::hypot(sinBuffer[hypPos], cosBuffer[hypPos]) / (128 * waterfallSamples)));
 
 			if (top < 30) {
 				badFFT++;					// every so often the FFT fails with extremely large numbers in all positions - just abort the draw and resample
