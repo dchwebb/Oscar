@@ -64,7 +64,7 @@
       36
     ],
     "visible_layers": "002fffc_80000001",
-    "zone_display_mode": 1
+    "zone_display_mode": 0
   },
   "meta": {
     "filename": "oscar.kicad_prl",
