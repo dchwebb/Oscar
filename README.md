@@ -33,13 +33,13 @@ Analog signal capture is carried out via the internal 12 bit ADCs. Capture is co
 
 The internal UART is used to capture MIDI data for display.
 
-![Image](https://raw.githubusercontent.com/dchwebb/Oscar/master/Graphics/MIDI2.jpg "icon")
+![Image](https://raw.githubusercontent.com/dchwebb/Oscar/master/Graphics/Midi2.jpg "icon")
 
-The microcontroller is clocked at 180MHz via an external 12MHz crystal oscillator.
+The microcontroller is clocked at 180MHz via an external 8MHz crystal oscillator.
 
 The display is a 320x240 TFT LCD controlled with an ILI9341 driver. Screen refreshes are sent using SPI via DMA from the microcontroller. Owing to memory limitations updates are carried out in double-buffered blocks rather than via full screen buffers.
 
-![Image](https://raw.githubusercontent.com/dchwebb/Oscar/master/Graphics/OscA.jpg "icon")
+![Image](https://raw.githubusercontent.com/dchwebb/Oscar/master/Graphics/WaterfallB.jpg "icon")
 
 ### Power Supply
 
@@ -48,4 +48,3 @@ The Eurorack +/-12V rails have reverse polarity protection and filtering. The 3.
 - +12V Current Draw: 157mA
 - -12V Current Draw: 6mA
 
-![Image](https://raw.githubusercontent.com/dchwebb/Oscar/master/Graphics/WAterfallB.jpg "icon")

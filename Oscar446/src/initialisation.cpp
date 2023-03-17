@@ -1,5 +1,6 @@
 #include "initialisation.h"
 
+// 8MHz / 8(M) * 360(N) / 2 (P) = 180MHz
 #define USE_HSE
 #define PLL_M 8
 #define PLL_N 360
