@@ -33,7 +33,6 @@ private:
 	static constexpr uint32_t eventSize = 12;
 
 	std::array<MIDIEvent, eventSize> midiEvents;		// Circular buffer to hold processed MIDI events
-	uint8_t eventHead = 0;
 	uint8_t eventTail = eventSize;
 	uint8_t eventCount = 0;
 

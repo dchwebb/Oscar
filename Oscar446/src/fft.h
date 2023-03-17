@@ -9,6 +9,23 @@ class UI;		// forward reference to handle circular dependency
 extern UI ui;
 extern LCD lcd;
 
+static constexpr uint32_t sinLutSize = 1024;
+
+constexpr auto CreateSinLUT()
+{
+	// Generate MIDI note to pitch lookup - this uses fractional MIDI note numbers to allow for pitchbends, fine tuning etc
+
+	std::array<float, sinLutSize> array {};
+	for (uint32_t s = 0; s < sinLutSize; ++s){
+		array[s] = sin(s * 2.0f * M_PI / sinLutSize);
+	}
+	return array;
+}
+
+
+
+constexpr std::array<float, sinLutSize> SineLUT = CreateSinLUT();
+
 
 class FFT {
 public:

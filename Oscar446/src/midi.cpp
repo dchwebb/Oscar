@@ -59,11 +59,7 @@ void MIDIHandler::ProcessMidi()
 				if (++eventTail > eventSize - 1) {
 					eventTail = 0;
 				}
-				if (eventCount >= eventSize) {		// Once the circular buffer is full each new event will overwrite the current head
-					if (eventHead++ >= eventSize) {
-						eventHead = 0;
-					}
-				} else {
+				if (eventCount < eventSize) {		// Once the circular buffer is full each new event will overwrite the oldest
 					++eventCount;
 				}
 				midiEvents[eventTail] = {timer, type, channel, val1, val2};
@@ -97,19 +93,17 @@ void MIDIHandler::ProcessMidi()
 		lcd.ColourFill(300, 230, 305, 235, LCD_BLACK);
 	}
 
-	if (queueCount < 10) {
-		// Draw midi events one at a time
-		if (eventCount > 0) {
-			if (drawIndex >= eventCount) {
-				drawIndex = 0;
-			}
-			int32_t arrayIndex = eventTail - drawIndex;			// Tail is the newest item - work backwards to older entries
-			if (arrayIndex < 0) {
-				arrayIndex += eventSize;
-			}
-			DrawEvent(midiEvents[arrayIndex]);
-			drawIndex++;
+	// Draw midi events one at a time, each time queue is processed
+	if (queueCount < 10 && eventCount > 0) {
+		if (drawIndex >= eventCount) {
+			drawIndex = 0;
 		}
+		int32_t arrayIndex = eventTail - drawIndex;			// Tail is the newest item - work backwards to older entries
+		if (arrayIndex < 0) {
+			arrayIndex += eventSize;
+		}
+		DrawEvent(midiEvents[arrayIndex]);
+		drawIndex++;
 	}
 }
 

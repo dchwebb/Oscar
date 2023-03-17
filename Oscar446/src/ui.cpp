@@ -72,7 +72,7 @@ void UI::EncoderAction(encoderType type, const int8_t& val)
 		break;
 	case VoltScale :
 		osc.voltScale -= val;
-		osc.voltScale = std::max(std::min((int)osc.voltScale, 12), 1);
+		osc.voltScale = std::clamp(static_cast<int>(osc.voltScale), 1, 12);
 		break;
 	case ChannelSelect :
 		osc.oscDisplay += val;

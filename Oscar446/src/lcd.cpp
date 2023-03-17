@@ -248,17 +248,15 @@ void LCD::DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const u
 
 	// Write character colour data to array
 	uint16_t px, py, fontRow, i = 0;
-	for (py = 0; py < font->Height; py++) {
+	for (py = 0; py < font->Height; ++py) {
 		fontRow = font->data[(c - 32) * font->Height + py];
-		for (px = 0; px < font->Width; px++) {
+		for (px = 0; px < font->Width; ++px) {
 			if ((fontRow << (px)) & 0x8000) {			// for one byte characters use if ((fontRow << px) & 0x200) {
-				//font->charBuffer[i] = foreground;
 				charBuffer[currentCharBuffer][i] = foreground;
 			} else {
-				//font->charBuffer[i] = background;
 				charBuffer[currentCharBuffer][i] = background;
 			}
-			i++;
+			++i;
 		}
 	}
 
@@ -272,8 +270,8 @@ void LCD::DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const u
 
 
 // writes a character to an existing display array
-void LCD::DrawCharMem(uint16_t x, uint16_t y, uint16_t memWidth, uint16_t* memBuffer, char c, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
-
+void LCD::DrawCharMem(uint16_t x, uint16_t y, uint16_t memWidth, uint16_t* memBuffer, char c, const FontData *font, const uint32_t& foreground, const uint32_t& background)
+{
 	// Write character colour data to array
 	uint16_t px, py, fontRow, i;
 
@@ -293,7 +291,9 @@ void LCD::DrawCharMem(uint16_t x, uint16_t y, uint16_t memWidth, uint16_t* memBu
 
 }
 
-void LCD::DrawString(uint16_t x0, uint16_t y0, std::string_view s, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
+
+void LCD::DrawString(uint16_t x0, uint16_t y0, std::string_view s, const FontData *font, const uint32_t& foreground, const uint32_t& background)
+{
 	for (const char& c : s) {
 		DrawChar(x0, y0, c, font, foreground, background);
 		x0 += font->Width;
