@@ -82,7 +82,9 @@ void Osc::OscRun()
 		if (drawPos < 5) {
 			for (int m = 1; m < (laneCount == 1 ? voltScale * 2 : (laneCount * 2)); ++m) {
 				int vPos = m * lcd.drawHeight / (laneCount == 1 ? voltScale * 2 : (laneCount * 2)) - 11;
-				lcd.drawBuffer[drawBufferNumber][vPos] = LCD_GREY;
+				if (vPos > 0) {
+					lcd.drawBuffer[drawBufferNumber][vPos] = LCD_GREY;
+				}
 			}
 		}
 
@@ -94,7 +96,7 @@ void Osc::OscRun()
 		prevPixelB = pixelB;
 		prevPixelC = pixelC;
 
-		drawPos ++;
+		++drawPos;
 		if (drawPos == lcd.drawWidth){
 			drawing = false;
 			noTriggerDraw = false;

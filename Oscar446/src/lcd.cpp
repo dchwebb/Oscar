@@ -1,7 +1,7 @@
 #include "lcd.h"
 
-void LCD::Init(void) {
-
+void LCD::Init()
+{
 	// Force reset
 	LCD_RST_RESET;		// Set reset pin low
 	Delay(20000);
@@ -47,7 +47,7 @@ void LCD::Init(void) {
 	ScreenFill(LCD_BLACK);
 };
 
-void LCD::CommandData(const cmdILI9341 cmd, cdArgs_t data)
+void LCD::CommandData(const cmdILI9341 cmd, const cdArgs_t data)
 {
 	Command(cmd);
 	LCD_DCX_SET;
@@ -56,7 +56,8 @@ void LCD::CommandData(const cmdILI9341 cmd, cdArgs_t data)
 	}
 }
 
-void LCD::Delay(volatile uint32_t delay)
+
+void LCD::Delay(volatile uint32_t delay)		// delay must be declared volatile or will be optimised away
 {
 	for (; delay != 0; delay--);
 }
@@ -69,21 +70,25 @@ void LCD::Command(const cmdILI9341 cmd)
 	SPISendByte(static_cast<uint8_t>(cmd));
 }
 
+
 //	Send data in either 8 or 16 bit modes
-void LCD::Data(const uint8_t& data)
+void LCD::Data(const uint8_t data)
 {
 	LCD_DCX_SET;
 	SPISendByte(data);
 }
 
-void LCD::Data16b(const uint16_t& data)
+
+void LCD::Data16b(const uint16_t data)
 {
 	LCD_DCX_SET;
 	SPISendByte(data >> 8);
 	SPISendByte(data & 0xFF);
 }
 
-void LCD::SetCursorPosition(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) {
+
+void LCD::SetCursorPosition(const uint16_t x1, const uint16_t y1, const uint16_t x2, const uint16_t y2)
+{
 	Command(cmdILI9341::COLUMN_ADDR);
 	Data16b(x1);
 	Data16b(x2);
@@ -94,7 +99,8 @@ void LCD::SetCursorPosition(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) 
 }
 
 
-void LCD::Rotate(LCD_Orientation_t o) {
+void LCD::Rotate(const LCD_Orientation_t o)
+{
 	Command(cmdILI9341::MAC);
 	switch (o) {
 		case LCD_Portrait :				Data(0x58); break;
@@ -113,17 +119,19 @@ void LCD::Rotate(LCD_Orientation_t o) {
 	}
 }
 
-void LCD::ScreenFill(const uint16_t colour) {
+
+void LCD::ScreenFill(const uint16_t colour)
+{
 	ColourFill(0, 0, width - 1, height - 1, colour);
 }
 
 
-void LCD::ColourFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t& colour)
+void LCD::ColourFill(const uint16_t x0, const uint16_t y0, const uint16_t x1, const uint16_t y1, const uint16_t colour)
 {
 	uint32_t pixelCount = (x1 - x0 + 1) * (y1 - y0 + 1);
 
 	SetCursorPosition(x0, y0, x1, y1);
-	DMAint16 = colour;								// data to transfer - set early to avoid problem where F722 doesn't update buffer until midway through send
+	dmaInt16 = colour;								// data to transfer - set early to avoid problem where F722 doesn't update buffer until midway through send
 	Command(cmdILI9341::GRAM);
 
 	LCD_DCX_SET;
@@ -133,7 +141,7 @@ void LCD::ColourFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const u
 	LCD_CLEAR_DMA_FLAGS
 	LCD_DMA_STREAM->CR &= ~DMA_SxCR_MINC;			// Memory not in increment mode
 	LCD_DMA_STREAM->NDTR = (pixelCount > 0xFFFF) ? pixelCount / 2 : pixelCount;						// Number of data items to transfer
-	LCD_DMA_STREAM->M0AR = (uint32_t) &DMAint16;	// DMA_InitStruct.DMA_Memory0BaseAddr;
+	LCD_DMA_STREAM->M0AR = (uint32_t) &dmaInt16;	// DMA_InitStruct.DMA_Memory0BaseAddr;
 	LCD_DMA_STREAM->CR |= DMA_SxCR_EN;				// Enable DMA transfer stream
 	LCD_SPI->CR2 |= SPI_CR2_TXDMAEN;				// Enable SPI TX DMA
 
@@ -146,7 +154,8 @@ void LCD::ColourFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const u
 }
 
 
-void LCD::PatternFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t* PixelData) {
+void LCD::PatternFill(const uint16_t x0, const uint16_t y0, const uint16_t x1, const uint16_t y1, const uint16_t* PixelData)
+{
 	uint32_t pixelCount = (x1 - x0 + 1) * (y1 - y0 + 1);
 
 	SetCursorPosition(x0, y0, x1, y1);
@@ -162,7 +171,8 @@ void LCD::PatternFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const 
 	LCD_SPI->CR2 |= SPI_CR2_TXDMAEN;				// Enable SPI TX DMA
 }
 
-void LCD::DrawPixel(uint16_t x, uint16_t y, const uint16_t& colour) {
+void LCD::DrawPixel(const uint16_t x, const uint16_t y, const uint16_t colour)
+{
 	SetCursorPosition(x, y, x, y);
 
 	Command(cmdILI9341::GRAM);
@@ -170,10 +180,8 @@ void LCD::DrawPixel(uint16_t x, uint16_t y, const uint16_t& colour) {
 }
 
 
-void LCD::DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint32_t& colour) {
-
-	int16_t dx, dy, err;
-
+void LCD::DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t colour)
+{
 	// Check lines are not too long
 	if (x0 >= width)	x0 = width - 1;
 	if (x1 >= width)	x1 = width - 1;
@@ -186,8 +194,8 @@ void LCD::DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uin
 	if (x0 > x1) 		std::swap(x0, x1);
 	if (y0 > y1) 		std::swap(y0, y1);
 
-	dx = x1 - x0;
-	dy = y1 - y0;
+	int16_t dx = x1 - x0;
+	int16_t dy = y1 - y0;
 
 	// Vertical or horizontal line
 	if (dx == 0 || dy == 0) {
@@ -195,7 +203,7 @@ void LCD::DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uin
 		return;
 	}
 
-	err = ((dx > dy) ? dx : -dy) / 2;
+	int16_t err = ((dx > dy) ? dx : -dy) / 2;
 
 	while (1) {
 		DrawPixel(x0, y0, colour);
@@ -217,8 +225,8 @@ void LCD::DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uin
 }
 
 
-void LCD::DrawRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint32_t& colour) {
-
+void LCD::DrawRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t colour)
+{
 	// Check lines are not too long
 	if (x0 >= width)	x0 = width - 1;
 	if (x1 >= width)	x1 = width - 1;
@@ -238,8 +246,8 @@ void LCD::DrawRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uin
 }
 
 
-void LCD::DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
-
+void LCD::DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const uint32_t& foreground, const uint16_t background)
+{
 	// If at the end of a line of display, go to new line and set x to 0 position
 	if ((x + font->Width) > width) {
 		y += font->Height;
@@ -247,9 +255,9 @@ void LCD::DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const u
 	}
 
 	// Write character colour data to array
-	uint16_t px, py, fontRow, i = 0;
+	uint16_t px, py, i = 0;
 	for (py = 0; py < font->Height; ++py) {
-		fontRow = font->data[(c - 32) * font->Height + py];
+		const uint16_t fontRow = font->data[(c - 32) * font->Height + py];
 		for (px = 0; px < font->Width; ++px) {
 			if ((fontRow << (px)) & 0x8000) {			// for one byte characters use if ((fontRow << px) & 0x200) {
 				charBuffer[currentCharBuffer][i] = foreground;
@@ -270,29 +278,28 @@ void LCD::DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const u
 
 
 // writes a character to an existing display array
-void LCD::DrawCharMem(uint16_t x, uint16_t y, uint16_t memWidth, uint16_t* memBuffer, char c, const FontData *font, const uint32_t& foreground, const uint32_t& background)
+void LCD::DrawCharMem(const uint16_t x, const uint16_t y, const uint16_t memWidth, uint16_t* memBuffer, char c, const FontData *font, const uint16_t foreground, const uint16_t background)
 {
 	// Write character colour data to array
-	uint16_t px, py, fontRow, i;
+	uint16_t px, py, i;
 
 	for (py = 0; py < font->Height; py++) {
 		i = (memWidth * (y + py)) + x;
 
-		fontRow = font->data[(c - 32) * font->Height + py];
-		for (px = 0; px < font->Width; px++) {
+		const uint16_t fontRow = font->data[(c - 32) * font->Height + py];
+		for (px = 0; px < font->Width; ++px) {
 			if ((fontRow << px) & 0x8000) {
 				memBuffer[i] = foreground;
 			} else {
 				memBuffer[i] = background;
 			}
-			i++;
+			++i;
 		}
 	}
-
 }
 
 
-void LCD::DrawString(uint16_t x0, uint16_t y0, std::string_view s, const FontData *font, const uint32_t& foreground, const uint32_t& background)
+void LCD::DrawString(uint16_t x0, const uint16_t y0, const std::string_view s, const FontData *font, const uint16_t foreground, const uint16_t background)
 {
 	for (const char& c : s) {
 		DrawChar(x0, y0, c, font, foreground, background);
@@ -301,18 +308,16 @@ void LCD::DrawString(uint16_t x0, uint16_t y0, std::string_view s, const FontDat
 }
 
 
-void LCD::DrawStringMem(uint16_t x0, uint16_t y0, uint16_t memWidth, uint16_t* memBuffer, std::string_view s, const FontData *font, const uint32_t& foreground, const uint32_t& background) {
+void LCD::DrawStringMem(uint16_t x0, const uint16_t y0, uint16_t const memWidth, uint16_t* memBuffer, std::string_view s, const FontData *font, const uint16_t foreground, const uint16_t background) {
 	for (const char& c : s) {
 		DrawCharMem(x0, y0, memWidth, memBuffer, c, font, foreground, background);
 		x0 += font->Width;
 	}
 }
 
-void LCD::SPISetDataSize(const SPIDataSize_t& Mode) {
 
-//	LCD_SPI->CR1 &= ~SPI_CR1_SPE;					// Disable SPI
-
-
+void LCD::SPISetDataSize(const SPIDataSize_t& Mode)
+{
 #ifndef STM32F722xx
 	if (Mode == SPIDataSize_16b) {
 		LCD_SPI->CR1 |= SPI_CR1_DFF;				// Data frame format: 0: 8-bit data frame format; 1: 16-bit data frame format
@@ -328,11 +333,11 @@ void LCD::SPISetDataSize(const SPIDataSize_t& Mode) {
 	}
 #endif
 
-//	LCD_SPI->CR1 |= SPI_CR1_SPE;					// Re-enable SPI
 }
 
-inline void LCD::SPISendByte(const uint8_t data) {
 
+inline void LCD::SPISendByte(const uint8_t data)
+{
 	while (SPI_DMA_Working);
 
 	// check if in 16 bit mode. Data frame format: 0: 8-bit data frame format; 1: 16-bit data frame format
@@ -346,7 +351,6 @@ inline void LCD::SPISendByte(const uint8_t data) {
 
 	uint8_t* SPI_DR = (uint8_t*)&(LCD_SPI->DR);		// cast the data register address as an 8 bit pointer - otherwise data gets packed wtih an extra byte of zeros
 	*SPI_DR = data;
-	//LCD_SPI->DR = data;							// Fill output buffer with data
 
 	while (SPI_DMA_Working);						// Wait for transmission to complete
 }

@@ -1,11 +1,10 @@
 #include <fft.h>
 
+// Create sine look up table as constexpr so will be stored in flash
+constexpr std::array<float, fft.sinLUTSize> sineLUT = fft.CreateSinLUT();
+
 FFT::FFT()
 {
-	for (uint32_t s = 0; s < sinLUTSize; ++s){
-		sineLUT[s] = sin(s * 2.0f * M_PI / sinLUTSize);
-	}
-
 	// clear the waterfall buffers
 	for (uint16_t w = 0; w < waterfallBuffers; ++w) {
 		for (uint16_t i = 0; i < waterfallSize; i++) {

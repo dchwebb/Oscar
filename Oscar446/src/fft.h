@@ -9,23 +9,6 @@ class UI;		// forward reference to handle circular dependency
 extern UI ui;
 extern LCD lcd;
 
-static constexpr uint32_t sinLutSize = 1024;
-
-constexpr auto CreateSinLUT()
-{
-	// Generate MIDI note to pitch lookup - this uses fractional MIDI note numbers to allow for pitchbends, fine tuning etc
-
-	std::array<float, sinLutSize> array {};
-	for (uint32_t s = 0; s < sinLutSize; ++s){
-		array[s] = sin(s * 2.0f * M_PI / sinLutSize);
-	}
-	return array;
-}
-
-
-
-constexpr std::array<float, sinLutSize> SineLUT = CreateSinLUT();
-
 
 class FFT {
 public:
@@ -34,6 +17,7 @@ public:
 
 	static constexpr uint16_t fftSamples = 1024;
 	static constexpr uint16_t  waterfallSamples = 512;
+	static constexpr uint32_t sinLUTSize = 1024;
 
 	// FFT and Waterfall Settings
 	bool autoTune = true;								// if true will attempt to adjust sample capture time to get sample capture to align to multiple of cycle period
@@ -60,9 +44,6 @@ private:
 	static constexpr uint16_t waterfallBuffers = 26;
 	static constexpr uint16_t waterfallSmooth = 4;
 
-	static constexpr uint32_t sinLUTSize = 1024;
-	float sineLUT[sinLUTSize];
-
 	float cosBuffer[fftSamples];						// Stores working cosine part of FFT calculation
 	uint8_t fftBufferNumber = 0;						// Index of sample buffer used for calculations
 	uint16_t fftErrors = 0;
@@ -79,6 +60,15 @@ private:
 	float harmonicFreq(const uint16_t harmonicNumber);
 	void sampleCapture(bool clearBuffer);
 
+public:
+	constexpr auto CreateSinLUT()
+	{
+		std::array<float, sinLUTSize> array {};
+		for (uint32_t s = 0; s < sinLUTSize; ++s){
+			array[s] = sin(s * 2.0f * M_PI / sinLUTSize);
+		}
+		return array;
+	}
 
 };
 

@@ -74,9 +74,6 @@ typedef std::vector<uint8_t> cdArgs_t;
 // Macros to check if DMA or SPI are busy - shouldn't need to check Stream5 as this is receive
 #define SPI_DMA_Working	LCD_DMA_STREAM->NDTR || ((LCD_SPI->SR & (SPI_SR_TXE | SPI_SR_RXNE)) == 0 || (LCD_SPI->SR & SPI_SR_BSY))
 
-enum LCD_Orientation_t { LCD_Portrait, LCD_Portrait_Flipped, LCD_Landscape, LCD_Landscape_Flipped } ;
-enum SPIDataSize_t { SPIDataSize_8b, SPIDataSize_16b };			// SPI in 8-bits mode/16-bits mode
-
 struct FontData {
 	const uint8_t Width;    // Font width in pixels
 	const uint8_t Height;   // Font height in pixels
@@ -86,7 +83,6 @@ struct FontData {
 
 class LCD {
 public:
-	LCD_Orientation_t orientation = LCD_Portrait;
 	uint16_t width = 240;
 	uint16_t height = 320;
 
@@ -94,37 +90,39 @@ public:
 	static constexpr uint16_t drawHeight = 216;
 	static constexpr uint16_t drawBufferWidth = 106;		// Maximum width of draw buffer (3 * 106 = 318 which is two short of full width but used in FFT for convenience
 
-	uint16_t DMAint16;
-	FontData Font_Small {7, 10, Font7x10};
-	FontData Font_Large {11, 18, Font11x18};
+	static constexpr FontData Font_Small {7, 10, Font7x10};
+	static constexpr FontData Font_Large {11, 18, Font11x18};
 
 	uint16_t drawBuffer[2][(drawHeight + 1) * drawBufferWidth];
 
 	void Init(void);
-	void Rotate(LCD_Orientation_t orientation);
 	void ScreenFill(const uint16_t colour);
-	void ColourFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t& colour);
-	void PatternFill(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t* PixelData);
-	void DrawPixel(uint16_t x, uint16_t y, const uint16_t& colour);
-	void DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint32_t& colour);
-	void DrawRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint32_t& colour);
-	void DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const uint32_t& foreground, const uint32_t& background);
-	void DrawCharMem(uint16_t x, uint16_t y, uint16_t memWidth, uint16_t* memBuffer, char c, const FontData *font, const uint32_t& foreground, const uint32_t& background);
-	void DrawString(uint16_t x0, uint16_t y0, std::string_view s, const FontData *font, const uint32_t& foreground, const uint32_t& background);
-	void DrawStringMem(uint16_t x0, uint16_t y0, uint16_t memWidth, uint16_t* memBuffer, std::string_view s, const FontData *font, const uint32_t& foreground, const uint32_t& background);
+	void ColourFill(const uint16_t x0, const uint16_t y0, const uint16_t x1, const uint16_t y1, const uint16_t colour);
+	void PatternFill(const uint16_t x0, const uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t* PixelData);
+	void DrawPixel(const uint16_t x, const uint16_t y, const uint16_t colour);
+	void DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t colour);
+	void DrawRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t colour);
+	void DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const uint32_t& foreground, const uint16_t background);
+	void DrawCharMem(uint16_t x, uint16_t y, uint16_t memWidth, uint16_t* memBuffer, char c, const FontData *font, const uint16_t foreground, const uint16_t background);
+	void DrawString(uint16_t x0, const uint16_t y0, std::string_view s, const FontData *font, const uint16_t foreground, const uint16_t background);
+	void DrawStringMem(uint16_t x0, const uint16_t y0, uint16_t memWidth, uint16_t* memBuffer, std::string_view s, const FontData *font, const uint16_t foreground, const uint16_t background);
 
-//	void Command(const uint8_t& data);
-	void Command(const cmdILI9341 data);
-	void Delay(volatile uint32_t delay);
 private:
+	enum LCD_Orientation_t { LCD_Portrait, LCD_Portrait_Flipped, LCD_Landscape, LCD_Landscape_Flipped } ;
+	enum SPIDataSize_t { SPIDataSize_8b, SPIDataSize_16b };			// SPI in 8-bits mode/16-bits mode
 
-	uint16_t charBuffer[2][16 * 26];
+	LCD_Orientation_t orientation = LCD_Portrait;
+	uint16_t charBuffer[2][Font_Large.Width * Font_Large.Height];
 	uint8_t currentCharBuffer = 0;
+	uint16_t dmaInt16;										// Used to buffer data for DMA transfer during colour fills
 
-	void Data(const uint8_t& data);
-	void Data16b(const uint16_t& data);
+	void Data(const uint8_t data);
+	void Data16b(const uint16_t data);
+	void Command(const cmdILI9341 data);
 	void CommandData(const cmdILI9341 cmd, cdArgs_t data);
-	void SetCursorPosition(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
+	void Rotate(LCD_Orientation_t orientation);
+	void SetCursorPosition(const uint16_t x1, const uint16_t y1, const uint16_t x2, const uint16_t y2);
+	void Delay(volatile uint32_t delay);
 
 	inline void SPISendByte(const uint8_t data);
 	void SPISetDataSize(const SPIDataSize_t& Mode);
