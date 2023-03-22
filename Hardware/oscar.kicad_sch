@@ -3352,9 +3352,9 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 75d963e0-c888-4ad7-8a34-38f330836dbd)
   )
-  (text "Fixes for next version:\nPull-down on BOOT0 pin\nMove daughterboard components to main board\nOpto-coupler on MIDI\nMIDI buffered through (x2?)\nBuffered mults on ABC channels\nRemove cap on encoder button\nDecoupling caps on micro and Op-amps\nR2 on daughterboard increased to 1.5k to improve backlight brightness?"
+  (text "Fixes for next version:\nPull-down on BOOT0 pin\nMove daughterboard components to main board\nMIDI in using TRS\nOpto-coupler on MIDI\nMIDI buffered through (x2?)\nBuffered mults on ABC channels\nRemove cap on encoder button\nDecoupling caps on MCU and Op-amps\nR2 on daughterboard increased to 1.5k to improve backlight brightness?\nOscillator load capacitors"
     (at 43.18 255.27 0)
-    (effects (font (size 1.27 1.27)) (justify left bottom))
+    (effects (font (size 2 2)) (justify left bottom))
     (uuid 7fe73338-fb12-4f57-a518-0192c44a0a94)
   )
   (text "Power Sections" (at 287.02 198.12 0)
