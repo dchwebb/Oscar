@@ -5,7 +5,7 @@
 #include "fft.h"
 #include "midi.h"
 #include "osc.h"
-
+#include "tuner.h"
 
 extern uint32_t SystemCoreClock;
 volatile uint32_t SysTickVal = 0;
@@ -15,7 +15,7 @@ float vCalibScale = 1.46f;
 uint16_t calibZeroPos = 9985;
 
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
-mode displayMode = Oscilloscope;
+//mode displayMode = Oscilloscope;
 uint32_t coverageTimer = 0, coverageTotal = 0;
 
 
@@ -71,13 +71,13 @@ int main(void) {
 
 		if (ui.menuMode) {
 
-		} else if (displayMode == Oscilloscope) {
+		} else if (ui.displayMode == DispMode::Oscilloscope) {
 			osc.OscRun();
 
-		} else if (displayMode == Fourier || displayMode == Waterfall) {
+		} else if (ui.displayMode == DispMode::Fourier || ui.displayMode == DispMode::Waterfall) {
 			fft.Run();
 
-		} else if (displayMode == MIDI) {
+		} else if (ui.displayMode == DispMode::MIDI) {
 			midi.ProcessMidi();
 
 		}

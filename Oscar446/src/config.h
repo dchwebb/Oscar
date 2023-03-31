@@ -21,7 +21,7 @@ struct configValues {
 
 	//	General settings
 	uint8_t Version = 2;				// version of saved config struct format
-	mode gen_displayMode = Oscilloscope;
+	DispMode gen_displayMode = DispMode::Oscilloscope;
 	int16_t gen_vCalibOffset;
 	float gen_vCalibScale;
 

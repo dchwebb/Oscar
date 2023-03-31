@@ -23,7 +23,7 @@ void FFT::Run()
 		fftBufferNumber = dataAvailable[0] ? 0 : 1;			// select correct draw buffer based on whether buffer 0 or 1 contains data
 		calcFFT(fftBuffer[fftBufferNumber]);
 
-		if (displayMode == Fourier) {
+		if (ui.displayMode == DispMode::Fourier) {
 			displayFFT(fftBuffer[fftBufferNumber]);
 		} else {
 			displayWaterfall(fftBuffer[fftBufferNumber]);

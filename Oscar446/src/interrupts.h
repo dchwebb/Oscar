@@ -3,7 +3,7 @@ void TIM3_IRQHandler(void)
 {
 	TIM3->SR &= ~TIM_SR_UIF;					// clear UIF flag
 
-	if (displayMode == Fourier || displayMode == Waterfall) {
+	if (ui.displayMode == DispMode::Fourier || ui.displayMode == DispMode::Waterfall) {
 		if (fft.capturePos == fft.samples && fft.capturing) {
 			fft.dataAvailable[fft.captureBufferIndex] = true;
 			fft.capturing = false;
@@ -19,7 +19,7 @@ void TIM3_IRQHandler(void)
 			++fft.capturePos;
 		}
 
-	} else if (displayMode == Oscilloscope) {
+	} else if (ui.displayMode == DispMode::Oscilloscope) {
 		// Average the last four ADC readings to smooth noise
 		osc.adcA = ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9];
 		osc.adcB = ADC_array[1] + ADC_array[4] + ADC_array[7] + ADC_array[10];

@@ -17,8 +17,9 @@
 #define ADC_BUFFER_LENGTH 12
 #define MINSAMPLETIMER 200
 
-enum encoderType { HorizScale, HorizScaleFine, CalibVertScale, CalibVertOffset, VoltScale, TriggerChannel, Trigger_X, Trigger_Y, FFTAutoTune, ActiveChannel, ChannelSelect, MultiLane, TraceOverlay };
-enum mode { Oscilloscope, Fourier, Waterfall, MIDI };
+enum encoderType { HorizScale, HorizScaleFine, CalibVertScale, CalibVertOffset, VoltScale, TriggerChannel, Trigger_X, Trigger_Y, FFTAutoTune, ActiveChannel, ChannelSelect, MultiLane, TraceOverlay, ZeroCrossing };
+//enum mode { Oscilloscope, Tuner, Fourier, Waterfall, MIDI };
+enum class DispMode { Oscilloscope, Tuner, Fourier, Waterfall, MIDI };
 enum oscChannel {channelA, channelB, channelC, channelNone};
 
 extern volatile uint16_t ADC_array[];
@@ -26,7 +27,7 @@ extern volatile uint32_t SysTickVal;
 extern int16_t vCalibOffset;
 extern float vCalibScale;
 extern uint16_t calibZeroPos;
-extern mode displayMode;
+//extern DispMode displayMode;
 extern uint32_t coverageTotal, coverageTimer;
 
 

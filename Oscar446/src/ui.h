@@ -4,6 +4,7 @@
 #include "lcd.h"
 #include "fft.h"
 #include "osc.h"
+#include "tuner.h"
 #include "config.h"
 
 
@@ -16,8 +17,11 @@ extern Osc osc;
 extern Config cfg;
 
 
+
 class UI {
 public:
+	DispMode displayMode = DispMode::Oscilloscope;
+
 	void DrawUI();
 	void handleEncoders();
 	void ResetMode();
@@ -62,6 +66,11 @@ private:
 		{ 2, "Channel", ActiveChannel },
 		{ 3, "AutoTune", FFTAutoTune },
 		{ 4, "Trace overlay", TraceOverlay } };
+
+	const std::vector<MenuItem> tunerMenu{
+		{ 0, "Channel", ActiveChannel },
+		{ 1, "Zero Cross", ZeroCrossing },
+		};
 
 	char charBuff[100];
 };

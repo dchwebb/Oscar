@@ -2,7 +2,7 @@
 
 void UI::DrawUI()
 {
-	if (displayMode == MIDI) {
+	if (displayMode == DispMode::MIDI) {
 		lcd.DrawString(120, lcd.drawHeight + 8, "MIDI Events", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 		return;
 	}
@@ -17,7 +17,7 @@ void UI::DrawUI()
 	lcd.DrawString(10, lcd.drawHeight + 8, EncoderLabel(encoderModeL), &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 	lcd.DrawString(240, lcd.drawHeight + 8, EncoderLabel(encoderModeR), &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 
-	if (displayMode == Oscilloscope) {
+	if (displayMode == DispMode::Oscilloscope) {
 		std::string s = FloatToString(640000.0f * (TIM3->PSC + 1) * (TIM3->ARR + 1) / SystemCoreClock, false) + "ms    ";
 		lcd.DrawString(140, lcd.drawHeight + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 	}
@@ -26,8 +26,10 @@ void UI::DrawUI()
 
 void UI::MenuAction(encoderType* et, volatile const int8_t& val)
 {
-	const std::vector<MenuItem>* currentMenu = displayMode == Oscilloscope? &oscMenu :
-			displayMode == Fourier || displayMode == Waterfall ? &fftMenu : nullptr;
+	const std::vector<MenuItem>* currentMenu =
+			displayMode == DispMode::Tuner ? &tunerMenu :
+			displayMode == DispMode::Oscilloscope ? &oscMenu :
+			displayMode == DispMode::Fourier || displayMode == DispMode::Waterfall ? &fftMenu : nullptr;
 
 	//	Move the selected menu item one forwards or one back based on value of encoder
 	auto mi = std::find_if(currentMenu->cbegin(), currentMenu->cend(), [=] (MenuItem m) { return m.selected == *et; } );
@@ -36,12 +38,15 @@ void UI::MenuAction(encoderType* et, volatile const int8_t& val)
 		*et = mi->selected;
 	}
 
-	if (displayMode == Oscilloscope) {
+	if (displayMode == DispMode::Oscilloscope) {
 		osc.encModeL = encoderModeL;
 		osc.encModeR = encoderModeR;
-	} else if (displayMode == Fourier) {
-		fft.EncModeL = encoderModeL;
-		fft.EncModeR = encoderModeR;
+	} else if (displayMode == DispMode::Tuner) {
+			tuner.encModeL = encoderModeL;
+			tuner.encModeR = encoderModeR;
+	} else if (displayMode == DispMode::Fourier) {
+		fft.encModeL = encoderModeL;
+		fft.encModeR = encoderModeR;
 	}
 
 	DrawMenu();
@@ -56,7 +61,7 @@ void UI::EncoderAction(encoderType type, const int8_t& val)
 		adj = TIM3->ARR + (TIM3->ARR < 5000 ? 200 : TIM3->ARR < 20000 ? 400 : TIM3->ARR < 50000 ? 4000 : 8000) * -val;
 		if (adj > MINSAMPLETIMER && adj < 560000) {
 			TIM3->ARR = adj;
-			if (displayMode == Oscilloscope)		osc.sampleTimer = adj;
+			if (displayMode == DispMode::Oscilloscope)		osc.sampleTimer = adj;
 			DrawUI();
 		}
 		break;
@@ -138,8 +143,10 @@ void UI::DrawMenu()
 	lcd.DrawLine(294, 1, 294, 27, LCD_WHITE);
 	lcd.DrawLine(159, 27, 159, 239, LCD_WHITE);
 
-	const std::vector<MenuItem>* currentMenu = displayMode == Oscilloscope? &oscMenu :
-			displayMode == Fourier || displayMode == Waterfall ? &fftMenu : nullptr;
+	const std::vector<MenuItem>* currentMenu =
+			displayMode == DispMode::Oscilloscope? &oscMenu :
+			displayMode == DispMode::Oscilloscope? &tunerMenu :
+			displayMode == DispMode::Fourier || displayMode == DispMode::Waterfall ? &fftMenu : nullptr;
 
 	uint8_t pos = 0;
 	for (auto m = currentMenu->cbegin(); m != currentMenu->cend(); m++, pos++) {
@@ -204,7 +211,7 @@ void UI::handleEncoders()
 	if (encoderBtnR) {
 		encoderBtnR = false;
 
-		if (displayMode == Oscilloscope || displayMode == Fourier) {
+		if (displayMode == DispMode::Oscilloscope || displayMode == DispMode::Tuner || displayMode == DispMode::Fourier) {
 			menuMode = true;
 			lcd.ScreenFill(LCD_BLACK);
 			DrawMenu();
@@ -216,15 +223,16 @@ void UI::handleEncoders()
 	if (encoderBtnL && !menuMode) {
 		encoderBtnL = false;
 		switch (displayMode) {
-		case Oscilloscope :
+		case DispMode::Oscilloscope :
 			osc.sampleTimer = TIM3->ARR;
-			displayMode = Fourier;
+			displayMode = DispMode::Tuner;
 			break;
-		case Fourier :		displayMode = Waterfall;	break;
-		case Waterfall :	displayMode = MIDI;			break;
-		case MIDI :
+		case DispMode::Tuner:			displayMode = DispMode::Fourier;	break;
+		case DispMode::Fourier :		displayMode = DispMode::Waterfall;	break;
+		case DispMode::Waterfall :		displayMode = DispMode::MIDI;		break;
+		case DispMode::MIDI :
 			TIM3->ARR = std::max(osc.sampleTimer, (uint16_t)MINSAMPLETIMER);
-			displayMode = Oscilloscope;
+			displayMode = DispMode::Oscilloscope;
 			break;
 		}
 		cfg.ScheduleSave();
@@ -242,21 +250,25 @@ void UI::ResetMode()
 
 	lcd.ScreenFill(LCD_BLACK);
 	switch (displayMode) {
-	case Oscilloscope :
+	case DispMode::Oscilloscope :
 		encoderModeL = osc.encModeL;
 		encoderModeR = osc.encModeR;
 		if (osc.sampleTimer > MINSAMPLETIMER)
 			TIM3->ARR = osc.sampleTimer;
 		break;
-	case Fourier :
-		encoderModeL = fft.EncModeL;
-		encoderModeR = fft.EncModeR;
+	case DispMode::Tuner :
+		encoderModeL = tuner.encModeL;
+		encoderModeR = tuner.encModeR;
 		break;
-	case Waterfall :
+	case DispMode::Fourier :
+		encoderModeL = fft.encModeL;
+		encoderModeR = fft.encModeR;
+		break;
+	case DispMode::Waterfall :
 		encoderModeL = fft.wfallEncModeL;
 		encoderModeR = fft.wfallEncModeR;
 		break;
-	case MIDI :
+	case DispMode::MIDI :
 		break;
 	}
 
@@ -264,12 +276,12 @@ void UI::ResetMode()
 	osc.bufferSamples = osc.capturePos = osc.oldAdc = 0;
 	osc.setTriggerChannel();
 	fft.dataAvailable[0] = fft.dataAvailable[1] = false;
-	fft.samples = displayMode == Fourier ? fft.fftSamples : fft.waterfallSamples;
+	fft.samples = displayMode == DispMode::Fourier ? fft.fftSamples : fft.waterfallSamples;
 
 
 	ui.DrawUI();
 
-	if (displayMode == MIDI) {
+	if (displayMode == DispMode::MIDI) {
 		UART4->CR1 |= USART_CR1_UE;			// Enable MIDI capture
 	} else {
 		TIM3->CR1 |= TIM_CR1_CEN;			// Reenable the sample acquisiton timer
@@ -306,6 +318,8 @@ std::string UI::EncoderLabel(encoderType type)
 		return "Channel " + std::string(fft.channel == channelA ? "A" : fft.channel == channelB ? "B" : "C");
 	case MultiLane :
 		return "Lanes: " + std::string(osc.multiLane ? "Yes" : "No ");
+	case ZeroCrossing :
+		return "Zero Cross";
 	default:
 	  return "";
 	}

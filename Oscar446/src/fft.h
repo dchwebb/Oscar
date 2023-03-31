@@ -23,8 +23,8 @@ public:
 	bool autoTune = true;								// if true will attempt to adjust sample capture time to get sample capture to align to multiple of cycle period
 	bool traceOverlay = true;							// Display trace overlaid on FFT display
 	oscChannel channel = channelA;
-	encoderType EncModeL = FFTAutoTune;
-	encoderType EncModeR = ActiveChannel;
+	encoderType encModeL = FFTAutoTune;
+	encoderType encModeR = ActiveChannel;
 	encoderType wfallEncModeL = HorizScale;
 	encoderType wfallEncModeR = ActiveChannel;
 
