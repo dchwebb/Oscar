@@ -74,6 +74,9 @@ int main(void) {
 		} else if (ui.displayMode == DispMode::Oscilloscope) {
 			osc.OscRun();
 
+		} else if (ui.displayMode == DispMode::Tuner) {
+			tuner.Run();
+
 		} else if (ui.displayMode == DispMode::Fourier || ui.displayMode == DispMode::Waterfall) {
 			fft.Run();
 

@@ -42,8 +42,8 @@ void UI::MenuAction(encoderType* et, volatile const int8_t& val)
 		osc.encModeL = encoderModeL;
 		osc.encModeR = encoderModeR;
 	} else if (displayMode == DispMode::Tuner) {
-			tuner.encModeL = encoderModeL;
-			tuner.encModeR = encoderModeR;
+		tuner.encModeL = encoderModeL;
+		tuner.encModeR = encoderModeR;
 	} else if (displayMode == DispMode::Fourier) {
 		fft.encModeL = encoderModeL;
 		fft.encModeR = encoderModeR;
@@ -61,7 +61,9 @@ void UI::EncoderAction(encoderType type, const int8_t& val)
 		adj = TIM3->ARR + (TIM3->ARR < 5000 ? 200 : TIM3->ARR < 20000 ? 400 : TIM3->ARR < 50000 ? 4000 : 8000) * -val;
 		if (adj > MINSAMPLETIMER && adj < 560000) {
 			TIM3->ARR = adj;
-			if (displayMode == DispMode::Oscilloscope)		osc.sampleTimer = adj;
+			if (displayMode == DispMode::Oscilloscope) {
+				osc.sampleTimer = adj;
+			}
 			DrawUI();
 		}
 		break;
@@ -145,7 +147,7 @@ void UI::DrawMenu()
 
 	const std::vector<MenuItem>* currentMenu =
 			displayMode == DispMode::Oscilloscope? &oscMenu :
-			displayMode == DispMode::Oscilloscope? &tunerMenu :
+			displayMode == DispMode::Tuner? &tunerMenu :
 			displayMode == DispMode::Fourier || displayMode == DispMode::Waterfall ? &fftMenu : nullptr;
 
 	uint8_t pos = 0;
@@ -222,18 +224,17 @@ void UI::handleEncoders()
 	// Change display mode (note recheck menuMode as interrupts can alter this mid-routine)
 	if (encoderBtnL && !menuMode) {
 		encoderBtnL = false;
-		switch (displayMode) {
-		case DispMode::Oscilloscope :
+
+		if (displayMode == DispMode::Oscilloscope) {
 			osc.sampleTimer = TIM3->ARR;
-			displayMode = DispMode::Tuner;
-			break;
-		case DispMode::Tuner:			displayMode = DispMode::Fourier;	break;
-		case DispMode::Fourier :		displayMode = DispMode::Waterfall;	break;
-		case DispMode::Waterfall :		displayMode = DispMode::MIDI;		break;
-		case DispMode::MIDI :
-			TIM3->ARR = std::max(osc.sampleTimer, (uint16_t)MINSAMPLETIMER);
-			displayMode = DispMode::Oscilloscope;
-			break;
+		}
+
+		switch (displayMode) {
+		case DispMode::Oscilloscope :	displayMode = DispMode::Tuner;			break;
+		case DispMode::Tuner:			displayMode = DispMode::Fourier;		break;
+		case DispMode::Fourier :		displayMode = DispMode::Waterfall;		break;
+		case DispMode::Waterfall :		displayMode = DispMode::MIDI;			break;
+		case DispMode::MIDI :			displayMode = DispMode::Oscilloscope;	break;
 		}
 		cfg.ScheduleSave();
 		ResetMode();
@@ -253,10 +254,10 @@ void UI::ResetMode()
 	case DispMode::Oscilloscope :
 		encoderModeL = osc.encModeL;
 		encoderModeR = osc.encModeR;
-		if (osc.sampleTimer > MINSAMPLETIMER)
-			TIM3->ARR = osc.sampleTimer;
+		TIM3->ARR = std::max(osc.sampleTimer, (uint16_t)MINSAMPLETIMER);
 		break;
 	case DispMode::Tuner :
+		tuner.Activate();
 		encoderModeL = tuner.encModeL;
 		encoderModeR = tuner.encModeR;
 		break;
@@ -318,8 +319,8 @@ std::string UI::EncoderLabel(encoderType type)
 		return "Channel " + std::string(fft.channel == channelA ? "A" : fft.channel == channelB ? "B" : "C");
 	case MultiLane :
 		return "Lanes: " + std::string(osc.multiLane ? "Yes" : "No ");
-	case ZeroCrossing :
-		return "Zero Cross";
+	case TunerMode :
+		return tuner.mode == Tuner::ZeroCrossing ? "Zero Cross" : "Auto Corr";
 	default:
 	  return "";
 	}

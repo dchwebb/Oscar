@@ -20,7 +20,7 @@ A waterfall plot shows the frequency spectrum over time in a 3 dimensional view.
 
 A MIDI event viewer displays the MIDI channel, note on/off status, pitchbends, control changes and aftertouch. Clock speed is indicated with a flashing dot. 
 
-![Image](https://raw.githubusercontent.com/dchwebb/Oscar/master/Graphics/MIDI1.jpg "icon")
+![Image](https://raw.githubusercontent.com/dchwebb/Oscar/master/Graphics/Midi1.jpg "icon")
 
 Technical
 ---------

@@ -69,7 +69,7 @@ private:
 
 	const std::vector<MenuItem> tunerMenu{
 		{ 0, "Channel", ActiveChannel },
-		{ 1, "Zero Cross", ZeroCrossing },
+		{ 1, "Tuner Mode", TunerMode }
 		};
 
 	char charBuff[100];

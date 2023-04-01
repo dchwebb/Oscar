@@ -17,7 +17,7 @@
 #define ADC_BUFFER_LENGTH 12
 #define MINSAMPLETIMER 200
 
-enum encoderType { HorizScale, HorizScaleFine, CalibVertScale, CalibVertOffset, VoltScale, TriggerChannel, Trigger_X, Trigger_Y, FFTAutoTune, ActiveChannel, ChannelSelect, MultiLane, TraceOverlay, ZeroCrossing };
+enum encoderType { HorizScale, HorizScaleFine, CalibVertScale, CalibVertOffset, VoltScale, TriggerChannel, Trigger_X, Trigger_Y, FFTAutoTune, ActiveChannel, ChannelSelect, MultiLane, TraceOverlay, TunerMode };
 //enum mode { Oscilloscope, Tuner, Fourier, Waterfall, MIDI };
 enum class DispMode { Oscilloscope, Tuner, Fourier, Waterfall, MIDI };
 enum oscChannel {channelA, channelB, channelC, channelNone};

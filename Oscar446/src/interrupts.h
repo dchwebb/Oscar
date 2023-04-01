@@ -3,7 +3,9 @@ void TIM3_IRQHandler(void)
 {
 	TIM3->SR &= ~TIM_SR_UIF;					// clear UIF flag
 
-	if (ui.displayMode == DispMode::Fourier || ui.displayMode == DispMode::Waterfall) {
+	if (ui.displayMode == DispMode::Tuner) {
+		tuner.Capture();
+	} else if (ui.displayMode == DispMode::Fourier || ui.displayMode == DispMode::Waterfall) {
 		if (fft.capturePos == fft.samples && fft.capturing) {
 			fft.dataAvailable[fft.captureBufferIndex] = true;
 			fft.capturing = false;
