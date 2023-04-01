@@ -43,20 +43,32 @@ void Tuner::Activate()
 void Tuner::Run()
 {
 	if (samplesReady) {
-		float diff = zeroCrossings[2] - zeroCrossings[1];		// Get first time difference between zero crossings
+		float diff = zeroCrossings[1] - zeroCrossings[0];		// Get first time difference between zero crossings
+		uint32_t stride = 1;			// Allow pitch detection where multiple zero crossings in cycle
+		uint32_t noMatch = 0;			// When enough failed matches increase stride
 		uint32_t matchCount = 0;
 		samplesReady = false;
 
-		for (uint32_t i = 2; i < zeroCrossings.size(); ++i) {
-			float tempDiff = zeroCrossings[i + 1] - zeroCrossings[i];
+		uint32_t i;
+		for (i = 1; i < zeroCrossings.size() - stride; ++i) {
+			float tempDiff = zeroCrossings[i + stride] - zeroCrossings[i];
 
 			if (tempDiff - diff < 0.05f * diff) {
+				diff = (diff + tempDiff) / 2.0f;			// Apply some damping to average out differences
 				++matchCount;
-				diff = (diff + tempDiff) / 2;
+			} else {
+				++noMatch;
+				if (noMatch > 3 && stride < 10) {			// After three failures increase stride length and restart loop
+					++stride;
+					diff = zeroCrossings[stride] - zeroCrossings[0];
+					i = 0;
+					matchCount = 0;
+					noMatch = 0;
+				}
 			}
 		}
 
-		if (matchCount > 20) {
+		if (matchCount > 10) {
 			float calcFreq = static_cast<float>(SystemCoreClock) / (2.0f * diff * (TIM3->PSC + 1) * (TIM3->ARR + 1));
 
 			// if value is close apply some damping

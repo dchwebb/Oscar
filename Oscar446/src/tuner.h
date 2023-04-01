@@ -22,7 +22,7 @@ public:
 
 	tunerMode mode = ZeroCrossing;
 
-	std::array<uint32_t, 50> zeroCrossings;
+	std::array<uint32_t, 20> zeroCrossings;
 	bool overZero = false;
 	bool samplesReady = false;
 	uint32_t zCrossPos = 0;
