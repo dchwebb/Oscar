@@ -128,6 +128,11 @@ void UI::EncoderAction(encoderType type, const int8_t& val)
 		osc.multiLane = !osc.multiLane;
 		DrawUI();
 		break;
+	case TunerMode:
+		//tuner.mode = tuner.mode == tuner::tunerMode::ZeroCrossing ? tuner::tunerMode::AutoCorrelation : tuner.mode == tuner::tunerMode::AutoCorrelation : tuner::tunerMode::FFT;
+		tuner.mode = tuner.mode == Tuner::ZeroCrossing ? Tuner::AutoCorrelation : Tuner::ZeroCrossing;
+		tuner.Activate(true);
+		DrawUI();
 	default:
 	  break;
 	}
@@ -182,7 +187,7 @@ void UI::handleEncoders()
 
 
 	// Check if encoder buttons are pressed with debounce (L: PA10; R: PB13) 0 = pressed
-	if (GPIOA->IDR & GPIO_IDR_IDR_10 && leftBtnReleased == 0) {		// button released
+	if (GPIOA->IDR & GPIO_IDR_IDR_10 && leftBtnReleased == 0) {
 		leftBtnReleased = SysTickVal;
 	}
 	if ((GPIOA->IDR & GPIO_IDR_IDR_10) == 0) {
@@ -191,7 +196,7 @@ void UI::handleEncoders()
 		}
 		leftBtnReleased = 0;
 	}
-	if (GPIOB->IDR & GPIO_IDR_IDR_13 && rightBtnReleased == 0) {		// button released
+	if (GPIOB->IDR & GPIO_IDR_IDR_13 && rightBtnReleased == 0) {
 		rightBtnReleased = SysTickVal;
 	}
 	if ((GPIOB->IDR & GPIO_IDR_IDR_13) == 0) {
@@ -257,7 +262,7 @@ void UI::ResetMode()
 		TIM3->ARR = std::max(osc.sampleTimer, (uint16_t)MINSAMPLETIMER);
 		break;
 	case DispMode::Tuner :
-		tuner.Activate();
+		tuner.Activate(false);
 		encoderModeL = tuner.encModeL;
 		encoderModeR = tuner.encModeR;
 		break;

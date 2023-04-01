@@ -13,9 +13,9 @@ extern LCD lcd;
 class Tuner {
 public:
 	enum tunerMode {ZeroCrossing, AutoCorrelation, FFT};
-	void Capture();				// Called from timer interrupt
-	void Activate();			// Tuning mode started
-	void Run();					// Processes samples once collected
+	void Capture();							// Called from timer interrupt
+	void Activate(bool startTimer);			// Tuning mode started
+	void Run();								// Processes samples once collected
 
 	encoderType encModeL = TunerMode;
 	encoderType encModeR = ActiveChannel;
@@ -25,11 +25,11 @@ public:
 	std::array<uint32_t, 20> zeroCrossings;
 	bool overZero = false;
 	bool samplesReady = false;
-	uint32_t zCrossPos = 0;
+	uint32_t tunerPos = 0;
 	uint32_t timer  = 0;
-	uint32_t highThreshold = 8192;
-	uint32_t lowThreshold;
 	float currFreq = 0.0f;
+
+	std::array<uint16_t, 2000> samples;		// Could provisionally use fftBuffer which is 2x1024 samples
 };
 
 extern Tuner tuner;
