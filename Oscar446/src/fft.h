@@ -73,4 +73,4 @@ public:
 };
 
 
-
+extern FFT fft;

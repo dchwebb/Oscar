@@ -1,5 +1,7 @@
 #include <fft.h>
 
+FFT fft;
+
 // Create sine look up table as constexpr so will be stored in flash
 constexpr std::array<float, fft.sinLUTSize> sineLUT = fft.CreateSinLUT();
 

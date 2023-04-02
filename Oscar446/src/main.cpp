@@ -20,7 +20,6 @@ uint32_t coverageTimer = 0, coverageTotal = 0;
 
 
 LCD lcd;
-FFT fft;
 UI ui;
 MIDIHandler midi;
 Osc osc;

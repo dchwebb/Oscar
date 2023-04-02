@@ -2,6 +2,13 @@
 
 Tuner tuner;
 
+Tuner::Tuner()
+{
+	samplesSize = sizeof(fft.fftBuffer) / 2;
+	samples = (uint16_t*)&(fft.fftBuffer);
+
+}
+
 void Tuner::Capture()
 {
 	if (mode == ZeroCrossing) {
@@ -23,8 +30,8 @@ void Tuner::Capture()
 		}
 	} else if (mode == AutoCorrelation) {
 		samples[tunerPos] = ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9];
-		if (++tunerPos > samples.size()) {
-			TIM3->CR1 &= ~TIM_CR1_CEN;				// Disable the sample acquisiton timer
+		if (++tunerPos > samplesSize) {
+			TIM3->CR1 &= ~TIM_CR1_CEN;					// Disable the sample acquisiton timer
 			samplesReady = true;
 		}
 	}
@@ -38,11 +45,11 @@ void Tuner::Activate(bool startTimer)
 		const uint32_t currVal = ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9];
 		overZero = currVal > calibZeroPos;
 		timer = 0;
-		TIM3->ARR = 1023;		// 90MHz / 1875 = 48kHz
 	} else if (mode == AutoCorrelation) {
 
 	}
 
+	TIM3->ARR = clockDivider;		// eg 90MHz / 1875 = 48kHz
 	tunerPos = 0;
 	samplesReady = false;
 
@@ -55,6 +62,9 @@ void Tuner::Activate(bool startTimer)
 void Tuner::Run()
 {
 	if (samplesReady) {
+		uint32_t freqInSamples = 0;
+		const uint32_t start = SysTickVal;
+
 		if (mode == ZeroCrossing) {
 			float diff = zeroCrossings[1] - zeroCrossings[0];		// Get first time difference between zero crossings
 			uint32_t stride = 1;			// Allow pitch detection where multiple zero crossings in cycle
@@ -81,21 +91,60 @@ void Tuner::Run()
 			}
 
 			if (matchCount > 10) {
-				float calcFreq = static_cast<float>(SystemCoreClock) / (2.0f * diff * (TIM3->PSC + 1) * (TIM3->ARR + 1));
-
-				// if value is close apply some damping
-				if (std::abs(calcFreq - currFreq) / calcFreq < 0.1f) {
-					currFreq = 0.85f * currFreq + 0.15f * calcFreq;
-				} else {
-					currFreq = calcFreq;
-				}
-
-				lcd.DrawString(10, 10, currFreq != 0 ? ui.FloatToString(currFreq, false) + "Hz    " : "          ", &lcd.Font_Large, LCD_WHITE, LCD_BLACK);
-
+				freqInSamples = diff;
 			}
+
 		} else if (mode == AutoCorrelation) {
 
+			for (uint32_t lag = 0; lag < results.size(); ++lag) {
+				float correlation = 0;
+				for (uint32_t w = 0; w < window; ++w) {
+					correlation += std::pow(samples[w + lag] - samples[w], 2);
+				}
+				results[lag] = static_cast<uint32_t>(correlation);
+			}
+
+			const uint32_t max = *std::max_element(results.begin(), results.end());		// Get largest value in array
+
+			// Find the first item in the array that is 1% the size of the largest item
+			const uint32_t threshold = max / 100;
+			uint32_t dist = 0;
+			uint32_t currLowest = 0;
+			bool startSearch = false;			// Set to true once we are ready to search (as with zero lag auto-correlation is perfect)
+			bool underThreshold = false;		// Used when locating lowest point below threshold
+			for (; dist < results.size(); ++dist) {
+				if (startSearch) {
+					if (underThreshold) {
+						if (results[dist] < currLowest) {
+							currLowest = results[dist];
+						} else {
+							freqInSamples = dist - 1;
+							break;
+						}
+					} else if (results[dist] < threshold) {
+						underThreshold = true;
+						currLowest = results[dist];
+					}
+				} else if (results[dist] > max / 90) {
+					startSearch = true;
+				}
+			}
 		}
+
+		if (freqInSamples) {
+			const float calcFreq = static_cast<float>(SystemCoreClock) / (2.0f * freqInSamples * (TIM3->PSC + 1) * (TIM3->ARR + 1));
+
+			// if value is close apply some damping; otherwise just use new value
+			if (std::abs(calcFreq - currFreq) / calcFreq < 0.1f) {
+				currFreq = 0.9f * currFreq + 0.1f * calcFreq;
+			} else {
+				currFreq = calcFreq;
+			}
+			lcd.DrawString(10, 10, ui.FloatToString(currFreq, false) + "Hz    ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
+			lcd.DrawString(10, 60, ui.IntToString(SysTickVal - start) + "ms  ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
+		}
+
+
 		Activate(true);
 	}
 }

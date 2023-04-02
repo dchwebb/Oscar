@@ -92,6 +92,7 @@ public:
 
 	static constexpr FontData Font_Small {7, 10, Font7x10};
 	static constexpr FontData Font_Large {11, 18, Font11x18};
+	static constexpr FontData Font_XLarge {16, 26, Font16x26};
 
 	uint16_t drawBuffer[2][(drawHeight + 1) * drawBufferWidth];
 
@@ -112,7 +113,7 @@ private:
 	enum SPIDataSize_t { SPIDataSize_8b, SPIDataSize_16b };			// SPI in 8-bits mode/16-bits mode
 
 	LCD_Orientation_t orientation = LCD_Portrait;
-	uint16_t charBuffer[2][Font_Large.Width * Font_Large.Height];
+	uint16_t charBuffer[2][Font_XLarge.Width * Font_XLarge.Height];
 	uint8_t currentCharBuffer = 0;
 	uint16_t dmaInt16;										// Used to buffer data for DMA transfer during colour fills
 
