@@ -15,10 +15,12 @@ public:
 	FFT();
 	void Run();
 	void Capture();
+	void Activate();
 
 	static constexpr uint32_t fftSamples = 1024;
 	static constexpr uint32_t  waterfallSamples = 512;
 	static constexpr uint32_t sinLUTSize = 1024;
+	static constexpr uint32_t timerDefault = 10000;		// Default speed of sample capture (start fairly slow) sample rate is 90Mhz / clockDivider
 
 	// FFT and Waterfall Settings
 	bool autoTune = true;								// if true will attempt to adjust sample capture time to get sample capture to align to multiple of cycle period

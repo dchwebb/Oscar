@@ -129,8 +129,7 @@ void UI::EncoderAction(encoderType type, const int8_t& val)
 		DrawUI();
 		break;
 	case TunerMode:
-		//tuner.mode = tuner.mode == tuner::tunerMode::ZeroCrossing ? tuner::tunerMode::AutoCorrelation : tuner.mode == tuner::tunerMode::AutoCorrelation : tuner::tunerMode::FFT;
-		tuner.mode = tuner.mode == Tuner::ZeroCrossing ? Tuner::AutoCorrelation : Tuner::ZeroCrossing;
+		tuner.mode = tuner.mode == Tuner::ZeroCrossing ? Tuner::AutoCorrelation : tuner.mode == Tuner::AutoCorrelation ? Tuner::FFT : Tuner::ZeroCrossing;
 		tuner.Activate(true);
 		DrawUI();
 	default:
@@ -235,11 +234,11 @@ void UI::handleEncoders()
 		}
 
 		switch (displayMode) {
-		case DispMode::Oscilloscope :	displayMode = DispMode::Tuner;			break;
+		case DispMode::Oscilloscope:	displayMode = DispMode::Tuner;			break;
 		case DispMode::Tuner:			displayMode = DispMode::Fourier;		break;
-		case DispMode::Fourier :		displayMode = DispMode::Waterfall;		break;
-		case DispMode::Waterfall :		displayMode = DispMode::MIDI;			break;
-		case DispMode::MIDI :			displayMode = DispMode::Oscilloscope;	break;
+		case DispMode::Fourier:			displayMode = DispMode::Waterfall;		break;
+		case DispMode::Waterfall:		displayMode = DispMode::MIDI;			break;
+		case DispMode::MIDI:			displayMode = DispMode::Oscilloscope;	break;
 		}
 		cfg.ScheduleSave();
 		ResetMode();
@@ -266,11 +265,13 @@ void UI::ResetMode()
 		encoderModeL = tuner.encModeL;
 		encoderModeR = tuner.encModeR;
 		break;
-	case DispMode::Fourier :
+	case DispMode::Fourier:
+		fft.Activate();
 		encoderModeL = fft.encModeL;
 		encoderModeR = fft.encModeR;
 		break;
 	case DispMode::Waterfall :
+		fft.Activate();
 		encoderModeL = fft.wfallEncModeL;
 		encoderModeR = fft.wfallEncModeR;
 		break;
@@ -278,12 +279,9 @@ void UI::ResetMode()
 		break;
 	}
 
-	fft.capturing = osc.capturing = osc.drawing = false;
+	osc.capturing = osc.drawing = false;
 	osc.bufferSamples = osc.capturePos = osc.oldAdc = 0;
 	osc.setTriggerChannel();
-	fft.dataAvailable[0] = fft.dataAvailable[1] = false;
-	//fft.samples = displayMode == DispMode::Fourier ? fft.fftSamples : fft.waterfallSamples;
-
 
 	ui.DrawUI();
 
@@ -325,7 +323,7 @@ std::string UI::EncoderLabel(encoderType type)
 	case MultiLane :
 		return "Lanes: " + std::string(osc.multiLane ? "Yes" : "No ");
 	case TunerMode :
-		return tuner.mode == Tuner::ZeroCrossing ? "Zero Cross" : "Auto Corr";
+		return tuner.mode == Tuner::ZeroCrossing ? "Zero Cross" : tuner.mode == Tuner::AutoCorrelation ? "Auto Corr" : "FFT       ";
 	default:
 	  return "";
 	}

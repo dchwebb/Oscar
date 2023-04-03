@@ -21,15 +21,31 @@ void Tuner::Capture()
 		}
 		if (!overZero && currVal > calibZeroPos) {
 			overZero = true;
-			zeroCrossings[tunerPos] = timer;
-			if (++tunerPos == zeroCrossings.size()) {
+			zeroCrossings[bufferPos] = timer;
+			if (++bufferPos == zeroCrossings.size()) {
 				samplesReady = true;
 			}
-
 		}
+
 	} else if (mode == AutoCorrelation) {
-		samples[tunerPos] = ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9];
-		if (++tunerPos > samplesSize) {
+		samples[bufferPos] = ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9];
+		if (++bufferPos > samplesSize) {
+			samplesReady = true;
+		}
+
+	} else if (mode == FFT) {
+
+		float* floatBuffer = (float*)&(fft.fftBuffer);
+
+		const uint32_t adcSummed = ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9];
+		floatBuffer[bufferPos] = 2047.0f - (static_cast<float>(adcSummed) / 4.0f);
+
+		// Capture 1.5 buffers - if capturing last third add it to the 2nd half of buffer 2
+		// 1st half of buffer 2 will be populated later from 2nd half of buffer 1
+		if (++bufferPos == FFT::fftSamples) {
+			bufferPos += FFT::fftSamples / 2;
+		}
+		if (bufferPos > FFT::fftSamples * 2) {
 			samplesReady = true;
 		}
 	}
@@ -47,12 +63,14 @@ void Tuner::Activate(bool startTimer)
 		const uint32_t currVal = ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9];
 		overZero = currVal > calibZeroPos;
 		timer = 0;
+		TIM3->ARR = zeroCrossRate;
 	} else if (mode == AutoCorrelation) {
-
+		TIM3->ARR = autoCorrRate;
+	} else if (mode == FFT) {
+		TIM3->ARR = FFT::timerDefault;
 	}
 
-	TIM3->ARR = clockDivider;		// eg 90MHz / 1875 = 48kHz
-	tunerPos = 0;
+	bufferPos = 0;
 	samplesReady = false;
 
 	if (startTimer) {
@@ -131,6 +149,11 @@ void Tuner::Run()
 					startSearch = true;
 				}
 			}
+		} else if (mode == FFT) {
+			// As we carry out two FFTs on samples 0 - 1023 then 512 - 1535, copy samples 512 - 1023 to position 1024
+			memcpy(&(fft.fftBuffer[1]), &(fft.fftBuffer[0][512]), 512 * 4);
+
+			volatile int susp = 1;
 		}
 
 		if (freqInSamples) {

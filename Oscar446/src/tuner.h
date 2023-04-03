@@ -25,10 +25,11 @@ public:
 	tunerMode mode = ZeroCrossing;
 
 private:
-	static constexpr uint32_t clockDivider = 400;		// sample rate is 90Mhz / clockDivider = sample rate
+	static constexpr uint32_t zeroCrossRate = 400;		// sample rate is 90Mhz / clockDivider
+	static constexpr uint32_t autoCorrRate = 1023;		// sample capture rate of auto-correlation
 
 	bool samplesReady = false;
-	uint32_t tunerPos = 0;					// Capture buffer position
+	uint32_t bufferPos = 0;					// Capture buffer position
 	float currFreq = 0.0f;
 
 	// Zero crossing settings

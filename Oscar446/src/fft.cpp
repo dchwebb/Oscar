@@ -16,6 +16,16 @@ FFT::FFT()
 }
 
 
+void FFT::Activate()
+{
+	TIM3->ARR = timerDefault;
+	capturing = false;
+	dataAvailable[0] = false;
+	dataAvailable[1] = false;
+	samples = ui.displayMode == DispMode::Fourier ? fftSamples : waterfallSamples;
+}
+
+
 void FFT::Run()
 {
 	// Carry out Fast fourier transform
@@ -23,7 +33,6 @@ void FFT::Run()
 
 	if (dataAvailable[0] || dataAvailable[1]) {
 		fftBufferNumber = dataAvailable[0] ? 0 : 1;			// select correct draw buffer based on whether buffer 0 or 1 contains data
-		samples = ui.displayMode == DispMode::Fourier ? fftSamples : waterfallSamples;
 
 		PopulateOverlayBuffer(fftBuffer[fftBufferNumber]);		// If in FFT mode with trace overlay will fill draw buffer before samples overwritten by FFT process
 		CalcFFT(fftBuffer[fftBufferNumber], samples);
@@ -40,31 +49,6 @@ void FFT::Run()
 	}
 }
 
-
-void FFT::PopulateOverlayBuffer(const float* sinBuffer)
-{
-	// Populate draw buffer to overlay sample view
-	if (ui.displayMode == DispMode::Fourier && traceOverlay) {
-		osc.laneCount = 2;		// To get an appropriate overlay height
-
-		// attempt to find if there is a trigger point
-		uint16_t s = 0;
-		uint16_t t = 4 * (2047 - sinBuffer[0]);
-		for (uint16_t p = 0; p < fftSamples - lcd.drawWidth; p++) {
-			if (t > osc.triggerY && (4 * (2047 - sinBuffer[p])) < osc.triggerY) {
-				s = p;
-				break;
-			}
-			t = 4 * (2047 - sinBuffer[p]);
-		}
-
-		for (uint16_t p = 0; p < lcd.drawWidth ; ++p) {
-			const uint32_t vPos = 4 * (2047 - sinBuffer[s + p]);
-			osc.OscBufferA[0][p] = osc.CalcVertOffset(vPos) + (lcd.drawHeight / 4);
-		}
-		osc.prevPixelA = osc.OscBufferA[0][0];
-	}
-}
 
 
 void FFT::readyCapture(const bool clearBuffer)
@@ -185,6 +169,32 @@ void FFT::CalcFFT(float* sinBuffer, uint32_t sampleCount)
 		node = node * 2;
 	}
 
+}
+
+
+void FFT::PopulateOverlayBuffer(const float* sinBuffer)
+{
+	// Populate draw buffer to overlay sample view
+	if (ui.displayMode == DispMode::Fourier && traceOverlay) {
+		osc.laneCount = 2;		// To get an appropriate overlay height
+
+		// attempt to find if there is a trigger point
+		uint16_t s = 0;
+		uint16_t t = 4 * (2047 - sinBuffer[0]);
+		for (uint16_t p = 0; p < fftSamples - lcd.drawWidth; p++) {
+			if (t > osc.triggerY && (4 * (2047 - sinBuffer[p])) < osc.triggerY) {
+				s = p;
+				break;
+			}
+			t = 4 * (2047 - sinBuffer[p]);
+		}
+
+		for (uint16_t p = 0; p < lcd.drawWidth ; ++p) {
+			const uint32_t vPos = 4 * (2047 - sinBuffer[s + p]);
+			osc.OscBufferA[0][p] = osc.CalcVertOffset(vPos) + (lcd.drawHeight / 4);
+		}
+		osc.prevPixelA = osc.OscBufferA[0][0];
+	}
 }
 
 
