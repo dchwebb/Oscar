@@ -6,20 +6,7 @@ void TIM3_IRQHandler(void)
 	if (ui.displayMode == DispMode::Tuner) {
 		tuner.Capture();
 	} else if (ui.displayMode == DispMode::Fourier || ui.displayMode == DispMode::Waterfall) {
-		if (fft.capturePos == fft.samples && fft.capturing) {
-			fft.dataAvailable[fft.captureBufferIndex] = true;
-			fft.capturing = false;
-		}
-
-		if (fft.capturing) {
-			// For FFT Mode we want a value between +- 2047
-			const uint32_t adcSummed =  fft.channel == channelA ? ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9] :
-										fft.channel == channelB ? ADC_array[1] + ADC_array[4] + ADC_array[7] + ADC_array[10] :
-																  ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11];
-
-			fft.fftBuffer[fft.captureBufferIndex][fft.capturePos] = 2047.0f - (static_cast<float>(adcSummed) / 4.0f);
-			++fft.capturePos;
-		}
+		fft.Capture();
 
 	} else if (ui.displayMode == DispMode::Oscilloscope) {
 		// Average the last four ADC readings to smooth noise

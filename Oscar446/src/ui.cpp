@@ -282,7 +282,7 @@ void UI::ResetMode()
 	osc.bufferSamples = osc.capturePos = osc.oldAdc = 0;
 	osc.setTriggerChannel();
 	fft.dataAvailable[0] = fft.dataAvailable[1] = false;
-	fft.samples = displayMode == DispMode::Fourier ? fft.fftSamples : fft.waterfallSamples;
+	//fft.samples = displayMode == DispMode::Fourier ? fft.fftSamples : fft.waterfallSamples;
 
 
 	ui.DrawUI();

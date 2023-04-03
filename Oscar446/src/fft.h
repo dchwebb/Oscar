@@ -14,9 +14,10 @@ class FFT {
 public:
 	FFT();
 	void Run();
+	void Capture();
 
-	static constexpr uint16_t fftSamples = 1024;
-	static constexpr uint16_t  waterfallSamples = 512;
+	static constexpr uint32_t fftSamples = 1024;
+	static constexpr uint32_t  waterfallSamples = 512;
 	static constexpr uint32_t sinLUTSize = 1024;
 
 	// FFT and Waterfall Settings
@@ -30,7 +31,7 @@ public:
 
 	// FFT working variables
 	float fftBuffer[2][fftSamples];						// holds raw samples captured in interrupt for FFT analysis
-	uint16_t samples = fftSamples;						// specifies number of samples depending on whether in FFT or Waterfall mode
+	uint32_t samples = fftSamples;						// specifies number of samples depending on whether in FFT or Waterfall mode
 	bool dataAvailable[2] {false, false};				// stores which sample buffers contain data
 	uint8_t captureBufferIndex = 0;						// Index of sample buffer being captured
 	uint16_t capturePos = 0;							// Position in capture buffer
@@ -54,14 +55,15 @@ private:
 	uint8_t drawWaterfall[waterfallBuffers][waterfallSize];
 	uint8_t waterfallBuffer = 0;
 
-	void calcFFT(float* candSin);
-	void displayFFT(const float* candSin);
-	void displayWaterfall(const float* candSin);
-	float harmonicFreq(const uint16_t harmonicNumber);
-	void sampleCapture(bool clearBuffer);
+	void CalcFFT(float* sinBuffer, uint32_t samples);
+	void PopulateOverlayBuffer(const float* sinBuffer);
+	void DisplayFFT(const float* candSin);
+	void DisplayWaterfall(const float* sinBuffer);
+	float HarmonicFreq(const uint16_t harmonicNumber);
+	void readyCapture(bool clearBuffer);
 
 public:
-	constexpr auto CreateSinLUT()
+	constexpr auto CreateSinLUT()		// constexpr function to generate LUT in Flash
 	{
 		std::array<float, sinLUTSize> array {};
 		for (uint32_t s = 0; s < sinLUTSize; ++s){

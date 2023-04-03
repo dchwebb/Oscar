@@ -3,7 +3,7 @@
 FFT fft;
 
 // Create sine look up table as constexpr so will be stored in flash
-constexpr std::array<float, fft.sinLUTSize> sineLUT = fft.CreateSinLUT();
+constexpr std::array<float, FFT::sinLUTSize> sineLUT = fft.CreateSinLUT();
 
 FFT::FFT()
 {
@@ -19,50 +19,38 @@ FFT::FFT()
 void FFT::Run()
 {
 	// Carry out Fast fourier transform
-	sampleCapture(false);									// checks if ready to start new capture
+	readyCapture(false);									// checks if ready to start new capture
 
 	if (dataAvailable[0] || dataAvailable[1]) {
 		fftBufferNumber = dataAvailable[0] ? 0 : 1;			// select correct draw buffer based on whether buffer 0 or 1 contains data
-		calcFFT(fftBuffer[fftBufferNumber]);
+		samples = ui.displayMode == DispMode::Fourier ? fftSamples : waterfallSamples;
+
+		PopulateOverlayBuffer(fftBuffer[fftBufferNumber]);		// If in FFT mode with trace overlay will fill draw buffer before samples overwritten by FFT process
+		CalcFFT(fftBuffer[fftBufferNumber], samples);
+
+		// Display frequency spread
+		lcd.DrawString(115, lcd.drawHeight + 8, ui.FloatToString(HarmonicFreq(1), true) + " - " + ui.FloatToString(HarmonicFreq(319), true) + "Hz  ",
+				&lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 
 		if (ui.displayMode == DispMode::Fourier) {
-			displayFFT(fftBuffer[fftBufferNumber]);
+			DisplayFFT(fftBuffer[fftBufferNumber]);
 		} else {
-			displayWaterfall(fftBuffer[fftBufferNumber]);
+			DisplayWaterfall(fftBuffer[fftBufferNumber]);
 		}
 	}
 }
 
 
-void FFT::sampleCapture(const bool clearBuffer)
+void FFT::PopulateOverlayBuffer(const float* sinBuffer)
 {
-	// Starts new fft sample capture
-	if (clearBuffer) {
-		dataAvailable[fftBufferNumber] = false;
-	}
-
-	if (!capturing && (!dataAvailable[0] || !dataAvailable[1])) {
-		capturing = true;
-		capturePos = 0;
-		captureBufferIndex = dataAvailable[0] ? 1 : 0;
-	}
-}
-
-
-void FFT::calcFFT(float* sinBuffer)
-{
-	// Carry out Fast fourier transform
-	uint16_t bitReverse = 0;
-	const uint16_t fftbits = log2(samples);
-
 	// Populate draw buffer to overlay sample view
-	if (traceOverlay) {
-		osc.laneCount = 2;
+	if (ui.displayMode == DispMode::Fourier && traceOverlay) {
+		osc.laneCount = 2;		// To get an appropriate overlay height
 
 		// attempt to find if there is a trigger point
 		uint16_t s = 0;
 		uint16_t t = 4 * (2047 - sinBuffer[0]);
-		for (uint16_t p = 0; p < samples - lcd.drawWidth; p++) {
+		for (uint16_t p = 0; p < fftSamples - lcd.drawWidth; p++) {
 			if (t > osc.triggerY && (4 * (2047 - sinBuffer[p])) < osc.triggerY) {
 				s = p;
 				break;
@@ -76,9 +64,52 @@ void FFT::calcFFT(float* sinBuffer)
 		}
 		osc.prevPixelA = osc.OscBufferA[0][0];
 	}
+}
+
+
+void FFT::readyCapture(const bool clearBuffer)
+{
+	// Starts new fft sample capture when ready
+	if (clearBuffer) {
+		dataAvailable[fftBufferNumber] = false;
+	}
+
+	if (!capturing && (!dataAvailable[0] || !dataAvailable[1])) {
+		capturing = true;
+		capturePos = 0;
+		captureBufferIndex = dataAvailable[0] ? 1 : 0;
+	}
+}
+
+
+void FFT::Capture()
+{
+	// Called from interrupt routine for each sample capture
+	if (capturing) {
+		// For FFT Mode we want a value between +- 2047
+		const uint32_t adcSummed =  channel == channelA ? ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9] :
+									channel == channelB ? ADC_array[1] + ADC_array[4] + ADC_array[7] + ADC_array[10] :
+														  ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11];
+
+		fftBuffer[captureBufferIndex][capturePos] = 2047.0f - (static_cast<float>(adcSummed) / 4.0f);
+
+		if (++capturePos == samples) {
+			dataAvailable[captureBufferIndex] = true;
+			capturing = false;
+		}
+	}
+
+}
+
+
+void FFT::CalcFFT(float* sinBuffer, uint32_t sampleCount)
+{
+	// Carry out Fast Fourier Transform; sinBuffer is a pointer to the current sample capture buffer
+	uint16_t bitReverse = 0;
+	const uint16_t fftbits = log2(sampleCount);
 
 	// Bit reverse samples
-	for (int i = 0; i < samples; ++i) {
+	for (uint32_t i = 0; i < sampleCount; ++i) {
 		// assembly bit reverses i and then rotates right to correct bit length
 		asm("rbit %[result], %[value]\n\t"
 			"ror %[result], %[shift]"
@@ -94,13 +125,13 @@ void FFT::calcFFT(float* sinBuffer)
 
 
 	// Step through each column in the butterfly diagram
-	int node = 1;
-	while (node < samples) {
+	uint32_t node = 1;
+	while (node < sampleCount) {
 
 		if (node == 1) {
 
 			// for the first loop the sine and cosine values will be 1 and 0 in all cases, simplifying the logic
-			for (uint32_t p1 = 0; p1 < samples; p1 += 2) {
+			for (uint32_t p1 = 0; p1 < sampleCount; p1 += 2) {
 				const uint32_t p2 = p1 + node;
 				const float sinP2 = sinBuffer[p2];
 				sinBuffer[p2] = sinBuffer[p1] - sinP2;
@@ -109,10 +140,10 @@ void FFT::calcFFT(float* sinBuffer)
 				cosBuffer[p1] = 0;
 			}
 
-		} else if (node == samples / 2) {
+		} else if (node == sampleCount / 2) {
 
 			// last node - this only needs to calculate the first half of the FFT results as the remainder are redundant
-			for (uint32_t p1 = 1; p1 < samples / 2; ++p1) {
+			for (uint32_t p1 = 1; p1 < sampleCount / 2; ++p1) {
 				const uint16_t b = std::round(p1 * sinLUTSize / (2 * node));
 				const float s = sineLUT[b];
 				const float c = sineLUT[b + sinLUTSize / 4 % sinLUTSize];
@@ -125,7 +156,7 @@ void FFT::calcFFT(float* sinBuffer)
 
 		} else {
 			// All but first and last nodes: step through each value of the W function
-			for (int Wx = 0; Wx < node; ++Wx) {
+			for (uint32_t Wx = 0; Wx < node; ++Wx) {
 
 				// Use Sine LUT to generate sine and cosine values faster than sine or cosine functions
 				const int b = std::round(Wx * sinLUTSize / (2 * node));
@@ -133,8 +164,8 @@ void FFT::calcFFT(float* sinBuffer)
 				const float c = sineLUT[b + sinLUTSize / 4 % sinLUTSize];
 
 				// replace pairs of nodes with updated values
-				for (int p1 = Wx; p1 < samples; p1 += node * 2) {
-					int p2 = p1 + node;
+				for (uint32_t p1 = Wx; p1 < sampleCount; p1 += node * 2) {
+					const int p2 = p1 + node;
 
 					const float sinP1 = sinBuffer[p1];
 					const float cosP1 = cosBuffer[p1];
@@ -154,21 +185,17 @@ void FFT::calcFFT(float* sinBuffer)
 		node = node * 2;
 	}
 
-	// Display frequency spread
-	lcd.DrawString(115, lcd.drawHeight + 8, ui.FloatToString(harmonicFreq(1), true) + " - " + ui.FloatToString(harmonicFreq(319), true) + "Hz  ",
-			&lcd.Font_Small, LCD_WHITE, LCD_BLACK);
-
 }
 
 
 // Display results of FFT: Combine sine and cosines to get amplitudes and store in buffers, transmitting as each buffer is completed
-void FFT::displayFFT(const float* sinBuffer)
+void FFT::DisplayFFT(const float* sinBuffer)
 {
 	harmonic.fill(0);
 	int16_t badFFT = 0, currHarmonic = -1, smearHarmonic = 0;
 	uint32_t maxHyp = 0;
 
-	const uint16_t overlayColour = fft.channel == channelA ? LCD_DULLGREEN : fft.channel == channelB ? LCD_DULLBLUE : LCD_DULLORANGE;
+	const uint16_t overlayColour = channel == channelA ? LCD_DULLGREEN : channel == channelB ? LCD_DULLBLUE : LCD_DULLORANGE;
 
 	// Cycle through each column in the display and draw
 	for (uint16_t i = 1; i <= lcd.drawWidth; i++) {
@@ -228,14 +255,14 @@ void FFT::displayFFT(const float* sinBuffer)
 
 			// if drawing the last buffer display the harmonic frequencies at the top right
 			if (i > lcd.drawWidth - lcd.drawBufferWidth) {
-				sampleCapture(true);			// Signal to Interrupt that new capture can start
+				readyCapture(true);			// Signal to Interrupt that new capture can start
 
 				for (uint8_t h = 0; h < fftHarmonicColours; ++h) {
 					if (harmonic[h] == 0) {
 						break;
 					}
 
-					const float freq = harmonicFreq(harmonic[h]);
+					const float freq = HarmonicFreq(harmonic[h]);
 
 					if (h == 0) {
 						// Draw first harmonic in larger font
@@ -254,7 +281,7 @@ void FFT::displayFFT(const float* sinBuffer)
 
 	// autotune attempts to lock the capture to an integer multiple of the fundamental for a clear display
 	if (autoTune && harmonic[0] > 0) {
-		const float freqFund = harmonicFreq(harmonic[0]);
+		const float freqFund = HarmonicFreq(harmonic[0]);
 
 		// work out which harmonic we want the fundamental to be - to adjust the sampling rate so a change in ARR affects the tuning of the FFT proportionally
 		const float targFund = std::max(freqFund / 10, 8.0f);
@@ -284,13 +311,13 @@ void FFT::displayFFT(const float* sinBuffer)
 }
 
 
-inline float FFT::harmonicFreq(const uint16_t harmonicNumber)
+inline float FFT::HarmonicFreq(const uint16_t harmonicNumber)
 {
 	return static_cast<float>(SystemCoreClock) * harmonicNumber / (2.0f * fftSamples * (TIM3->PSC + 1) * (TIM3->ARR + 1));
 }
 
 
-void FFT::displayWaterfall(const float* sinBuffer)
+void FFT::DisplayWaterfall(const float* sinBuffer)
 {
 	uint16_t badFFT = 0, top, mult, div, sPos = 0, hypPos = 0;
 	uint16_t smoothVals[waterfallSmooth];
@@ -337,7 +364,7 @@ void FFT::displayWaterfall(const float* sinBuffer)
 
 	}
 
-	sampleCapture(true);			// Signal to Interrupt that new capture can start
+	readyCapture(true);			// Signal to Interrupt that new capture can start
 
 	waterfallBuffer = (waterfallBuffer + 1) % waterfallBuffers;
 
@@ -352,7 +379,7 @@ void FFT::displayWaterfall(const float* sinBuffer)
 		for (uint16_t w = 0; w < waterfallBuffers; ++w) {
 
 			//	Darken green has less effect than darkening orange or blue - adjust accordingly
-			const uint16_t colourShade = ui.DarkenColour(fft.channel == channelA ? LCD_GREEN : fft.channel == channelB ? LCD_LIGHTBLUE : LCD_ORANGE,  (uint16_t)w * 2 * (fft.channel == channelA ? 1 : 0.8));
+			const uint16_t colourShade = ui.DarkenColour(channel == channelA ? LCD_GREEN : channel == channelB ? LCD_LIGHTBLUE : LCD_ORANGE,  (uint16_t)w * 2 * (channel == channelA ? 1 : 0.8));
 
 			const int16_t buff = (waterfallBuffer + w) % waterfallBuffers;
 			int xOffset = w * 2 + 3;

@@ -23,7 +23,6 @@ void Tuner::Capture()
 			overZero = true;
 			zeroCrossings[tunerPos] = timer;
 			if (++tunerPos == zeroCrossings.size()) {
-				TIM3->CR1 &= ~TIM_CR1_CEN;				// Disable the sample acquisiton timer
 				samplesReady = true;
 			}
 
@@ -31,9 +30,12 @@ void Tuner::Capture()
 	} else if (mode == AutoCorrelation) {
 		samples[tunerPos] = ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9];
 		if (++tunerPos > samplesSize) {
-			TIM3->CR1 &= ~TIM_CR1_CEN;					// Disable the sample acquisiton timer
 			samplesReady = true;
 		}
+	}
+
+	if (samplesReady) {
+		TIM3->CR1 &= ~TIM_CR1_CEN;					// Disable the sample acquisiton timer
 	}
 }
 
