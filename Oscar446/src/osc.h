@@ -13,7 +13,7 @@ public:
 	void OscRun();
 	uint16_t CalcVertOffset(const uint16_t& vPos);
 	void setTriggerChannel();
-
+	float FreqFromPos(const uint16_t pos);
 
 	// Oscilloscope settings
 	int16_t triggerX = 10;
@@ -47,7 +47,6 @@ public:
 private:
 	void SetDrawBuffer(uint16_t* buff1, uint16_t* buff2);
 	void CircRun();
-	float FreqFromPos(const uint16_t pos);
 
 	uint8_t drawBufferNumber = 0;
 

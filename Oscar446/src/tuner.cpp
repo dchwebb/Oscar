@@ -1,4 +1,5 @@
 #include "tuner.h"
+#include "osc.h"
 
 Tuner tuner;
 
@@ -82,7 +83,7 @@ void Tuner::Activate(bool startTimer)
 void Tuner::Run()
 {
 	if (samplesReady) {
-		uint32_t freqInSamples = 0;
+		float frequency = 0.0f;
 		const uint32_t start = SysTickVal;
 
 		if (mode == ZeroCrossing) {
@@ -111,7 +112,7 @@ void Tuner::Run()
 			}
 
 			if (matchCount > 10) {
-				freqInSamples = diff;
+				frequency = osc.FreqFromPos(diff);
 			}
 
 		} else if (mode == AutoCorrelation) {
@@ -138,7 +139,7 @@ void Tuner::Run()
 						if (results[dist] < currLowest) {
 							currLowest = results[dist];
 						} else {
-							freqInSamples = dist - 1;
+							frequency = osc.FreqFromPos(dist - 1);
 							break;
 						}
 					} else if (results[dist] < threshold) {
@@ -153,17 +154,44 @@ void Tuner::Run()
 			// As we carry out two FFTs on samples 0 - 1023 then 512 - 1535, copy samples 512 - 1023 to position 1024
 			memcpy(&(fft.fftBuffer[1]), &(fft.fftBuffer[0][512]), 512 * 4);
 
-			volatile int susp = 1;
+			// Carry out FFT on both buffers
+			fft.CalcFFT(fft.fftBuffer[0], FFT::fftSamples);
+
+			// Find first significant harmonic
+			uint32_t maxHyp = 0;
+			float phase = 0.0f;
+			bool localMax = false;
+			uint32_t maxIndex = 0;
+			for (uint32_t i = 1; i <= FFT::fftSamples / 2; ++i) {
+				const float hypotenuse = std::hypot(fft.fftBuffer[0][i], fft.cosBuffer[i]);
+				if (localMax) {
+					if (hypotenuse > maxHyp) {
+						maxHyp = hypotenuse;
+						maxIndex = i;
+					} else {
+						break;
+					}
+				} else if (hypotenuse > 50000) {
+					localMax = true;
+					maxHyp = hypotenuse;
+					maxIndex = i;
+				}
+			}
+			if (maxIndex) {
+				phase = atan(fft.cosBuffer[maxIndex] / fft.fftBuffer[0][maxIndex]);
+				lcd.DrawString(10, 120, ui.FloatToString(phase, false) + " phase  ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
+
+				frequency = fft.HarmonicFreq(maxIndex);
+			}
 		}
 
-		if (freqInSamples) {
-			const float calcFreq = static_cast<float>(SystemCoreClock) / (2.0f * freqInSamples * (TIM3->PSC + 1) * (TIM3->ARR + 1));
+		if (frequency > 0.0f) {
 
 			// if value is close apply some damping; otherwise just use new value
-			if (std::abs(calcFreq - currFreq) / calcFreq < 0.1f) {
-				currFreq = 0.9f * currFreq + 0.1f * calcFreq;
+			if (std::abs(frequency - currFreq) / frequency < 0.1f) {
+				currFreq = 0.9f * currFreq + 0.1f * frequency;
 			} else {
-				currFreq = calcFreq;
+				currFreq = frequency;
 			}
 			lcd.DrawString(10, 10, ui.FloatToString(currFreq, false) + "Hz    ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
 			lcd.DrawString(10, 60, ui.IntToString(SysTickVal - start) + "ms  ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);

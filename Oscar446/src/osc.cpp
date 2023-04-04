@@ -140,7 +140,7 @@ uint16_t Osc::CalcVertOffset(const uint16_t& vPos)
 
 float Osc::FreqFromPos(const uint16_t pos)
 {
-	// returns frequency of signal based on number of samples wide the signal is in the screen
+	// returns frequency of signal based on number of samples wide the signal is versus the sampling rate
 	return static_cast<float>(SystemCoreClock) / (2.0f * pos * (TIM3->PSC + 1) * (TIM3->ARR + 1));
 }
 

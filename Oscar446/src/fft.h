@@ -6,12 +6,16 @@
 
 
 class UI;		// forward reference to handle circular dependency
+class Tuner;
 extern UI ui;
 extern LCD lcd;
 
 
 class FFT {
+	friend class Tuner;
+
 public:
+
 	FFT();
 	void Run();
 	void Capture();
