@@ -158,8 +158,8 @@ void Tuner::Run()
 			fft.CalcFFT(fft.fftBuffer[0], FFT::fftSamples);
 
 			// Find first significant harmonic
-			uint32_t maxHyp = 0;
-			float phase = 0.0f;
+			volatile uint32_t maxHyp = 0;
+			volatile float phase0, phase1 = 0.0f;
 			bool localMax = false;
 			uint32_t maxIndex = 0;
 			for (uint32_t i = 1; i <= FFT::fftSamples / 2; ++i) {
@@ -178,8 +178,14 @@ void Tuner::Run()
 				}
 			}
 			if (maxIndex) {
-				phase = atan(fft.cosBuffer[maxIndex] / fft.fftBuffer[0][maxIndex]);
-				lcd.DrawString(10, 120, ui.FloatToString(phase, false) + " phase  ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
+				phase0 = atan(fft.cosBuffer[maxIndex] / fft.fftBuffer[0][maxIndex]);
+
+				// Carry out FFT on buffer 2
+				fft.CalcFFT(fft.fftBuffer[1], FFT::fftSamples);
+				volatile uint32_t hyp1 = std::hypot(fft.fftBuffer[1][maxIndex], fft.cosBuffer[maxIndex]);
+				phase1 = atan(fft.cosBuffer[maxIndex] / fft.fftBuffer[1][maxIndex]);
+
+				lcd.DrawString(10, 120, ui.FloatToString(phase0, false) + "  " + ui.FloatToString(phase1, false) + " phase  ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
 
 				frequency = fft.HarmonicFreq(maxIndex);
 			}
