@@ -80,6 +80,19 @@ void Tuner::Activate(bool startTimer)
 }
 
 
+float cyclesInit = 2.5f;
+float cycles = cyclesInit;
+float cyclesInc = 0.02f;
+char charBuff[100];
+//float phaseDiff[100];
+
+std::string FloatFmt(float f)
+{
+	sprintf(charBuff, "%.3f", f);
+	return std::string(charBuff);
+}
+
+
 void Tuner::Run()
 {
 	if (samplesReady) {
@@ -154,6 +167,17 @@ void Tuner::Run()
 			// As we carry out two FFTs on samples 0 - 1023 then 512 - 1535, copy samples 512 - 1023 to position 1024
 			memcpy(&(fft.fftBuffer[1]), &(fft.fftBuffer[0][512]), 512 * 4);
 
+			// For testing create a buffer containing 3.5 Pi samples
+			cycles += cyclesInc;
+			if (cycles >= cyclesInit + 1.0f) {
+				cycles = cyclesInit;
+			}
+
+			for (uint32_t i = 0; i < 1024; ++i) {
+				fft.fftBuffer[0][i] = 1000.0f * sin(cycles * i * 2.0f * M_PI / FFT::sinLUTSize);
+				fft.fftBuffer[1][i] = 1000.0f * sin((cycles * M_PI) + cycles * i * 2.0f * M_PI / FFT::sinLUTSize);
+			}
+
 			// Carry out FFT on both buffers
 			fft.CalcFFT(fft.fftBuffer[0], FFT::fftSamples);
 
@@ -161,7 +185,7 @@ void Tuner::Run()
 			volatile uint32_t maxHyp = 0;
 			volatile float phase0, phase1 = 0.0f;
 			bool localMax = false;
-			uint32_t maxIndex = 0;
+			volatile uint32_t maxIndex = 0;
 			for (uint32_t i = 1; i <= FFT::fftSamples / 2; ++i) {
 				const float hypotenuse = std::hypot(fft.fftBuffer[0][i], fft.cosBuffer[i]);
 				if (localMax) {
@@ -185,7 +209,14 @@ void Tuner::Run()
 				volatile uint32_t hyp1 = std::hypot(fft.fftBuffer[1][maxIndex], fft.cosBuffer[maxIndex]);
 				phase1 = atan(fft.cosBuffer[maxIndex] / fft.fftBuffer[1][maxIndex]);
 
-				lcd.DrawString(10, 120, ui.FloatToString(phase0, false) + "  " + ui.FloatToString(phase1, false) + " phase  ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
+				float phaseAdj = phase0 - phase1;
+				//phaseDiff[(uint32_t)((cycles - 1.5f) * 100)] = phaseAdj;
+
+
+				float adjIndex = (float)maxIndex + phaseAdj / M_PI;
+
+				lcd.DrawString(10, 120, FloatFmt(cycles) + " " + FloatFmt(adjIndex) + " phase  ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
+				lcd.DrawString(10, 170, FloatFmt(adjIndex) + " adjInd  ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
 
 				frequency = fft.HarmonicFreq(maxIndex);
 			}
