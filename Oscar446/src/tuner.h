@@ -43,6 +43,8 @@ private:
 
 	static constexpr uint32_t window = 200;
 	std::array<uint32_t, 1000> results;
+
+
 };
 
 extern Tuner tuner;

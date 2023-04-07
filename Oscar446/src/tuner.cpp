@@ -68,7 +68,11 @@ void Tuner::Activate(bool startTimer)
 	} else if (mode == AutoCorrelation) {
 		TIM3->ARR = autoCorrRate;
 	} else if (mode == FFT) {
-		TIM3->ARR = FFT::timerDefault;
+		if (currFreq > 800) {
+			TIM3->ARR = FFT::timerDefault / 2;
+		} else {
+			TIM3->ARR = FFT::timerDefault;
+		}
 	}
 
 	bufferPos = 0;
@@ -80,11 +84,7 @@ void Tuner::Activate(bool startTimer)
 }
 
 
-float cyclesInit = 100.5f;
-float cycles = cyclesInit;
-float cyclesInc = 0.02f;
 char charBuff[100];
-//float phaseDiff[100];
 
 std::string FloatFmt(float f)
 {
@@ -166,28 +166,15 @@ void Tuner::Run()
 		} else if (mode == FFT) {
 			// As we carry out two FFTs on samples 0 - 1023 then 512 - 1535, copy samples 512 - 1023 to position 1024
 			memcpy(&(fft.fftBuffer[1]), &(fft.fftBuffer[0][512]), 512 * 4);
-/*
-			// For testing create a buffer containing 3.5 Pi samples
-			cycles += cyclesInc;
-			if (cycles >= cyclesInit + 1.0f) {
-				cycles = cyclesInit;
-			}
 
-			for (uint32_t i = 0; i < 1024; ++i) {
-				fft.fftBuffer[0][i] = 1000.0f * sin(cycles * i * 2.0f * M_PI / FFT::sinLUTSize);
-				fft.fftBuffer[1][i] = 1000.0f * sin((cycles * M_PI) + cycles * i * 2.0f * M_PI / FFT::sinLUTSize);
-			}
-*/
 			// Carry out FFT on both buffers
 			fft.CalcFFT(fft.fftBuffer[0], FFT::fftSamples);
 
 			// Find first significant harmonic
 			volatile uint32_t maxHyp = 0;
-//			uint32_t prevHyp = 0;		// The magnitude of the bin before the maximum
-//			uint32_t nextHyp = 0;		// The magnitude of the bin after the maximum
-
-			bool localMax = false;
 			volatile uint32_t maxBin = 0;
+			bool localMax = false;
+
 			for (uint32_t i = 1; i <= FFT::fftSamples / 2; ++i) {
 				const float hypotenuse = std::hypot(fft.fftBuffer[0][i], fft.cosBuffer[i]);
 				if (localMax) {
@@ -205,24 +192,14 @@ void Tuner::Run()
 				}
 			}
 			if (maxBin) {
-				volatile float phase0, phase1 = 0.0f;
-				phase0 = atan(fft.cosBuffer[maxBin] / fft.fftBuffer[0][maxBin]);
 
-				volatile uint32_t hyp00 = std::hypot(fft.fftBuffer[0][maxBin - 1], fft.cosBuffer[maxBin - 1]);
-				volatile uint32_t hyp01 = std::hypot(fft.fftBuffer[0][maxBin + 0], fft.cosBuffer[maxBin + 0]);
-				volatile uint32_t hyp02 = std::hypot(fft.fftBuffer[0][maxBin + 1], fft.cosBuffer[maxBin + 1]);
-				volatile uint32_t hyp10 = std::hypot(fft.fftBuffer[1][maxBin - 1], fft.cosBuffer[maxBin - 1]);
-				volatile uint32_t hyp11 = std::hypot(fft.fftBuffer[1][maxBin + 0], fft.cosBuffer[maxBin + 0]);
-				volatile uint32_t hyp12 = std::hypot(fft.fftBuffer[1][maxBin + 1], fft.cosBuffer[maxBin + 1]);
-
-
+				const float phase0 = atan(fft.cosBuffer[maxBin] / fft.fftBuffer[0][maxBin]);
 
 				// Carry out FFT on buffer 2
 				fft.CalcFFT(fft.fftBuffer[1], FFT::fftSamples);
-				phase1 = atan(fft.cosBuffer[maxBin] / fft.fftBuffer[1][maxBin]);
 
-				volatile float phaseAdj = phase0 - phase1;
-				//phaseDiff[(uint32_t)((cycles - 1.5f) * 100)] = phaseAdj;
+				const float phase1 = atan(fft.cosBuffer[maxBin] / fft.fftBuffer[1][maxBin]);
+				float phaseAdj = phase0 - phase1;
 
 				// handle phase wrapping
 				if (phaseAdj < -M_PI / 2.0f) {
@@ -234,16 +211,17 @@ void Tuner::Run()
 
 				// When a signal is almost exactly between two bins the first and second FFT can disagree
 				// Use the direction of the phase adjustment to correct
+				uint32_t hyp11 = std::hypot(fft.fftBuffer[1][maxBin + 0], fft.cosBuffer[maxBin + 0]);
+				uint32_t hyp12 = std::hypot(fft.fftBuffer[1][maxBin + 1], fft.cosBuffer[maxBin + 1]);
+
 				if (hyp12 > hyp11 && phaseAdj < 0.0f) {
 					++maxBin;
 				}
-//				if (hyp10 > hyp11 && phaseAdj > 0.0f) {
-//					--maxIndex;
-//				}
+
 				const float adjIndex = static_cast<float>(maxBin) + phaseAdj / M_PI;
 
-				lcd.DrawString(10, 120, FloatFmt(phaseAdj) + " phase  ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
-				lcd.DrawString(10, 170, FloatFmt(adjIndex) + " adjInd  ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
+//				lcd.DrawString(10, 120, FloatFmt(phaseAdj) + " phase  ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
+//				lcd.DrawString(10, 170, FloatFmt(adjIndex) + " adjInd  ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
 
 				frequency = fft.HarmonicFreq(adjIndex);
 			}
@@ -252,13 +230,29 @@ void Tuner::Run()
 		if (frequency > 0.0f) {
 
 			// if value is close apply some damping; otherwise just use new value
-			if (std::abs(frequency - currFreq) / frequency < 0.1f) {
-				currFreq = 0.9f * currFreq + 0.1f * frequency;
+			if (std::abs(frequency - currFreq) / frequency < 0.05f) {
+				currFreq = 0.8f * currFreq + 0.2f * frequency;
 			} else {
 				currFreq = frequency;
 			}
 			lcd.DrawString(10, 10, ui.FloatToString(currFreq, false) + "Hz    ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
 			lcd.DrawString(10, 60, ui.IntToString(SysTickVal - start) + "ms  ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
+
+			// Formula for note is (ln(freq) - ln(16.35)) / ln(2 ^ (1/12))
+			// Where 16.35 is frequency of low C and return value is semi-tones from low C
+			constexpr float numRecip = 1.0f / log(pow(2.0f, 1.0f / 12.0f));
+			constexpr float logBase = log(16.35160f);
+			volatile float note = (log(currFreq) - logBase) * numRecip;
+			volatile uint32_t pitch = std::lround(note) % 12;
+			volatile uint32_t octave = std::lround(note) / 12;
+			int32_t noteDiff = static_cast<int32_t>(100.0f * (note - std::round(note)));
+
+			const std::string noteNames[12] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+			lcd.DrawString(10, 120, noteNames[pitch] + ui.IntToString(octave) + " " + ui.IntToString(noteDiff) + " cents   ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
+
+			// Calculate cent difference
+
+
 		}
 
 

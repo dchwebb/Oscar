@@ -343,9 +343,9 @@ std::string UI::FloatToString(float f, bool smartFormat)
 }
 
 
-std::string UI::IntToString(const uint16_t v)
+std::string UI::IntToString(const int32_t v)
 {
-	sprintf(charBuff, "%u", v);
+	sprintf(charBuff, "%ld", v);
 	return std::string(charBuff);
 }
 
