@@ -65,7 +65,7 @@ private:
 	void PopulateOverlayBuffer(const float* sinBuffer);
 	void DisplayFFT(const float* candSin);
 	void DisplayWaterfall(const float* sinBuffer);
-	float HarmonicFreq(const uint16_t harmonicNumber);
+	float HarmonicFreq(const float harmonicNumber);
 	void readyCapture(bool clearBuffer);
 
 public:

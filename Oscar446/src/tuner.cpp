@@ -80,7 +80,7 @@ void Tuner::Activate(bool startTimer)
 }
 
 
-float cyclesInit = 2.5f;
+float cyclesInit = 100.5f;
 float cycles = cyclesInit;
 float cyclesInc = 0.02f;
 char charBuff[100];
@@ -166,7 +166,7 @@ void Tuner::Run()
 		} else if (mode == FFT) {
 			// As we carry out two FFTs on samples 0 - 1023 then 512 - 1535, copy samples 512 - 1023 to position 1024
 			memcpy(&(fft.fftBuffer[1]), &(fft.fftBuffer[0][512]), 512 * 4);
-
+/*
 			// For testing create a buffer containing 3.5 Pi samples
 			cycles += cyclesInc;
 			if (cycles >= cyclesInit + 1.0f) {
@@ -177,48 +177,75 @@ void Tuner::Run()
 				fft.fftBuffer[0][i] = 1000.0f * sin(cycles * i * 2.0f * M_PI / FFT::sinLUTSize);
 				fft.fftBuffer[1][i] = 1000.0f * sin((cycles * M_PI) + cycles * i * 2.0f * M_PI / FFT::sinLUTSize);
 			}
-
+*/
 			// Carry out FFT on both buffers
 			fft.CalcFFT(fft.fftBuffer[0], FFT::fftSamples);
 
 			// Find first significant harmonic
 			volatile uint32_t maxHyp = 0;
-			volatile float phase0, phase1 = 0.0f;
+//			uint32_t prevHyp = 0;		// The magnitude of the bin before the maximum
+//			uint32_t nextHyp = 0;		// The magnitude of the bin after the maximum
+
 			bool localMax = false;
-			volatile uint32_t maxIndex = 0;
+			volatile uint32_t maxBin = 0;
 			for (uint32_t i = 1; i <= FFT::fftSamples / 2; ++i) {
 				const float hypotenuse = std::hypot(fft.fftBuffer[0][i], fft.cosBuffer[i]);
 				if (localMax) {
 					if (hypotenuse > maxHyp) {
 						maxHyp = hypotenuse;
-						maxIndex = i;
+						maxBin = i;
 					} else {
+						//nextHyp = hypotenuse;
 						break;
 					}
 				} else if (hypotenuse > 50000) {
 					localMax = true;
 					maxHyp = hypotenuse;
-					maxIndex = i;
+					maxBin = i;
 				}
 			}
-			if (maxIndex) {
-				phase0 = atan(fft.cosBuffer[maxIndex] / fft.fftBuffer[0][maxIndex]);
+			if (maxBin) {
+				volatile float phase0, phase1 = 0.0f;
+				phase0 = atan(fft.cosBuffer[maxBin] / fft.fftBuffer[0][maxBin]);
+
+				volatile uint32_t hyp00 = std::hypot(fft.fftBuffer[0][maxBin - 1], fft.cosBuffer[maxBin - 1]);
+				volatile uint32_t hyp01 = std::hypot(fft.fftBuffer[0][maxBin + 0], fft.cosBuffer[maxBin + 0]);
+				volatile uint32_t hyp02 = std::hypot(fft.fftBuffer[0][maxBin + 1], fft.cosBuffer[maxBin + 1]);
+				volatile uint32_t hyp10 = std::hypot(fft.fftBuffer[1][maxBin - 1], fft.cosBuffer[maxBin - 1]);
+				volatile uint32_t hyp11 = std::hypot(fft.fftBuffer[1][maxBin + 0], fft.cosBuffer[maxBin + 0]);
+				volatile uint32_t hyp12 = std::hypot(fft.fftBuffer[1][maxBin + 1], fft.cosBuffer[maxBin + 1]);
+
+
 
 				// Carry out FFT on buffer 2
 				fft.CalcFFT(fft.fftBuffer[1], FFT::fftSamples);
-				volatile uint32_t hyp1 = std::hypot(fft.fftBuffer[1][maxIndex], fft.cosBuffer[maxIndex]);
-				phase1 = atan(fft.cosBuffer[maxIndex] / fft.fftBuffer[1][maxIndex]);
+				phase1 = atan(fft.cosBuffer[maxBin] / fft.fftBuffer[1][maxBin]);
 
-				float phaseAdj = phase0 - phase1;
+				volatile float phaseAdj = phase0 - phase1;
 				//phaseDiff[(uint32_t)((cycles - 1.5f) * 100)] = phaseAdj;
 
+				// handle phase wrapping
+				if (phaseAdj < -M_PI / 2.0f) {
+					phaseAdj += M_PI;
+				}
+				if (phaseAdj > M_PI / 2.0f) {
+					phaseAdj -= M_PI;
+				}
 
-				float adjIndex = (float)maxIndex + phaseAdj / M_PI;
+				// When a signal is almost exactly between two bins the first and second FFT can disagree
+				// Use the direction of the phase adjustment to correct
+				if (hyp12 > hyp11 && phaseAdj < 0.0f) {
+					++maxBin;
+				}
+//				if (hyp10 > hyp11 && phaseAdj > 0.0f) {
+//					--maxIndex;
+//				}
+				const float adjIndex = static_cast<float>(maxBin) + phaseAdj / M_PI;
 
-				lcd.DrawString(10, 120, FloatFmt(cycles) + " " + FloatFmt(adjIndex) + " phase  ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
+				lcd.DrawString(10, 120, FloatFmt(phaseAdj) + " phase  ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
 				lcd.DrawString(10, 170, FloatFmt(adjIndex) + " adjInd  ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
 
-				frequency = fft.HarmonicFreq(maxIndex);
+				frequency = fft.HarmonicFreq(adjIndex);
 			}
 		}
 
