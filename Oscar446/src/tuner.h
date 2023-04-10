@@ -5,14 +5,9 @@
 
 
 
-
-//class UI;		// forward reference to handle circular dependency
-
-
-
 class Tuner {
 public:
-	enum tunerMode {ZeroCrossing, AutoCorrelation, FFT};
+	enum tunerMode {FFT, ZeroCrossing};
 
 	Tuner();
 	void Capture();							// Called from timer interrupt
@@ -22,12 +17,13 @@ public:
 	encoderType encModeL = TunerMode;
 	encoderType encModeR = ActiveChannel;
 
-	tunerMode mode = ZeroCrossing;
+	tunerMode mode = FFT;
 
 private:
 	static constexpr uint32_t zeroCrossRate = 400;		// sample rate is 90Mhz / clockDivider
-	static constexpr uint32_t autoCorrRate = 1023;		// sample capture rate of auto-correlation
+//	static constexpr uint32_t autoCorrRate = 1023;		// sample capture rate of auto-correlation
 
+	int8_t sampleRateAdj = 0;				// Used to make small adjustments to fft sample rate to avoid phase errors
 	bool samplesReady = false;
 	uint32_t bufferPos = 0;					// Capture buffer position
 	float currFreq = 0.0f;
@@ -38,11 +34,11 @@ private:
 	uint32_t timer  = 0;
 
 	// Auto-correlation settings
-	uint32_t samplesSize;					// Populated in constructor as we share the FFT buffer
-	uint16_t* samples;						// Pointer to the FFT buffer
+//	uint32_t samplesSize;					// Populated in constructor as we share the FFT buffer
+//	uint16_t* samples;						// Pointer to the FFT buffer
 
-	static constexpr uint32_t window = 200;
-	std::array<uint32_t, 1000> results;
+//	static constexpr uint32_t window = 200;
+//	std::array<uint32_t, 1000> results;
 
 
 };

@@ -129,7 +129,7 @@ void UI::EncoderAction(encoderType type, const int8_t& val)
 		DrawUI();
 		break;
 	case TunerMode:
-		tuner.mode = tuner.mode == Tuner::ZeroCrossing ? Tuner::AutoCorrelation : tuner.mode == Tuner::AutoCorrelation ? Tuner::FFT : Tuner::ZeroCrossing;
+		tuner.mode = tuner.mode == Tuner::ZeroCrossing ? Tuner::FFT : Tuner::ZeroCrossing;
 		tuner.Activate(true);
 		DrawUI();
 	default:
@@ -323,7 +323,7 @@ std::string UI::EncoderLabel(encoderType type)
 	case MultiLane :
 		return "Lanes: " + std::string(osc.multiLane ? "Yes" : "No ");
 	case TunerMode :
-		return tuner.mode == Tuner::ZeroCrossing ? "Zero Cross" : tuner.mode == Tuner::AutoCorrelation ? "Auto Corr" : "FFT       ";
+		return tuner.mode == Tuner::ZeroCrossing ? "Zero Cross" : "FFT       ";
 	default:
 	  return "";
 	}
@@ -348,6 +348,7 @@ std::string UI::IntToString(const int32_t v)
 	sprintf(charBuff, "%ld", v);
 	return std::string(charBuff);
 }
+
 
 //	Takes an RGB colour and darkens by the specified amount
 uint16_t UI::DarkenColour(const uint16_t& colour, uint16_t amount) {
