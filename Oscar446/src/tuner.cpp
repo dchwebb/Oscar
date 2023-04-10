@@ -3,14 +3,6 @@
 
 Tuner tuner;
 
-Tuner::Tuner()
-{
-//	samplesSize = sizeof(fft.fftBuffer) / 2;
-//	samples = (uint16_t*)&(fft.fftBuffer);
-
-}
-
-
 void Tuner::Capture()
 {
 	const uint32_t adcSummed =  fft.channel == channelA ? ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9] :
@@ -42,6 +34,11 @@ void Tuner::Capture()
 			if (++bufferPos == zeroCrossings.size()) {
 				samplesReady = true;
 			}
+		}
+
+		// If no signal found abort and display no signal message
+		if (timer > 200000) {
+			samplesReady = true;
 		}
 	}
 
@@ -86,29 +83,40 @@ void Tuner::Run()
 		const uint32_t start = SysTickVal;
 
 		if (mode == FFT) {
+			// Phase adjusted FFT: FFT on two overlapping buffers; where the 2nd half of buffer 1 is the 1st part of buffer 2
+			// Calculate the fundamental bin looking for a magnitude over a threshold, then adjust by the phase difference of the two FFTs
+
 			// As we do two FFTs on samples 0 - 1023 then 512 - 1535, copy samples 512 - 1023 to position 1024
 			memcpy(&(fft.fftBuffer[1]), &(fft.fftBuffer[0][512]), 512 * 4);
 
-			// Carry out FFT on both buffers
-			fft.CalcFFT(fft.fftBuffer[0], FFT::fftSamples);
+			fft.CalcFFT(fft.fftBuffer[0], FFT::fftSamples);			// Carry out FFT on first buffer
 
 			// Find first significant harmonic
+			volatile uint32_t fundMag = 0;
 			volatile uint32_t maxMag = 0;
 			volatile uint32_t maxBin = 0;
 			bool localMax = false;			// True once magnitude of bin is large enough to count as fundamental
 
+			// Locate maximum hypoteneuse
+			for (uint32_t i = 1; i <= FFT::fftSamples / 2; ++i) {
+				const float hypotenuse = std::hypot(fft.fftBuffer[0][i], fft.cosBuffer[i]);
+				if (hypotenuse > maxMag) {
+					maxMag = hypotenuse;
+				}
+			}
+			// Locate first hypoteuse that is large enough relative to the maximum to count as fundamental
 			for (uint32_t i = 1; i <= FFT::fftSamples / 2; ++i) {
 				const float hypotenuse = std::hypot(fft.fftBuffer[0][i], fft.cosBuffer[i]);
 				if (localMax) {
-					if (hypotenuse > maxMag) {
-						maxMag = hypotenuse;
+					if (hypotenuse > fundMag) {
+						fundMag = hypotenuse;
 						maxBin = i;
 					} else {
 						break;
 					}
-				} else if (hypotenuse > 50000) {
+				} else if (hypotenuse > magThreshold && hypotenuse > (float)maxMag * 0.5f) {
 					localMax = true;
-					maxMag = hypotenuse;
+					fundMag = hypotenuse;
 					maxBin = i;
 				}
 			}
@@ -117,7 +125,7 @@ void Tuner::Run()
 
 				volatile const float phase0 = atan(fft.cosBuffer[maxBin] / fft.fftBuffer[0][maxBin]);
 
-				fft.CalcFFT(fft.fftBuffer[1], FFT::fftSamples);				// Carry out FFT on buffer 2
+				fft.CalcFFT(fft.fftBuffer[1], FFT::fftSamples);				// Carry out FFT on buffer 2 (overwrites cosine results from first FFT)
 
 				volatile const float phase1 = atan(fft.cosBuffer[maxBin] / fft.fftBuffer[1][maxBin]);
 				volatile float phaseAdj = (phase0 - phase1) / M_PI;			// normalise phase adjustment
@@ -140,75 +148,81 @@ void Tuner::Run()
 				}
 
 				// Possibly due to rounding errors at around 50% phase adjustments the cycle rate can be out by a cycle - abort and shift sampling rate
-				if (phaseAdj > 0.48f) {
-					++sampleRateAdj;
+				if (phaseAdj > 0.47f || phaseAdj < -0.47f) {
+					sampleRateAdj += currFreq < 60 ? 32 : 1;
 				} else {
 					frequency = fft.HarmonicFreq(static_cast<float>(maxBin) + phaseAdj);
 				}
 			}
+
 		} else {
 			// Zero crossing mode
+			if (bufferPos == zeroCrossings.size()) {						// Check that a signal was found
 
-			float diff = zeroCrossings[1] - zeroCrossings[0];		// Get first time difference between zero crossings
-			uint32_t stride = 1;			// Allow pitch detection where multiple zero crossings in cycle
-			uint32_t noMatch = 0;			// When enough failed matches increase stride
-			uint32_t matchCount = 0;
+				float diff = zeroCrossings[1] - zeroCrossings[0];		// Get first time difference between zero crossings
+				uint32_t stride = 1;									// Allow pitch detection where multiple zero crossings in cycle
+				uint32_t noMatch = 0;									// When enough failed matches increase stride
+				uint32_t matchCount = 0;
 
-			uint32_t i;
-			for (i = 1; i < zeroCrossings.size() - stride; ++i) {
-				float tempDiff = zeroCrossings[i + stride] - zeroCrossings[i];
+				uint32_t i;
+				for (i = 1; i < zeroCrossings.size() - stride; ++i) {
+					float tempDiff = zeroCrossings[i + stride] - zeroCrossings[i];
 
-				if (tempDiff - diff < 0.05f * diff) {
-					diff = (diff + tempDiff) / 2.0f;			// Apply some damping to average out differences
-					++matchCount;
-				} else {
-					++noMatch;
-					if (noMatch > 3 && stride < 10) {			// After three failures increase stride length and restart loop
-						++stride;
-						diff = zeroCrossings[stride] - zeroCrossings[0];
-						i = 0;
-						matchCount = 0;
-						noMatch = 0;
+					if (tempDiff - diff < 0.05f * diff) {
+						diff = (diff + tempDiff) / 2.0f;				// Apply some damping to average out differences
+						++matchCount;
+					} else {
+						++noMatch;
+						if (noMatch > 3 && stride < 10) {				// After three failures increase stride length and restart loop
+							++stride;
+							diff = zeroCrossings[stride] - zeroCrossings[0];
+							i = 0;
+							matchCount = 0;
+							noMatch = 0;
+						}
 					}
 				}
-			}
 
-			if (matchCount > 10) {
-				frequency = osc.FreqFromPos(diff);
+				if (matchCount > 10) {
+					frequency = osc.FreqFromPos(diff);
+				}
 			}
-
 		}
 
-		if (frequency > 0.0f) {
-
+		if (frequency > 16.35f) {
 			// if value is close apply some damping; otherwise just use new value
 			if (std::abs(frequency - currFreq) / frequency < 0.05f) {
 				currFreq = 0.7f * currFreq + 0.3f * frequency;
 			} else {
 				currFreq = frequency;
 			}
-		}
-
-		if (currFreq > 0.0f) {
-			const uint16_t fontColour = frequency > 0.0f ? LCD_WHITE : LCD_GREY;
-
-			lcd.DrawString(10, 10, ui.FloatToString(currFreq, false) + "Hz    ", &lcd.Font_XLarge, fontColour, LCD_BLACK);
 
 			// Formula to get musical note from frequency is (ln(freq) - ln(16.35)) / ln(2 ^ (1/12))
 			// Where 16.35 is frequency of low C and return value is semi-tones from low C
+			const std::string noteNames[12] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
 			constexpr float numRecip = 1.0f / log(pow(2.0f, 1.0f / 12.0f));		// Store reciprocal to avoid division
 			constexpr float logBase = log(16.35160f);
 			float note = (log(currFreq) - logBase) * numRecip;
-			uint32_t pitch = std::lround(note) % 12;
-			uint32_t octave = std::lround(note) / 12;
-			int32_t centDiff = static_cast<int32_t>(100.0f * (note - std::round(note)));
+			const uint32_t pitch = std::lround(note) % 12;
+			const uint32_t octave = std::lround(note) / 12;
+			const int32_t centDiff = static_cast<int32_t>(100.0f * (note - std::round(note)));
 
-			const std::string noteNames[12] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
-			lcd.DrawString(10, 80, noteNames[pitch] + ui.IntToString(octave) + " " + ui.IntToString(centDiff) + " cents   ", &lcd.Font_XLarge, fontColour, LCD_BLACK);
-		} else {
-			lcd.DrawString(10, 10, "No Signal    ", &lcd.Font_XLarge, LCD_GREY, LCD_BLACK);
+			// Draw note name and octave with cent error to the left (-) or right (+)
+			lcd.DrawString(30, 50, centDiff < 0 ? ui.IntToString(centDiff) + "   ": "     ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
+			lcd.DrawString(110, 50, noteNames[pitch] + ui.IntToString(octave) + "  ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
+			lcd.DrawString(170, 50, centDiff > 0 ? "+" + ui.IntToString(centDiff) + " ": "    ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
+
+			const uint16_t hertzColour = fft.channel == channelA ? LCD_GREEN : fft.channel == channelB ? LCD_LIGHTBLUE : LCD_ORANGE;
+			lcd.DrawString(80, 100, ui.FloatToString(currFreq, false) + "Hz    ", &lcd.Font_XLarge, hertzColour, LCD_BLACK);
+
+			lcd.ColourFill(300, 200, 305, 205, colourCyle[++colourInc & 3]);
+
+			lastValid = SysTickVal;
+
+		} else if (SysTickVal - lastValid > 4000) {
+			lcd.DrawString(30, 50, "  No Signal    ", &lcd.Font_XLarge, LCD_GREY, LCD_BLACK);
+			lcd.DrawString(80, 100, ui.FloatToString(currFreq, false) + "Hz    ", &lcd.Font_XLarge, LCD_GREY, LCD_BLACK);
 		}
-
 
 
 		Activate(true);

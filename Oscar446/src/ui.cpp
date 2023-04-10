@@ -234,11 +234,11 @@ void UI::handleEncoders()
 		}
 
 		switch (displayMode) {
-		case DispMode::Oscilloscope:	displayMode = DispMode::Tuner;			break;
-		case DispMode::Tuner:			displayMode = DispMode::Fourier;		break;
-		case DispMode::Fourier:			displayMode = DispMode::Waterfall;		break;
-		case DispMode::Waterfall:		displayMode = DispMode::MIDI;			break;
-		case DispMode::MIDI:			displayMode = DispMode::Oscilloscope;	break;
+			case DispMode::Oscilloscope:	displayMode = DispMode::Tuner;			break;
+			case DispMode::Tuner:			displayMode = DispMode::Fourier;		break;
+			case DispMode::Fourier:			displayMode = DispMode::Waterfall;		break;
+			case DispMode::Waterfall:		displayMode = DispMode::MIDI;			break;
+			case DispMode::MIDI:			displayMode = DispMode::Oscilloscope;	break;
 		}
 		cfg.ScheduleSave();
 		ResetMode();

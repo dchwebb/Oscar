@@ -10,12 +10,12 @@
 extern uint32_t SystemCoreClock;
 volatile uint32_t SysTickVal = 0;
 
-int16_t vCalibOffset = -3590;			// Dev board with 14k resistors: -3940, 1.499999
+int16_t vCalibOffset = -3590;				// Dev board with 14k resistors: -3940, 1.499999
 float vCalibScale = 1.46f;
 uint16_t calibZeroPos = 9985;
 
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
-//mode displayMode = Oscilloscope;
+
 uint32_t coverageTimer = 0, coverageTotal = 0;
 
 
@@ -27,7 +27,7 @@ Config cfg;
 
 
 
-inline uint16_t CalcZeroSize() {					// returns ADC size that corresponds to 0v
+inline uint16_t CalcZeroSize() {			// returns ADC size that corresponds to 0v
 	return (8192 - vCalibOffset) / vCalibScale;
 }
 

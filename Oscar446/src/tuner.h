@@ -9,10 +9,9 @@ class Tuner {
 public:
 	enum tunerMode {FFT, ZeroCrossing};
 
-	Tuner();
-	void Capture();							// Called from timer interrupt
-	void Activate(bool startTimer);			// Tuning mode started
-	void Run();								// Processes samples once collected
+	void Capture();									// Called from timer interrupt
+	void Activate(bool startTimer);					// Tuning mode started
+	void Run();										// Processes samples once collected
 
 	encoderType encModeL = TunerMode;
 	encoderType encModeR = ActiveChannel;
@@ -20,27 +19,25 @@ public:
 	tunerMode mode = FFT;
 
 private:
-	static constexpr uint32_t zeroCrossRate = 400;		// sample rate is 90Mhz / clockDivider
-//	static constexpr uint32_t autoCorrRate = 1023;		// sample capture rate of auto-correlation
 
-	int8_t sampleRateAdj = 0;				// Used to make small adjustments to fft sample rate to avoid phase errors
 	bool samplesReady = false;
-	uint32_t bufferPos = 0;					// Capture buffer position
+	uint32_t bufferPos = 0;							// Capture buffer position
 	float currFreq = 0.0f;
+	uint32_t lastValid = 0;							// Store time we last saw a good signal to show 'No signal' as appropriate
+	const uint16_t colourCyle[4] = {LCD_WHITE, LCD_RED, LCD_ORANGE, LCD_YELLOW};
+	uint8_t colourInc = 0;
+
+	// Phase Adjusted FFT settings
+	int8_t sampleRateAdj = 0;						// Used to make small adjustments to fft sample rate to avoid phase errors
+	uint32_t magThreshold = 30000;					// Threshold at which a bin is significant enough to count as fundamental
 
 	// Zero crossing settings
-	std::array<uint32_t, 20> zeroCrossings;	// Holds the timestamps in samples of each upward zero crossing
-	bool overZero = false;					// Stores current direction of waveform
+	static constexpr uint32_t zeroCrossRate = 400;	// sample rate is 90Mhz / clockDivider
+	std::array<uint32_t, 20> zeroCrossings;			// Holds the timestamps in samples of each upward zero crossing
+	bool overZero = false;							// Stores current direction of waveform
 	uint32_t timer  = 0;
-
-	// Auto-correlation settings
-//	uint32_t samplesSize;					// Populated in constructor as we share the FFT buffer
-//	uint16_t* samples;						// Pointer to the FFT buffer
-
-//	static constexpr uint32_t window = 200;
-//	std::array<uint32_t, 1000> results;
-
 
 };
 
 extern Tuner tuner;
+
