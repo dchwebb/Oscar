@@ -24,8 +24,7 @@ private:
 	uint32_t bufferPos = 0;							// Capture buffer position
 	float currFreq = 0.0f;
 	uint32_t lastValid = 0;							// Store time we last saw a good signal to show 'No signal' as appropriate
-	const uint16_t colourCyle[4] = {LCD_WHITE, LCD_RED, LCD_ORANGE, LCD_YELLOW};
-	uint8_t colourInc = 0;
+	bool convBlink = false;							// Show a flashing cursor each time a conversion has finished
 
 	// Phase Adjusted FFT settings
 	int8_t sampleRateAdj = 0;						// Used to make small adjustments to fft sample rate to avoid phase errors

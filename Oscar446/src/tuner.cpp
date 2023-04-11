@@ -98,14 +98,15 @@ void Tuner::Run()
 			bool localMax = false;			// True once magnitude of bin is large enough to count as fundamental
 
 			// Locate maximum hypoteneuse
-			for (uint32_t i = 1; i <= FFT::fftSamples / 2; ++i) {
+			for (uint32_t i = 1; i < FFT::fftSamples / 2; ++i) {
 				const float hypotenuse = std::hypot(fft.fftBuffer[0][i], fft.cosBuffer[i]);
 				if (hypotenuse > maxMag) {
 					maxMag = hypotenuse;
 				}
 			}
+
 			// Locate first hypoteuse that is large enough relative to the maximum to count as fundamental
-			for (uint32_t i = 1; i <= FFT::fftSamples / 2; ++i) {
+			for (uint32_t i = 1; i < FFT::fftSamples / 2; ++i) {
 				const float hypotenuse = std::hypot(fft.fftBuffer[0][i], fft.cosBuffer[i]);
 				if (localMax) {
 					if (hypotenuse > fundMag) {
@@ -114,7 +115,7 @@ void Tuner::Run()
 					} else {
 						break;
 					}
-				} else if (hypotenuse > magThreshold && hypotenuse > (float)maxMag * 0.5f) {
+				} else if (hypotenuse > magThreshold && hypotenuse > static_cast<float>(maxMag) * 0.5f) {
 					localMax = true;
 					fundMag = hypotenuse;
 					maxBin = i;
@@ -142,17 +143,20 @@ void Tuner::Run()
 				// Use the direction of the phase adjustment to correct
 				volatile const uint32_t hyp11 = std::hypot(fft.fftBuffer[1][maxBin + 0], fft.cosBuffer[maxBin + 0]);
 				volatile const uint32_t hyp12 = std::hypot(fft.fftBuffer[1][maxBin + 1], fft.cosBuffer[maxBin + 1]);
-
-				if (hyp12 > hyp11 && phaseAdj < 0.0f) {
+				if (hyp12 > hyp11 && phaseAdj < 0.0f) {		// Correct for situations where each FFT disagrees about the fundamental bin
 					++maxBin;
 				}
 
+				frequency = fft.HarmonicFreq(static_cast<float>(maxBin) + phaseAdj);
+
 				// Possibly due to rounding errors at around 50% phase adjustments the cycle rate can be out by a cycle - abort and shift sampling rate
 				if (phaseAdj > 0.47f || phaseAdj < -0.47f) {
-					sampleRateAdj += currFreq < 60 ? 32 : 1;
-				} else {
-					frequency = fft.HarmonicFreq(static_cast<float>(maxBin) + phaseAdj);
+					if (std::fabs(frequency - currFreq) / currFreq > 0.05f) {
+						sampleRateAdj += currFreq < 60 ? 32 : 2;
+						frequency = 0.0f;
+					}
 				}
+
 			}
 
 		} else {
@@ -191,7 +195,7 @@ void Tuner::Run()
 
 		if (frequency > 16.35f) {
 			// if value is close apply some damping; otherwise just use new value
-			if (std::abs(frequency - currFreq) / frequency < 0.05f) {
+			if (std::abs(frequency - currFreq) / frequency < 0.04f) {
 				currFreq = 0.7f * currFreq + 0.3f * frequency;
 			} else {
 				currFreq = frequency;
@@ -215,7 +219,12 @@ void Tuner::Run()
 			const uint16_t hertzColour = fft.channel == channelA ? LCD_GREEN : fft.channel == channelB ? LCD_LIGHTBLUE : LCD_ORANGE;
 			lcd.DrawString(80, 100, ui.FloatToString(currFreq, false) + "Hz    ", &lcd.Font_XLarge, hertzColour, LCD_BLACK);
 
-			lcd.ColourFill(300, 200, 305, 205, colourCyle[++colourInc & 3]);
+			convBlink = !convBlink;
+			lcd.ColourFill(300, 200, 305, 205, convBlink ? hertzColour : LCD_BLACK);
+
+			// Debug timing
+			//lcd.DrawString(10, 180, ui.IntToString(SysTickVal - start) + "ms   ", &lcd.Font_Large, LCD_GREY, LCD_BLACK);
+			lcd.DrawString(140, lcd.drawHeight + 8, ui.IntToString(SysTickVal - start) + "ms   ", &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 
 			lastValid = SysTickVal;
 
