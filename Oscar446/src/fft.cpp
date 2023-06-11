@@ -59,9 +59,9 @@ void FFT::readyCapture(const bool clearBuffer)
 	}
 
 	if (!capturing && (!dataAvailable[0] || !dataAvailable[1])) {
-		capturing = true;
 		capturePos = 0;
 		captureBufferIndex = dataAvailable[0] ? 1 : 0;
+		capturing = true;
 	}
 }
 

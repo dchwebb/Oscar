@@ -72,15 +72,17 @@ void TIM3_IRQHandler(void)
 }
 
 
-
 //	Coverage timer
-void TIM1_BRK_TIM9_IRQHandler(void) {
+void TIM1_BRK_TIM9_IRQHandler()
+{
 	TIM9->SR &= ~TIM_SR_UIF;									// clear UIF flag
-	coverageTimer ++;
+	++coverageTimer;
 }
 
+
 // MIDI Decoder
-void UART4_IRQHandler(void) {
+void UART4_IRQHandler()
+{
 	if (UART4->SR | USART_SR_RXNE) {
 		midi.queue[midi.queueWrite] = UART4->DR; 				// accessing DR automatically resets the receive flag
 		midi.queueCount++;
@@ -88,6 +90,8 @@ void UART4_IRQHandler(void) {
 	}
 }
 
-void SysTick_Handler(void) {
+
+void SysTick_Handler(void)
+{
 	SysTickVal++;
 }
