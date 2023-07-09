@@ -20,7 +20,7 @@ struct configValues {
 	char StartMarker[4] = "CFG";		// Start Marker
 
 	//	General settings
-	uint8_t Version = 2;				// version of saved config struct format
+	uint8_t Version = 3;				// version of saved config struct format
 	DispMode gen_displayMode = DispMode::Oscilloscope;
 	int16_t gen_vCalibOffset;
 	float gen_vCalibScale;
@@ -42,6 +42,11 @@ struct configValues {
 	oscChannel fft_channel;
 	encoderType fft_EncModeL;
 	encoderType fft_EncModeR;
+
+	// Tuner settings
+	encoderType tuner_EncModeL;
+	encoderType tuner_EncModeR;
+	bool tuner_traceOverlay;
 
 	char EndMarker[4] = "END";			// End Marker
 };

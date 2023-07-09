@@ -69,8 +69,8 @@ private:
 
 	const std::vector<MenuItem> tunerMenu{
 		{ 0, "Channel", ActiveChannel },
-		{ 1, "Tuner Mode", TunerMode }
-		};
+		{ 1, "Tuner Mode", TunerMode },
+		{ 2, "Trace overlay", TraceOverlay } };
 
 	char charBuff[100];
 };

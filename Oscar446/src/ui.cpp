@@ -114,7 +114,14 @@ void UI::EncoderAction(encoderType type, const int8_t& val)
 		DrawUI();
 		break;
 	case TraceOverlay :
-		fft.traceOverlay = !fft.traceOverlay;
+		if (displayMode == DispMode::Fourier) {
+			fft.traceOverlay = !fft.traceOverlay;
+		} else {
+			tuner.traceOverlay = !tuner.traceOverlay;
+			if (!tuner.traceOverlay) {
+				tuner.ClearOverlay();
+			}
+		}
 		DrawUI();
 		break;
 	case ActiveChannel :
@@ -317,7 +324,7 @@ std::string UI::EncoderLabel(encoderType type)
 	case FFTAutoTune :
 		return "Tune: " + std::string(fft.autoTune ? "auto" : "off ");
 	case TraceOverlay :
-		return "Trace: " + std::string(fft.traceOverlay ? "on " : "off ");
+		return "Trace: " + std::string((displayMode == DispMode::Fourier ? fft.traceOverlay : tuner.traceOverlay) ? "on " : "off ");
 	case ActiveChannel :
 		return "Channel " + std::string(fft.channel == channelA ? "A" : fft.channel == channelB ? "B" : "C");
 	case MultiLane :

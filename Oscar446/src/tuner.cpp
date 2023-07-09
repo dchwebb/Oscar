@@ -94,12 +94,12 @@ std::pair<float, float> Tuner::FFTSingleBin(volatile uint32_t bin)
 
 void Tuner::DrawOverlay()
 {
-
-	// attempt to find if there is a trigger point
+	// Draw oscilloscope trace at bottom of tuner display
 	const float trigger = 2047.0f - (static_cast<float>(osc.triggerY) / 4.0f);		// Normalise oscillator trigger to stored sample amplitude
-	uint16_t start = 0;						// First sample where tigger activated
+	uint16_t start = 0;																// First sample where tigger activated
 	float lastPoint = fft.fftBuffer[0][0];
 
+	// Attempt to find trigger point
 	for (uint16_t p = 0; p < FFT::fftSamples - lcd.drawWidth; p++) {
 		if (lastPoint > trigger && fft.fftBuffer[0][p] < trigger) {
 			start = p;
@@ -108,26 +108,30 @@ void Tuner::DrawOverlay()
 		lastPoint = fft.fftBuffer[0][p];
 	}
 
-	// Stored samples are amplitude +/-2047
-	uint16_t* overlayDrawBuffer = &lcd.drawBuffer[0][0];				// lcd draw buffer is wrong dimensions for overlay
+	uint16_t* overlayDrawBuffer = &lcd.drawBuffer[0][0];					// lcd draw buffer is wrong dimensions for overlay
 
 	const uint16_t overlayColour = fft.channel == channelA ? LCD_DULLGREEN : fft.channel == channelB ? LCD_DULLBLUE : LCD_DULLORANGE;
-	const float overlayHeight = 108.0f;
 	const float scale = overlayHeight / 4096.0f;
 
 	memset(overlayDrawBuffer, 0, overlayHeight * lcd.drawWidth * 2);		// Clear draw buffer (*2 as buffer is uint16_t)
 
-	uint32_t currVPos = scale * (2048.0f + fft.fftBuffer[0][start]);
+	// Stored samples are amplitude +/-2047
+	uint32_t currVPos = scale * (2048.0f + fft.fftBuffer[0][start]);		// Used to fill in vertical lines between columns
 	for (uint16_t p = 0; p < lcd.drawWidth ; ++p) {
 		const uint32_t vPos = scale * (2048.0f + fft.fftBuffer[0][p + start]);
 		do {
 			currVPos += currVPos < vPos ? 1 : currVPos > vPos ? -1 : 0;
 			overlayDrawBuffer[currVPos * lcd.drawWidth + p] = overlayColour;
 		} while (vPos != currVPos);
-
-		//currVPos = vPos;
 	}
-	lcd.PatternFill(0, overlayHeight + 1, lcd.drawWidth - 1, lcd.drawHeight, &lcd.drawBuffer[0][0]);
+
+	// Overlay is actually drawn at end of tuning process so display can be updated while next capture underway
+}
+
+
+void Tuner::ClearOverlay()
+{
+	lcd.ColourFill(0, 108 + 1, lcd.drawWidth - 1, lcd.drawHeight, LCD_BLACK);
 }
 
 
@@ -145,14 +149,16 @@ void Tuner::Run()
 			memcpy(&(fft.fftBuffer[1]), &(fft.fftBuffer[0][512]), 512 * 4);
 
 			// Capture samples for overlay
-			DrawOverlay();
+			if (traceOverlay) {
+				DrawOverlay();
+			}
 
 			fft.CalcFFT(fft.fftBuffer[0], FFT::fftSamples);			// Carry out FFT on first buffer
 
 			// Find first significant harmonic
-			volatile uint32_t fundMag = 0;
-			volatile uint32_t maxMag = 0;
-			volatile uint32_t maxBin = 0;
+			uint32_t fundMag = 0;
+			uint32_t maxMag = 0;
+			uint32_t maxBin = 0;
 			bool localMax = false;			// True once magnitude of bin is large enough to count as fundamental
 
 			// Locate maximum hypoteneuse
@@ -183,9 +189,6 @@ void Tuner::Run()
 			if (maxBin) {
 
 				volatile const float phase0 = atan(fft.cosBuffer[maxBin] / fft.fftBuffer[0][maxBin]);
-
-				// Run one bin FFT on buffer 2
-				//volatile std::pair<float, float> res = FFTSingleBin(maxBin);
 
 				fft.CalcFFT(fft.fftBuffer[1], FFT::fftSamples);				// Carry out FFT on buffer 2 (overwrites cosine results from first FFT)
 
@@ -294,6 +297,11 @@ void Tuner::Run()
 			lcd.DrawString(80, 85, ui.FloatToString(currFreq, false) + "Hz    ", &lcd.Font_XLarge, LCD_GREY, LCD_BLACK);
 		}
 
+		// Draw overlay here whilst next data is being captured
+		if (traceOverlay) {
+			while (SPI_DMA_Working);
+			lcd.PatternFill(0, 108 + 1, lcd.drawWidth - 1, lcd.drawHeight, &lcd.drawBuffer[0][0]);
+		}
 
 		Activate(true);
 	}

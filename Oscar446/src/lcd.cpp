@@ -171,6 +171,7 @@ void LCD::PatternFill(const uint16_t x0, const uint16_t y0, const uint16_t x1, c
 	LCD_SPI->CR2 |= SPI_CR2_TXDMAEN;				// Enable SPI TX DMA
 }
 
+
 void LCD::DrawPixel(const uint16_t x, const uint16_t y, const uint16_t colour)
 {
 	SetCursorPosition(x, y, x, y);

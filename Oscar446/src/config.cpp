@@ -57,6 +57,10 @@ void Config::SetConfig(configValues &cv) {
 	cv.fft_channel = fft.channel;
 	cv.fft_EncModeL = fft.encModeL;
 	cv.fft_EncModeR = fft.encModeR;
+
+	cv.tuner_EncModeL = tuner.encModeL;
+	cv.tuner_EncModeR = tuner.encModeR;
+	cv.tuner_traceOverlay = tuner.traceOverlay;
 }
 
 
@@ -67,7 +71,7 @@ void Config::RestoreConfig()
 	configValues cv;
 	memcpy((uint32_t*)&cv, (uint32_t*)ADDR_FLASH_SECTOR_7, sizeof(cv));
 
-	if (strcmp(cv.StartMarker, "CFG") == 0 && strcmp(cv.EndMarker, "END") == 0 && cv.Version == 2) {
+	if (strcmp(cv.StartMarker, "CFG") == 0 && strcmp(cv.EndMarker, "END") == 0 && cv.Version == 3) {
 		ui.displayMode = cv.gen_displayMode;
 		vCalibOffset = cv.gen_vCalibOffset;
 		vCalibScale = cv.gen_vCalibScale;
@@ -87,6 +91,10 @@ void Config::RestoreConfig()
 		fft.channel = cv.fft_channel;
 		fft.encModeL = cv.fft_EncModeL;
 		fft.encModeR = cv.fft_EncModeR;
+
+		tuner.encModeL = cv.tuner_EncModeL;
+		tuner.encModeR = cv.tuner_EncModeR;
+		tuner.traceOverlay = cv.tuner_traceOverlay;
 	}
 }
 
