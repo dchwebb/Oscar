@@ -44,6 +44,8 @@ public:
 
 	bool capturing;
 
+	const float* sinLUTExt = nullptr;
+
 private:
 	static constexpr uint8_t  fftHarmonicColours = 5;
 	static constexpr uint16_t waterfallDrawHeight = 80;

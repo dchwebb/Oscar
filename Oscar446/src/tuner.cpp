@@ -1,7 +1,10 @@
 #include "tuner.h"
 #include "osc.h"
 
+
 Tuner tuner;
+
+extern  std::array<float, FFT::sinLUTSize> sineLUT;
 
 void Tuner::Capture()
 {
@@ -75,6 +78,58 @@ void Tuner::Activate(bool startTimer)
 }
 
 
+std::pair<float, float> Tuner::FFTSingleBin(volatile uint32_t bin)
+{
+	// Note this works pretty well but (probably due to rounding) gives slightly different answers to a full FFT
+	float c = 0.0f;
+	float s = 0.0f;
+	for (uint32_t i = 0; i < FFT::fftSamples; ++i) {
+		c += fft.fftBuffer[1][i] * fft.sinLUTExt[((i * bin) + (FFT::sinLUTSize / 4)) % FFT::sinLUTSize];
+		s += fft.fftBuffer[1][i] * fft.sinLUTExt[(i * bin) % FFT::sinLUTSize];
+	}
+
+	return std::make_pair(c, s);
+}
+
+
+void Tuner::DrawOverlay()
+{
+
+	// attempt to find if there is a trigger point
+	const float trigger = 2047.0f - (static_cast<float>(osc.triggerY) / 4.0f);		// Normalise oscillator trigger to stored sample amplitude
+	uint16_t start = 0;						// First sample where tigger activated
+	float lastPoint = fft.fftBuffer[0][0];
+
+	for (uint16_t p = 0; p < FFT::fftSamples - lcd.drawWidth; p++) {
+		if (lastPoint > trigger && fft.fftBuffer[0][p] < trigger) {
+			start = p;
+			break;
+		}
+		lastPoint = fft.fftBuffer[0][p];
+	}
+
+	// Stored samples are amplitude +/-2047
+	uint16_t* overlayDrawBuffer = &lcd.drawBuffer[0][0];				// lcd draw buffer is wrong dimensions for overlay
+
+	const uint16_t overlayColour = fft.channel == channelA ? LCD_DULLGREEN : fft.channel == channelB ? LCD_DULLBLUE : LCD_DULLORANGE;
+	const float overlayHeight = 108.0f;
+	const float scale = overlayHeight / 4096.0f;
+
+	memset(overlayDrawBuffer, 0, overlayHeight * lcd.drawWidth * 2);		// Clear draw buffer (*2 as buffer is uint16_t)
+
+	uint32_t currVPos = scale * (2048.0f + fft.fftBuffer[0][start]);
+	for (uint16_t p = 0; p < lcd.drawWidth ; ++p) {
+		const uint32_t vPos = scale * (2048.0f + fft.fftBuffer[0][p + start]);
+		do {
+			currVPos += currVPos < vPos ? 1 : currVPos > vPos ? -1 : 0;
+			overlayDrawBuffer[currVPos * lcd.drawWidth + p] = overlayColour;
+		} while (vPos != currVPos);
+
+		//currVPos = vPos;
+	}
+	lcd.PatternFill(0, overlayHeight + 1, lcd.drawWidth - 1, lcd.drawHeight, &lcd.drawBuffer[0][0]);
+}
+
 
 void Tuner::Run()
 {
@@ -88,6 +143,9 @@ void Tuner::Run()
 
 			// As we do two FFTs on samples 0 - 1023 then 512 - 1535, copy samples 512 - 1023 to position 1024
 			memcpy(&(fft.fftBuffer[1]), &(fft.fftBuffer[0][512]), 512 * 4);
+
+			// Capture samples for overlay
+			DrawOverlay();
 
 			fft.CalcFFT(fft.fftBuffer[0], FFT::fftSamples);			// Carry out FFT on first buffer
 
@@ -125,6 +183,9 @@ void Tuner::Run()
 			if (maxBin) {
 
 				volatile const float phase0 = atan(fft.cosBuffer[maxBin] / fft.fftBuffer[0][maxBin]);
+
+				// Run one bin FFT on buffer 2
+				//volatile std::pair<float, float> res = FFTSingleBin(maxBin);
 
 				fft.CalcFFT(fft.fftBuffer[1], FFT::fftSamples);				// Carry out FFT on buffer 2 (overwrites cosine results from first FFT)
 
@@ -212,12 +273,12 @@ void Tuner::Run()
 			const int32_t centDiff = static_cast<int32_t>(100.0f * (note - std::round(note)));
 
 			// Draw note name and octave with cent error to the left (-) or right (+)
-			lcd.DrawString(30, 50, centDiff < 0 ? ui.IntToString(centDiff) + "   ": "     ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
-			lcd.DrawString(110, 50, noteNames[pitch] + ui.IntToString(octave) + "  ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
-			lcd.DrawString(170, 50, centDiff > 0 ? "+" + ui.IntToString(centDiff) + " ": "    ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
+			lcd.DrawString(30, 35, centDiff < 0 ? ui.IntToString(centDiff) + "   ": "     ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
+			lcd.DrawString(110, 35, noteNames[pitch] + ui.IntToString(octave) + "  ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
+			lcd.DrawString(170, 35, centDiff > 0 ? "+" + ui.IntToString(centDiff) + " ": "    ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
 
 			const uint16_t hertzColour = fft.channel == channelA ? LCD_GREEN : fft.channel == channelB ? LCD_LIGHTBLUE : LCD_ORANGE;
-			lcd.DrawString(80, 100, ui.FloatToString(currFreq, false) + "Hz    ", &lcd.Font_XLarge, hertzColour, LCD_BLACK);
+			lcd.DrawString(80, 85, ui.FloatToString(currFreq, false) + "Hz    ", &lcd.Font_XLarge, hertzColour, LCD_BLACK);
 
 			convBlink = !convBlink;
 			lcd.ColourFill(300, 200, 305, 205, convBlink ? hertzColour : LCD_BLACK);
@@ -229,8 +290,8 @@ void Tuner::Run()
 			lastValid = SysTickVal;
 
 		} else if (SysTickVal - lastValid > 4000) {
-			lcd.DrawString(30, 50, "  No Signal    ", &lcd.Font_XLarge, LCD_GREY, LCD_BLACK);
-			lcd.DrawString(80, 100, ui.FloatToString(currFreq, false) + "Hz    ", &lcd.Font_XLarge, LCD_GREY, LCD_BLACK);
+			lcd.DrawString(30, 35, "  No Signal    ", &lcd.Font_XLarge, LCD_GREY, LCD_BLACK);
+			lcd.DrawString(80, 85, ui.FloatToString(currFreq, false) + "Hz    ", &lcd.Font_XLarge, LCD_GREY, LCD_BLACK);
 		}
 
 

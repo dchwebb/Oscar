@@ -7,6 +7,7 @@ constexpr std::array<float, FFT::sinLUTSize> sineLUT = fft.CreateSinLUT();
 
 FFT::FFT()
 {
+	sinLUTExt = &sineLUT[0];
 	// clear the waterfall buffers
 	for (uint16_t w = 0; w < waterfallBuffers; ++w) {
 		for (uint16_t i = 0; i < waterfallSize; i++) {
@@ -34,7 +35,9 @@ void FFT::Run()
 	if (dataAvailable[0] || dataAvailable[1]) {
 		fftBufferNumber = dataAvailable[0] ? 0 : 1;			// select correct draw buffer based on whether buffer 0 or 1 contains data
 
-		PopulateOverlayBuffer(fftBuffer[fftBufferNumber]);		// If in FFT mode with trace overlay will fill draw buffer before samples overwritten by FFT process
+		if (ui.displayMode == DispMode::Fourier && traceOverlay) {
+			PopulateOverlayBuffer(fftBuffer[fftBufferNumber]);		// If in FFT mode with trace overlay will fill draw buffer before samples overwritten by FFT process
+		}
 		CalcFFT(fftBuffer[fftBufferNumber], samples);
 
 		// Display frequency spread
@@ -107,7 +110,6 @@ void FFT::CalcFFT(float* sinBuffer, uint32_t sampleCount)
 		}
 	}
 
-
 	// Step through each column in the butterfly diagram
 	uint32_t node = 1;
 	while (node < sampleCount) {
@@ -172,29 +174,27 @@ void FFT::CalcFFT(float* sinBuffer, uint32_t sampleCount)
 }
 
 
-void FFT::PopulateOverlayBuffer(const float* sinBuffer)
+void FFT::PopulateOverlayBuffer(const float* sampleBuffer)
 {
 	// Populate draw buffer to overlay sample view
-	if (ui.displayMode == DispMode::Fourier && traceOverlay) {
-		osc.laneCount = 2;		// To get an appropriate overlay height
+	osc.laneCount = 2;		// To get an appropriate overlay height
 
-		// attempt to find if there is a trigger point
-		uint16_t s = 0;
-		uint16_t t = 4 * (2047 - sinBuffer[0]);
-		for (uint16_t p = 0; p < fftSamples - lcd.drawWidth; p++) {
-			if (t > osc.triggerY && (4 * (2047 - sinBuffer[p])) < osc.triggerY) {
-				s = p;
-				break;
-			}
-			t = 4 * (2047 - sinBuffer[p]);
+	// attempt to find if there is a trigger point
+	uint16_t start = 0;
+	uint16_t trigger = 4 * (2047 - sampleBuffer[0]);
+	for (uint16_t p = 0; p < fftSamples - lcd.drawWidth; p++) {
+		if (trigger > osc.triggerY && (4 * (2047 - sampleBuffer[p])) < osc.triggerY) {
+			start = p;
+			break;
 		}
-
-		for (uint16_t p = 0; p < lcd.drawWidth ; ++p) {
-			const uint32_t vPos = 4 * (2047 - sinBuffer[s + p]);
-			osc.OscBufferA[0][p] = osc.CalcVertOffset(vPos) + (lcd.drawHeight / 4);
-		}
-		osc.prevPixelA = osc.OscBufferA[0][0];
+		trigger = 4 * (2047 - sampleBuffer[p]);
 	}
+
+	for (uint16_t p = 0; p < lcd.drawWidth ; ++p) {
+		const uint32_t vPos = 4 * (2047 - sampleBuffer[start + p]);
+		osc.OscBufferA[0][p] = osc.CalcVertOffset(vPos) + (lcd.drawHeight / 4);
+	}
+	osc.prevPixelA = osc.OscBufferA[0][0];
 }
 
 

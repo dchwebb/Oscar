@@ -2,7 +2,7 @@
 
 #include "initialisation.h"
 #include "fft.h"
-
+#include "lcd.h"
 
 
 class Tuner {
@@ -19,6 +19,8 @@ public:
 	tunerMode mode = FFT;
 
 private:
+	std::pair<float, float> FFTSingleBin(uint32_t bin);		// Calculates FFT of a single frequency bin
+	void DrawOverlay();
 
 	bool samplesReady = false;
 	uint32_t bufferPos = 0;							// Capture buffer position
