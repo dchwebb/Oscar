@@ -1,21 +1,6 @@
 #pragma once
 
 #include "initialisation.h"
-#include "lcd.h"
-#include "fft.h"
-#include "osc.h"
-#include "tuner.h"
-#include "config.h"
-
-
-class FFT;		// forward reference to handle circular dependency
-class Osc;
-class Config;
-extern FFT fft;
-extern LCD lcd;
-extern Osc osc;
-extern Config cfg;
-
 
 
 class UI {
@@ -74,9 +59,11 @@ private:
 
 	const std::vector<MenuItem> tunerMenu{
 		{ 0, "Channel", ActiveChannel },
-		{ 1, "Tuner Mode", TunerMode },
-		{ 2, "Trace overlay", TraceOverlay } };
+		{ 1, "Vert scale", VoltScale },
+		{ 2, "Tuner Mode", TunerMode },
+		{ 3, "Trace overlay", TraceOverlay } };
 
 	char charBuff[100];
 };
 
+extern UI ui;

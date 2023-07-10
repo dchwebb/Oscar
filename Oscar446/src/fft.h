@@ -4,12 +4,7 @@
 #include "lcd.h"
 #include "ui.h"
 
-
-class UI;		// forward reference to handle circular dependency
 class Tuner;
-extern UI ui;
-extern LCD lcd;
-
 
 class FFT {
 	friend class Tuner;
@@ -41,13 +36,13 @@ public:
 
 	bool capturing;
 
-	const float* sinLUTExt = nullptr;
+	const float* sinLUTExt = nullptr;					// As LUT is created constexpr store a pointer to allow access from outside FFT class
 
 	struct Config {
 		bool autoTune = true;							// if true will attempt to adjust sample capture time to get sample capture to align to multiple of cycle period
 		bool traceOverlay = true;						// Display trace overlaid on FFT display
 		oscChannel channel = channelA;
-		encoderType encModeL = FFTAutoTune;
+		encoderType encModeL = VoltScale;
 		encoderType encModeR = ActiveChannel;
 	} config;
 
@@ -76,7 +71,7 @@ private:
 	void readyCapture(bool clearBuffer);
 
 public:
-	constexpr auto CreateSinLUT()		// constexpr function to generate LUT in Flash
+	constexpr auto CreateSinLUT()						// constexpr function to generate LUT in Flash
 	{
 		std::array<float, sinLUTSize> array {};
 		for (uint32_t s = 0; s < sinLUTSize; ++s){

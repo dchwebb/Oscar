@@ -4,6 +4,8 @@
 #include "fft.h"
 #include "tuner.h"
 
+Config cfg;
+
 // called whenever a config setting is changed to schedule a save after waiting to see if any more changes are being made
 void Config::ScheduleSave()
 {

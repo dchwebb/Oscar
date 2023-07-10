@@ -2,10 +2,7 @@
 
 #include "initialisation.h"
 #include "lcd.h"
-#include "ui.h"
-class UI;		// forward reference to handle circular dependency
-extern UI ui;
-extern LCD lcd;
+
 
 
 class Osc {
@@ -53,6 +50,7 @@ public:
 		bool multiLane = true;
 		int8_t voltScale = 8;
 	} config;
+
 private:
 	void SetDrawBuffer(uint16_t* buff1, uint16_t* buff2);
 	void CircRun();
@@ -68,3 +66,4 @@ private:
 };
 
 
+extern Osc osc;

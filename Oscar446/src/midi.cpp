@@ -1,5 +1,7 @@
 #include <midi.h>
-#include <algorithm>
+#include <ui.h>
+
+MIDIHandler midi;
 
 void MIDIHandler::ProcessMidi()
 {

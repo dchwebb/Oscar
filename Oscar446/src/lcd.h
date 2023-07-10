@@ -132,3 +132,4 @@ private:
 };
 
 
+extern LCD lcd;

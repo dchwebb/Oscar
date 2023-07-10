@@ -1,4 +1,12 @@
 #include "ui.h"
+#include "lcd.h"
+#include "fft.h"
+#include "osc.h"
+#include "tuner.h"
+#include "config.h"
+
+UI ui;
+
 
 void UI::DrawUI()
 {

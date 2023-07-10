@@ -2,10 +2,7 @@
 
 #include "stm32f4xx.h"
 #include <cmath>
-#include <string>
 #include <cstring>
-#include <array>
-#include <vector>
 #include <algorithm>
 
 // Coverage profiler macros using timer 4 to count clock cycles / 10

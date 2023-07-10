@@ -1,4 +1,7 @@
 #include "osc.h"
+#include "ui.h"
+
+Osc osc;
 
 void Osc::Capture()
 {

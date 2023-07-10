@@ -2,7 +2,6 @@
 
 #include "initialisation.h"
 #include "fft.h"
-#include "lcd.h"
 
 
 class Tuner {
@@ -20,12 +19,13 @@ public:
 		encoderType encModeL = TunerMode;
 		encoderType encModeR = ActiveChannel;
 		tunerMode mode = FFT;
-		bool traceOverlay = true;						// Display trace overlaid on tuner display
+		bool traceOverlay = true;					// Display trace overlaid on tuner display
 	} config;
 
 private:
 	std::pair<float, float> FFTSingleBin(uint32_t bin);		// Calculates FFT of a single frequency bin
 	void DrawOverlay();
+	uint32_t OverlayVPos(float sample);
 
 	bool samplesReady = false;
 	uint32_t bufferPos = 0;							// Capture buffer position

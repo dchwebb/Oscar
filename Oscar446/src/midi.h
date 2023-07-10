@@ -2,9 +2,6 @@
 
 #include "initialisation.h"
 #include <lcd.h>
-#include <ui.h>
-
-extern LCD lcd;
 
 
 class MIDIHandler {
@@ -46,3 +43,5 @@ private:
 	void QueueInc();
 	std::string NoteName(const uint8_t note);
 };
+
+extern MIDIHandler midi;

@@ -25,3 +25,4 @@ private:
 
 };
 
+extern Config cfg;

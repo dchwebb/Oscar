@@ -9,16 +9,8 @@
 
 extern uint32_t SystemCoreClock;
 volatile uint32_t SysTickVal = 0;
-
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
-
 uint32_t coverageTimer = 0, coverageTotal = 0;
-
-LCD lcd;
-UI ui;
-MIDIHandler midi;
-Osc osc;
-Config cfg;
 
 
 extern "C"

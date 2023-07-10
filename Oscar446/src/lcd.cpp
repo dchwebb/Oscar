@@ -1,5 +1,7 @@
 #include "lcd.h"
 
+LCD lcd;
+
 void LCD::Init()
 {
 	// Force reset

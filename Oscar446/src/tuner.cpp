@@ -111,14 +111,12 @@ void Tuner::DrawOverlay()
 	uint16_t* overlayDrawBuffer = &lcd.drawBuffer[0][0];					// lcd draw buffer is wrong dimensions for overlay
 
 	const uint16_t overlayColour = fft.config.channel == channelA ? LCD_DULLGREEN : fft.config.channel == channelB ? LCD_DULLBLUE : LCD_DULLORANGE;
-	const float scale = overlayHeight / 4096.0f;
 
 	memset(overlayDrawBuffer, 0, overlayHeight * lcd.drawWidth * 2);		// Clear draw buffer (*2 as buffer is uint16_t)
 
-	// Stored samples are amplitude +/-2047
-	uint32_t currVPos = scale * (2048.0f + fft.fftBuffer[0][start]);		// Used to fill in vertical lines between columns
+	uint32_t currVPos = OverlayVPos(fft.fftBuffer[0][start]);				// Used to fill in vertical lines between columns
 	for (uint16_t p = 0; p < lcd.drawWidth ; ++p) {
-		const uint32_t vPos = scale * (2048.0f + fft.fftBuffer[0][p + start]);
+		const uint32_t vPos = OverlayVPos(fft.fftBuffer[0][start + p]);
 		do {
 			currVPos += currVPos < vPos ? 1 : currVPos > vPos ? -1 : 0;
 			overlayDrawBuffer[currVPos * lcd.drawWidth + p] = overlayColour;
@@ -126,6 +124,15 @@ void Tuner::DrawOverlay()
 	}
 
 	// Overlay is actually drawn at end of tuning process so display can be updated while next capture underway
+}
+
+
+inline uint32_t Tuner::OverlayVPos(float sample)
+{
+	// Stored samples are amplitude +/-2047
+	const float scaled = (((sample / 4096.0f) * (8.0f / osc.config.voltScale)) + 0.5f) * overlayHeight;
+	return static_cast<uint32_t>(std::clamp(scaled, 0.0f, overlayHeight));
+
 }
 
 
@@ -284,7 +291,7 @@ void Tuner::Run()
 			lcd.DrawString(80, 85, ui.FloatToString(currFreq, false) + "Hz    ", &lcd.Font_XLarge, hertzColour, LCD_BLACK);
 
 			convBlink = !convBlink;
-			lcd.ColourFill(300, 200, 305, 205, convBlink ? hertzColour : LCD_BLACK);
+			lcd.ColourFill(300, 5, 305, 10, convBlink ? hertzColour : LCD_BLACK);
 
 			// Debug timing
 			//lcd.DrawString(10, 180, ui.IntToString(SysTickVal - start) + "ms   ", &lcd.Font_Large, LCD_GREY, LCD_BLACK);

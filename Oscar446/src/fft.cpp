@@ -1,4 +1,5 @@
 #include <fft.h>
+#include "osc.h"
 
 FFT fft;
 
