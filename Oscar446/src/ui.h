@@ -20,11 +20,16 @@ extern Config cfg;
 
 class UI {
 public:
-	DispMode displayMode = DispMode::Oscilloscope;
-
 	void DrawUI();
 	void handleEncoders();
 	void ResetMode();
+	uint32_t SerialiseConfig(uint8_t** buff);
+	uint32_t StoreConfig(uint8_t* buff);
+
+	struct Config {
+		DispMode displayMode = DispMode::Oscilloscope;
+	} config;
+
 
 	std::string FloatToString(float f, bool smartFormat);
 	std::string IntToString(const int32_t v);

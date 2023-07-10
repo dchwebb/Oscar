@@ -2,7 +2,7 @@
 
 void UI::DrawUI()
 {
-	if (displayMode == DispMode::MIDI) {
+	if (config.displayMode == DispMode::MIDI) {
 		lcd.DrawString(120, lcd.drawHeight + 8, "MIDI Events", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 		return;
 	}
@@ -17,7 +17,7 @@ void UI::DrawUI()
 	lcd.DrawString(10, lcd.drawHeight + 8, EncoderLabel(encoderModeL), &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 	lcd.DrawString(240, lcd.drawHeight + 8, EncoderLabel(encoderModeR), &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 
-	if (displayMode == DispMode::Oscilloscope) {
+	if (config.displayMode == DispMode::Oscilloscope) {
 		std::string s = FloatToString(640000.0f * (TIM3->PSC + 1) * (TIM3->ARR + 1) / SystemCoreClock, false) + "ms    ";
 		lcd.DrawString(140, lcd.drawHeight + 8, s, &lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 	}
@@ -27,9 +27,9 @@ void UI::DrawUI()
 void UI::MenuAction(encoderType* et, volatile const int8_t& val)
 {
 	const std::vector<MenuItem>* currentMenu =
-			displayMode == DispMode::Tuner ? &tunerMenu :
-			displayMode == DispMode::Oscilloscope ? &oscMenu :
-			displayMode == DispMode::Fourier || displayMode == DispMode::Waterfall ? &fftMenu : nullptr;
+			config.displayMode == DispMode::Tuner ? &tunerMenu :
+			config.displayMode == DispMode::Oscilloscope ? &oscMenu :
+			config.displayMode == DispMode::Fourier || config.displayMode == DispMode::Waterfall ? &fftMenu : nullptr;
 
 	//	Move the selected menu item one forwards or one back based on value of encoder
 	auto mi = std::find_if(currentMenu->cbegin(), currentMenu->cend(), [=] (MenuItem m) { return m.selected == *et; } );
@@ -38,15 +38,15 @@ void UI::MenuAction(encoderType* et, volatile const int8_t& val)
 		*et = mi->selected;
 	}
 
-	if (displayMode == DispMode::Oscilloscope) {
-		osc.encModeL = encoderModeL;
-		osc.encModeR = encoderModeR;
-	} else if (displayMode == DispMode::Tuner) {
-		tuner.encModeL = encoderModeL;
-		tuner.encModeR = encoderModeR;
-	} else if (displayMode == DispMode::Fourier) {
-		fft.encModeL = encoderModeL;
-		fft.encModeR = encoderModeR;
+	if (config.displayMode == DispMode::Oscilloscope) {
+		osc.config.encModeL = encoderModeL;
+		osc.config.encModeR = encoderModeR;
+	} else if (config.displayMode == DispMode::Tuner) {
+		tuner.config.encModeL = encoderModeL;
+		tuner.config.encModeR = encoderModeR;
+	} else if (config.displayMode == DispMode::Fourier) {
+		fft.config.encModeL = encoderModeL;
+		fft.config.encModeR = encoderModeR;
 	}
 
 	DrawMenu();
@@ -61,8 +61,8 @@ void UI::EncoderAction(encoderType type, const int8_t& val)
 		adj = TIM3->ARR + (TIM3->ARR < 5000 ? 200 : TIM3->ARR < 20000 ? 400 : TIM3->ARR < 50000 ? 4000 : 8000) * -val;
 		if (adj > MINSAMPLETIMER && adj < 560000) {
 			TIM3->ARR = adj;
-			if (displayMode == DispMode::Oscilloscope) {
-				osc.sampleTimer = adj;
+			if (config.displayMode == DispMode::Oscilloscope) {
+				osc.config.sampleTimer = adj;
 			}
 			DrawUI();
 		}
@@ -72,53 +72,53 @@ void UI::EncoderAction(encoderType type, const int8_t& val)
 		DrawUI();
 		break;
 	case CalibVertOffset :
-		vCalibOffset += 50 * val;
+		osc.config.vCalibOffset += 50 * val;
 		break;
 	case CalibVertScale :
-		vCalibScale += val * .01;
+		osc.config.vCalibScale += val * .01;
 		break;
 	case VoltScale :
-		osc.voltScale -= val;
-		osc.voltScale = std::clamp(static_cast<int>(osc.voltScale), 1, 12);
+		osc.config.voltScale -= val;
+		osc.config.voltScale = std::clamp(static_cast<int>(osc.config.voltScale), 1, 12);
 		break;
 	case ChannelSelect :
-		osc.oscDisplay += val;
-		osc.oscDisplay = osc.oscDisplay == 0 ? 7 : osc.oscDisplay == 8 ? 1 : osc.oscDisplay;
+		osc.config.oscDisplay += val;
+		osc.config.oscDisplay = osc.config.oscDisplay == 0 ? 7 : osc.config.oscDisplay == 8 ? 1 : osc.config.oscDisplay;
 		osc.setTriggerChannel();
 
 		DrawUI();
 		break;
 
 	case TriggerChannel :
-		if ((osc.triggerChannel == channelNone && val > 0) || (osc.triggerChannel == channelB && val < 0))
-			osc.triggerChannel = channelA;
-		else if ((osc.triggerChannel == channelA && val > 0) || (osc.triggerChannel == channelC && val < 0))
-			osc.triggerChannel = channelB;
-		else if ((osc.triggerChannel == channelB && val > 0) || (osc.triggerChannel == channelNone && val < 0))
-			osc.triggerChannel = channelC;
-		else if ((osc.triggerChannel == channelC && val > 0) || (osc.triggerChannel == channelA && val < 0))
-			osc.triggerChannel = channelNone;
+		if ((osc.config.triggerChannel == channelNone && val > 0) || (osc.config.triggerChannel == channelB && val < 0))
+			osc.config.triggerChannel = channelA;
+		else if ((osc.config.triggerChannel == channelA && val > 0) || (osc.config.triggerChannel == channelC && val < 0))
+			osc.config.triggerChannel = channelB;
+		else if ((osc.config.triggerChannel == channelB && val > 0) || (osc.config.triggerChannel == channelNone && val < 0))
+			osc.config.triggerChannel = channelC;
+		else if ((osc.config.triggerChannel == channelC && val > 0) || (osc.config.triggerChannel == channelA && val < 0))
+			osc.config.triggerChannel = channelNone;
 
 		osc.setTriggerChannel();
 
 		DrawUI();
 		break;
 	case Trigger_Y :
-		osc.triggerY = std::min(std::max((int32_t)osc.triggerY + 100 * val, (int32_t)3800), (int32_t)16000);
+		osc.config.triggerY = std::min(std::max((int32_t)osc.config.triggerY + 100 * val, (int32_t)3800), (int32_t)16000);
 		break;
 	case Trigger_X :
-		osc.triggerX = std::min(std::max(osc.triggerX + 2 * val, 0), 316);
+		osc.config.triggerX = std::min(std::max(osc.config.triggerX + 2 * val, 0), 316);
 		break;
 	case FFTAutoTune :
-		fft.autoTune = !fft.autoTune;
+		fft.config.autoTune = !fft.config.autoTune;
 		DrawUI();
 		break;
 	case TraceOverlay :
-		if (displayMode == DispMode::Fourier) {
-			fft.traceOverlay = !fft.traceOverlay;
+		if (config.displayMode == DispMode::Fourier) {
+			fft.config.traceOverlay = !fft.config.traceOverlay;
 		} else {
-			tuner.traceOverlay = !tuner.traceOverlay;
-			if (!tuner.traceOverlay) {
+			tuner.config.traceOverlay = !tuner.config.traceOverlay;
+			if (!tuner.config.traceOverlay) {
 				tuner.ClearOverlay();
 			}
 		}
@@ -126,17 +126,17 @@ void UI::EncoderAction(encoderType type, const int8_t& val)
 		break;
 	case ActiveChannel :
 		if (val > 0)
-			fft.channel = (fft.channel == channelA) ? channelB : (fft.channel == channelB) ? channelC : channelA;
+			fft.config.channel = (fft.config.channel == channelA) ? channelB : (fft.config.channel == channelB) ? channelC : channelA;
 		else
-			fft.channel = (fft.channel == channelA) ? channelC : (fft.channel == channelB) ? channelA : channelB;
+			fft.config.channel = (fft.config.channel == channelA) ? channelC : (fft.config.channel == channelB) ? channelA : channelB;
 		DrawUI();
 		break;
 	case MultiLane :
-		osc.multiLane = !osc.multiLane;
+		osc.config.multiLane = !osc.config.multiLane;
 		DrawUI();
 		break;
 	case TunerMode:
-		tuner.mode = tuner.mode == Tuner::ZeroCrossing ? Tuner::FFT : Tuner::ZeroCrossing;
+		tuner.config.mode = tuner.config.mode == Tuner::ZeroCrossing ? Tuner::FFT : Tuner::ZeroCrossing;
 		tuner.Activate(true);
 		DrawUI();
 	default:
@@ -157,9 +157,9 @@ void UI::DrawMenu()
 	lcd.DrawLine(159, 27, 159, 239, LCD_WHITE);
 
 	const std::vector<MenuItem>* currentMenu =
-			displayMode == DispMode::Oscilloscope? &oscMenu :
-			displayMode == DispMode::Tuner? &tunerMenu :
-			displayMode == DispMode::Fourier || displayMode == DispMode::Waterfall ? &fftMenu : nullptr;
+			config.displayMode == DispMode::Oscilloscope ? &oscMenu :
+			config.displayMode == DispMode::Tuner ? &tunerMenu :
+			config.displayMode == DispMode::Fourier || config.displayMode == DispMode::Waterfall ? &fftMenu : nullptr;
 
 	uint8_t pos = 0;
 	for (auto m = currentMenu->cbegin(); m != currentMenu->cend(); m++, pos++) {
@@ -224,7 +224,7 @@ void UI::handleEncoders()
 	if (encoderBtnR) {
 		encoderBtnR = false;
 
-		if (displayMode == DispMode::Oscilloscope || displayMode == DispMode::Tuner || displayMode == DispMode::Fourier) {
+		if (config.displayMode == DispMode::Oscilloscope || config.displayMode == DispMode::Tuner || config.displayMode == DispMode::Fourier) {
 			menuMode = true;
 			lcd.ScreenFill(LCD_BLACK);
 			DrawMenu();
@@ -236,16 +236,16 @@ void UI::handleEncoders()
 	if (encoderBtnL && !menuMode) {
 		encoderBtnL = false;
 
-		if (displayMode == DispMode::Oscilloscope) {
-			osc.sampleTimer = TIM3->ARR;
+		if (config.displayMode == DispMode::Oscilloscope) {
+			osc.config.sampleTimer = TIM3->ARR;
 		}
 
-		switch (displayMode) {
-			case DispMode::Oscilloscope:	displayMode = DispMode::Tuner;			break;
-			case DispMode::Tuner:			displayMode = DispMode::Fourier;		break;
-			case DispMode::Fourier:			displayMode = DispMode::Waterfall;		break;
-			case DispMode::Waterfall:		displayMode = DispMode::MIDI;			break;
-			case DispMode::MIDI:			displayMode = DispMode::Oscilloscope;	break;
+		switch (config.displayMode) {
+			case DispMode::Oscilloscope:	config.displayMode = DispMode::Tuner;			break;
+			case DispMode::Tuner:			config.displayMode = DispMode::Fourier;			break;
+			case DispMode::Fourier:			config.displayMode = DispMode::Waterfall;		break;
+			case DispMode::Waterfall:		config.displayMode = DispMode::MIDI;			break;
+			case DispMode::MIDI:			config.displayMode = DispMode::Oscilloscope;	break;
 		}
 		cfg.ScheduleSave();
 		ResetMode();
@@ -261,21 +261,21 @@ void UI::ResetMode()
 	UART4->CR1 &= ~USART_CR1_UE;			// Disable MIDI capture on UART4
 
 	lcd.ScreenFill(LCD_BLACK);
-	switch (displayMode) {
+	switch (config.displayMode) {
 	case DispMode::Oscilloscope :
-		encoderModeL = osc.encModeL;
-		encoderModeR = osc.encModeR;
-		TIM3->ARR = std::max(osc.sampleTimer, (uint16_t)MINSAMPLETIMER);
+		encoderModeL = osc.config.encModeL;
+		encoderModeR = osc.config.encModeR;
+		TIM3->ARR = std::max(osc.config.sampleTimer, (uint16_t)MINSAMPLETIMER);
 		break;
 	case DispMode::Tuner :
 		tuner.Activate(false);
-		encoderModeL = tuner.encModeL;
-		encoderModeR = tuner.encModeR;
+		encoderModeL = tuner.config.encModeL;
+		encoderModeR = tuner.config.encModeR;
 		break;
 	case DispMode::Fourier:
 		fft.Activate();
-		encoderModeL = fft.encModeL;
-		encoderModeR = fft.encModeR;
+		encoderModeL = fft.config.encModeL;
+		encoderModeR = fft.config.encModeR;
 		break;
 	case DispMode::Waterfall :
 		fft.Activate();
@@ -292,7 +292,7 @@ void UI::ResetMode()
 
 	ui.DrawUI();
 
-	if (displayMode == DispMode::MIDI) {
+	if (config.displayMode == DispMode::MIDI) {
 		UART4->CR1 |= USART_CR1_UE;			// Enable MIDI capture
 	} else {
 		TIM3->CR1 |= TIM_CR1_CEN;			// Reenable the sample acquisiton timer
@@ -308,7 +308,7 @@ std::string UI::EncoderLabel(encoderType type)
 	case HorizScaleFine :
 		return "Zoom Horiz";
 	case ChannelSelect :
-		return "Ch:" + std::string(osc.oscDisplay & 1 ? "A" : "") + std::string(osc.oscDisplay & 2 ? "B" : "") + std::string(osc.oscDisplay & 4 ? "C  " : "  ");
+		return "Ch:" + std::string(osc.config.oscDisplay & 1 ? "A" : "") + std::string(osc.config.oscDisplay & 2 ? "B" : "") + std::string(osc.config.oscDisplay & 4 ? "C  " : "  ");
 	case CalibVertScale :
 		return "Calib Scale";
 	case CalibVertOffset :
@@ -320,17 +320,17 @@ std::string UI::EncoderLabel(encoderType type)
 	case Trigger_Y :
 		return "Trigger Y";
 	case TriggerChannel :
-		return std::string(osc.triggerChannel == channelA ? "Trigger A " : osc.triggerChannel == channelB ? "Trigger B " : osc.triggerChannel == channelC ? "Trigger C " : "No Trigger");
+		return std::string(osc.config.triggerChannel == channelA ? "Trigger A " : osc.config.triggerChannel == channelB ? "Trigger B " : osc.config.triggerChannel == channelC ? "Trigger C " : "No Trigger");
 	case FFTAutoTune :
-		return "Tune: " + std::string(fft.autoTune ? "auto" : "off ");
+		return "Tune: " + std::string(fft.config.autoTune ? "auto" : "off ");
 	case TraceOverlay :
-		return "Trace: " + std::string((displayMode == DispMode::Fourier ? fft.traceOverlay : tuner.traceOverlay) ? "on " : "off ");
+		return "Trace: " + std::string((config.displayMode == DispMode::Fourier ? fft.config.traceOverlay : tuner.config.traceOverlay) ? "on " : "off ");
 	case ActiveChannel :
-		return "Channel " + std::string(fft.channel == channelA ? "A" : fft.channel == channelB ? "B" : "C");
+		return "Channel " + std::string(fft.config.channel == channelA ? "A" : fft.config.channel == channelB ? "B" : "C");
 	case MultiLane :
-		return "Lanes: " + std::string(osc.multiLane ? "Yes" : "No ");
+		return "Lanes: " + std::string(osc.config.multiLane ? "Yes" : "No ");
 	case TunerMode :
-		return tuner.mode == Tuner::ZeroCrossing ? "Zero Cross" : "FFT       ";
+		return tuner.config.mode == Tuner::ZeroCrossing ? "Zero Cross" : "FFT       ";
 	default:
 	  return "";
 	}
@@ -366,4 +366,20 @@ uint16_t UI::DarkenColour(const uint16_t& colour, uint16_t amount) {
 	g -= std::min(amount, g);
 	b -= std::min(amount, b);;
 	return ((r >> 1) << 11) + (g << 5) + (b >> 1);
+}
+
+
+uint32_t UI::SerialiseConfig(uint8_t** buff)
+{
+	*buff = reinterpret_cast<uint8_t*>(&config);
+	return sizeof(config);
+}
+
+
+uint32_t UI::StoreConfig(uint8_t* buff)
+{
+	if (buff != nullptr) {
+		memcpy(&config, buff, sizeof(config));
+	}
+	return sizeof(config);
 }

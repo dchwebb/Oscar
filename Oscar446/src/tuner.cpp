@@ -8,11 +8,11 @@ extern  std::array<float, FFT::sinLUTSize> sineLUT;
 
 void Tuner::Capture()
 {
-	const uint32_t adcSummed =  fft.channel == channelA ? ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9] :
-								fft.channel == channelB ? ADC_array[1] + ADC_array[4] + ADC_array[7] + ADC_array[10] :
-														  ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11];
+	const uint32_t adcSummed =  fft.config.channel == channelA ? ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9] :
+								fft.config.channel == channelB ? ADC_array[1] + ADC_array[4] + ADC_array[7] + ADC_array[10] :
+														  	  	 ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11];
 
-	if (mode == FFT) {
+	if (config.mode == FFT) {
 
 		float* floatBuffer = (float*)&(fft.fftBuffer);
 		floatBuffer[bufferPos] = 2047.0f - (static_cast<float>(adcSummed) / 4.0f);
@@ -28,10 +28,10 @@ void Tuner::Capture()
 	} else {
 		++timer;
 
-		if (overZero && static_cast<int>(adcSummed) < calibZeroPos - 100) {
+		if (overZero && static_cast<int>(adcSummed) < osc.calibZeroPos - 100) {
 			overZero = false;
 		}
-		if (!overZero && adcSummed > calibZeroPos) {
+		if (!overZero && adcSummed > osc.calibZeroPos) {
 			overZero = true;
 			zeroCrossings[bufferPos] = timer;
 			if (++bufferPos == zeroCrossings.size()) {
@@ -53,7 +53,7 @@ void Tuner::Capture()
 
 void Tuner::Activate(bool startTimer)
 {
-	if (mode == FFT) {
+	if (config.mode == FFT) {
 		if (currFreq > 800.0f) {
 			TIM3->ARR = (FFT::timerDefault / 2) + sampleRateAdj;
 		} else if (currFreq < 50.0f) {
@@ -64,7 +64,7 @@ void Tuner::Activate(bool startTimer)
 	} else {
 		// Get current value of ADC (assume channel A for now)
 		const uint32_t currVal = ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9];
-		overZero = currVal > calibZeroPos;
+		overZero = currVal > osc.calibZeroPos;
 		timer = 0;
 		TIM3->ARR = zeroCrossRate;
 	}
@@ -78,7 +78,7 @@ void Tuner::Activate(bool startTimer)
 }
 
 
-std::pair<float, float> Tuner::FFTSingleBin(volatile uint32_t bin)
+std::pair<float, float> Tuner::FFTSingleBin(uint32_t bin)
 {
 	// Note this works pretty well but (probably due to rounding) gives slightly different answers to a full FFT
 	float c = 0.0f;
@@ -95,7 +95,7 @@ std::pair<float, float> Tuner::FFTSingleBin(volatile uint32_t bin)
 void Tuner::DrawOverlay()
 {
 	// Draw oscilloscope trace at bottom of tuner display
-	const float trigger = 2047.0f - (static_cast<float>(osc.triggerY) / 4.0f);		// Normalise oscillator trigger to stored sample amplitude
+	const float trigger = 2047.0f - (static_cast<float>(osc.config.triggerY) / 4.0f);		// Normalise oscillator trigger to stored sample amplitude
 	uint16_t start = 0;																// First sample where tigger activated
 	float lastPoint = fft.fftBuffer[0][0];
 
@@ -110,7 +110,7 @@ void Tuner::DrawOverlay()
 
 	uint16_t* overlayDrawBuffer = &lcd.drawBuffer[0][0];					// lcd draw buffer is wrong dimensions for overlay
 
-	const uint16_t overlayColour = fft.channel == channelA ? LCD_DULLGREEN : fft.channel == channelB ? LCD_DULLBLUE : LCD_DULLORANGE;
+	const uint16_t overlayColour = fft.config.channel == channelA ? LCD_DULLGREEN : fft.config.channel == channelB ? LCD_DULLBLUE : LCD_DULLORANGE;
 	const float scale = overlayHeight / 4096.0f;
 
 	memset(overlayDrawBuffer, 0, overlayHeight * lcd.drawWidth * 2);		// Clear draw buffer (*2 as buffer is uint16_t)
@@ -141,7 +141,7 @@ void Tuner::Run()
 		float frequency = 0.0f;
 		const uint32_t start = SysTickVal;
 
-		if (mode == FFT) {
+		if (config.mode == FFT) {
 			// Phase adjusted FFT: FFT on two overlapping buffers; where the 2nd half of buffer 1 is the 1st part of buffer 2
 			// Calculate the fundamental bin looking for a magnitude over a threshold, then adjust by the phase difference of the two FFTs
 
@@ -149,7 +149,7 @@ void Tuner::Run()
 			memcpy(&(fft.fftBuffer[1]), &(fft.fftBuffer[0][512]), 512 * 4);
 
 			// Capture samples for overlay
-			if (traceOverlay) {
+			if (config.traceOverlay) {
 				DrawOverlay();
 			}
 
@@ -188,12 +188,12 @@ void Tuner::Run()
 
 			if (maxBin) {
 
-				volatile const float phase0 = atan(fft.cosBuffer[maxBin] / fft.fftBuffer[0][maxBin]);
+				const float phase0 = atan(fft.cosBuffer[maxBin] / fft.fftBuffer[0][maxBin]);
 
 				fft.CalcFFT(fft.fftBuffer[1], FFT::fftSamples);				// Carry out FFT on buffer 2 (overwrites cosine results from first FFT)
 
-				volatile const float phase1 = atan(fft.cosBuffer[maxBin] / fft.fftBuffer[1][maxBin]);
-				volatile float phaseAdj = (phase0 - phase1) / M_PI;			// normalise phase adjustment
+				const float phase1 = atan(fft.cosBuffer[maxBin] / fft.fftBuffer[1][maxBin]);
+				float phaseAdj = (phase0 - phase1) / M_PI;			// normalise phase adjustment
 
 				// handle phase wrapping
 				if (phaseAdj < -0.5f) {
@@ -205,8 +205,8 @@ void Tuner::Run()
 
 				// When a signal is almost exactly between two bins the first and second FFT can disagree
 				// Use the direction of the phase adjustment to correct
-				volatile const uint32_t hyp11 = std::hypot(fft.fftBuffer[1][maxBin + 0], fft.cosBuffer[maxBin + 0]);
-				volatile const uint32_t hyp12 = std::hypot(fft.fftBuffer[1][maxBin + 1], fft.cosBuffer[maxBin + 1]);
+				const uint32_t hyp11 = std::hypot(fft.fftBuffer[1][maxBin + 0], fft.cosBuffer[maxBin + 0]);
+				const uint32_t hyp12 = std::hypot(fft.fftBuffer[1][maxBin + 1], fft.cosBuffer[maxBin + 1]);
 				if (hyp12 > hyp11 && phaseAdj < 0.0f) {		// Correct for situations where each FFT disagrees about the fundamental bin
 					++maxBin;
 				}
@@ -280,7 +280,7 @@ void Tuner::Run()
 			lcd.DrawString(110, 35, noteNames[pitch] + ui.IntToString(octave) + "  ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
 			lcd.DrawString(170, 35, centDiff > 0 ? "+" + ui.IntToString(centDiff) + " ": "    ", &lcd.Font_XLarge, LCD_WHITE, LCD_BLACK);
 
-			const uint16_t hertzColour = fft.channel == channelA ? LCD_GREEN : fft.channel == channelB ? LCD_LIGHTBLUE : LCD_ORANGE;
+			const uint16_t hertzColour = fft.config.channel == channelA ? LCD_GREEN : fft.config.channel == channelB ? LCD_LIGHTBLUE : LCD_ORANGE;
 			lcd.DrawString(80, 85, ui.FloatToString(currFreq, false) + "Hz    ", &lcd.Font_XLarge, hertzColour, LCD_BLACK);
 
 			convBlink = !convBlink;
@@ -298,7 +298,7 @@ void Tuner::Run()
 		}
 
 		// Draw overlay here whilst next data is being captured
-		if (traceOverlay) {
+		if (config.traceOverlay) {
 			while (SPI_DMA_Working);
 			lcd.PatternFill(0, 108 + 1, lcd.drawWidth - 1, lcd.drawHeight, &lcd.drawBuffer[0][0]);
 		}
@@ -308,3 +308,17 @@ void Tuner::Run()
 }
 
 
+uint32_t Tuner::SerialiseConfig(uint8_t** buff)
+{
+	*buff = reinterpret_cast<uint8_t*>(&config);
+	return sizeof(config);
+}
+
+
+uint32_t Tuner::StoreConfig(uint8_t* buff)
+{
+	if (buff != nullptr) {
+		memcpy(&config, buff, sizeof(config));
+	}
+	return sizeof(config);
+}

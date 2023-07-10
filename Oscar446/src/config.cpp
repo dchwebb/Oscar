@@ -1,10 +1,16 @@
-#include <config.h>
+#include "config.h"
+#include "ui.h"
+#include "osc.h"
+#include "fft.h"
+#include "tuner.h"
 
 // called whenever a config setting is changed to schedule a save after waiting to see if any more changes are being made
-void Config::ScheduleSave() {
+void Config::ScheduleSave()
+{
 	scheduleSave = true;
 	saveBooked = SysTickVal;
 }
+
 
 // Write calibration settings to Flash memory
 void Config::SaveConfig() {
@@ -13,8 +19,7 @@ void Config::SaveConfig() {
 	uint32_t address = ADDR_FLASH_SECTOR_7;		// Store data in Sector 7 last sector in F446 to allow maximum space for program code
 	FLASH_Status flash_status = FLASH_COMPLETE;
 
-	configValues cv;
-	SetConfig(cv);
+	uint32_t cfgSize = SetConfig();
 
 	__disable_irq();		// Disable Interrupts
 	FLASH_Unlock();			// Unlock Flash memory for writing
@@ -27,8 +32,8 @@ void Config::SaveConfig() {
 
 	// If erase worked, program the Flash memory with the config settings byte by byte
 	if (flash_status == FLASH_COMPLETE) {
-		for (unsigned int f = 0; f < sizeof(cv); f++) {
-			char byte = *((char*)(&cv) + f);
+		for (unsigned int f = 0; f < cfgSize; f++) {
+			char byte = *((char*)(&configBuffer) + f);
 			flash_status = FLASH_ProgramByte((uint32_t)address + f, byte);
 		}
 	}
@@ -37,65 +42,58 @@ void Config::SaveConfig() {
 	__enable_irq(); 		// Enable Interrupts
 }
 
-void Config::SetConfig(configValues &cv) {
-	cv.gen_displayMode = ui.displayMode;
-	cv.gen_vCalibOffset = vCalibOffset;
-	cv.gen_vCalibScale = vCalibScale;
 
-	cv.osc_TriggerX = osc.triggerX;
-	cv.osc_TriggerY = osc.triggerY;
-	cv.osc_TriggerChannel = (osc.triggerChannel == channelA ? 1 : osc.triggerChannel == channelB ? 2 : osc.triggerChannel == channelC ? 3 : 0);
-	cv.osc_EncModeL = osc.encModeL;
-	cv.osc_EncModeR = osc.encModeR;
-	cv.osc_SampleTimer = osc.sampleTimer;
-	cv.osc_oscDisplay = osc.oscDisplay;
-	cv.osc_multiLane = osc.multiLane;
-	cv.osc_voltScale = osc.voltScale;
+uint32_t Config::SetConfig()
+{
+	// Serialise config values into buffer
+	memset(configBuffer, 0, sizeof(configBuffer));					// Clear buffer
+	strncpy(reinterpret_cast<char*>(configBuffer), "CFG", 4);		// Header
+	configBuffer[4] = configVersion;
+	uint32_t configPos = 8;											// Position in buffer to store data
+	uint32_t configSize = 0;										// Holds the size of each config buffer
 
-	cv.fft_autoTune = fft.autoTune;
-	cv.fft_traceOverlay = fft.traceOverlay;
-	cv.fft_channel = fft.channel;
-	cv.fft_EncModeL = fft.encModeL;
-	cv.fft_EncModeR = fft.encModeR;
+	uint8_t* cfgBuffer = nullptr;
 
-	cv.tuner_EncModeL = tuner.encModeL;
-	cv.tuner_EncModeR = tuner.encModeR;
-	cv.tuner_traceOverlay = tuner.traceOverlay;
+	// UI settings
+	configSize = ui.SerialiseConfig(&cfgBuffer);
+	memcpy(&configBuffer[configPos], cfgBuffer, configSize);
+	configPos += configSize;
+
+	// Oscilloscope settings
+	configSize = osc.SerialiseConfig(&cfgBuffer);
+	memcpy(&configBuffer[configPos], cfgBuffer, configSize);
+	configPos += configSize;
+
+	// FFT settings
+	configSize = fft.SerialiseConfig(&cfgBuffer);
+	memcpy(&configBuffer[configPos], cfgBuffer, configSize);
+	configPos += configSize;
+
+	// Tuner settings
+	configSize = tuner.SerialiseConfig(&cfgBuffer);
+	memcpy(&configBuffer[configPos], cfgBuffer, configSize);
+	configPos += configSize;
+
+	return configPos;
 }
 
 
 // Restore configuration settings from flash memory
 void Config::RestoreConfig()
 {
-	// create temporary copy of settings from memory to check if they are valid
-	configValues cv;
-	memcpy((uint32_t*)&cv, (uint32_t*)ADDR_FLASH_SECTOR_7, sizeof(cv));
+	uint8_t* flashConfig = reinterpret_cast<uint8_t*>(ADDR_FLASH_SECTOR_7);
 
-	if (strcmp(cv.StartMarker, "CFG") == 0 && strcmp(cv.EndMarker, "END") == 0 && cv.Version == 3) {
-		ui.displayMode = cv.gen_displayMode;
-		vCalibOffset = cv.gen_vCalibOffset;
-		vCalibScale = cv.gen_vCalibScale;
+	// Check for config start and version number
+	if (strcmp((char*)flashConfig, "CFG") == 0 && *reinterpret_cast<uint32_t*>(&flashConfig[4]) == configVersion) {
+		uint32_t configPos = 8;											// Position in buffer of start of data
 
-		osc.triggerX = cv.osc_TriggerX;
-		osc.triggerY = cv.osc_TriggerY;
-		osc.triggerChannel = (cv.osc_TriggerChannel == 1 ? channelA : cv.osc_TriggerChannel == 2 ? channelB : cv.osc_TriggerChannel == 3 ? channelC : channelNone);
-		osc.encModeL = cv.osc_EncModeL;
-		osc.encModeR = cv.osc_EncModeR;
-		osc.sampleTimer = cv.osc_SampleTimer;
-		osc.oscDisplay = cv.osc_oscDisplay;
-		osc.multiLane = cv.osc_multiLane;
-		osc.voltScale = cv.osc_voltScale;
+		configPos += ui.StoreConfig(&flashConfig[configPos]);
+		configPos += osc.StoreConfig(&flashConfig[configPos]);
+		configPos += fft.StoreConfig(&flashConfig[configPos]);
+		configPos += tuner.StoreConfig(&flashConfig[configPos]);
 
-		fft.autoTune = cv.fft_autoTune;
-		fft.traceOverlay = cv.fft_traceOverlay;
-		fft.channel = cv.fft_channel;
-		fft.encModeL = cv.fft_EncModeL;
-		fft.encModeR = cv.fft_EncModeR;
-
-		tuner.encModeL = cv.tuner_EncModeL;
-		tuner.encModeR = cv.tuner_EncModeR;
-		tuner.traceOverlay = cv.tuner_traceOverlay;
 	}
 }
+
 
 

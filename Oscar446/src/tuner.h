@@ -13,12 +13,15 @@ public:
 	void Activate(bool startTimer);					// Tuning mode started
 	void Run();										// Processes samples once collected
 	void ClearOverlay();
+	uint32_t SerialiseConfig(uint8_t** buff);
+	uint32_t StoreConfig(uint8_t* buff);
 
-	encoderType encModeL = TunerMode;
-	encoderType encModeR = ActiveChannel;
-
-	tunerMode mode = FFT;
-	bool traceOverlay = true;						// Display trace overlaid on tuner display
+	struct Config {
+		encoderType encModeL = TunerMode;
+		encoderType encModeR = ActiveChannel;
+		tunerMode mode = FFT;
+		bool traceOverlay = true;						// Display trace overlaid on tuner display
+	} config;
 
 private:
 	std::pair<float, float> FFTSingleBin(uint32_t bin);		// Calculates FFT of a single frequency bin

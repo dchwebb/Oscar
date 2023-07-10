@@ -20,6 +20,8 @@ public:
 	void Run();
 	void Capture();
 	void Activate();
+	uint32_t SerialiseConfig(uint8_t** buff);
+	uint32_t StoreConfig(uint8_t* buff);
 
 	static constexpr uint32_t fftSamples = 1024;
 	static constexpr uint32_t  waterfallSamples = 512;
@@ -27,11 +29,6 @@ public:
 	static constexpr uint32_t timerDefault = 10000;		// Default speed of sample capture (start fairly slow) sample rate is 90Mhz / clockDivider
 
 	// FFT and Waterfall Settings
-	bool autoTune = true;								// if true will attempt to adjust sample capture time to get sample capture to align to multiple of cycle period
-	bool traceOverlay = true;							// Display trace overlaid on FFT display
-	oscChannel channel = channelA;
-	encoderType encModeL = FFTAutoTune;
-	encoderType encModeR = ActiveChannel;
 	encoderType wfallEncModeL = HorizScale;
 	encoderType wfallEncModeR = ActiveChannel;
 
@@ -45,6 +42,14 @@ public:
 	bool capturing;
 
 	const float* sinLUTExt = nullptr;
+
+	struct Config {
+		bool autoTune = true;							// if true will attempt to adjust sample capture time to get sample capture to align to multiple of cycle period
+		bool traceOverlay = true;						// Display trace overlaid on FFT display
+		oscChannel channel = channelA;
+		encoderType encModeL = FFTAutoTune;
+		encoderType encModeR = ActiveChannel;
+	} config;
 
 private:
 	static constexpr uint8_t  fftHarmonicColours = 5;

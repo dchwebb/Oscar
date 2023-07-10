@@ -23,7 +23,7 @@ void FFT::Activate()
 	capturing = false;
 	dataAvailable[0] = false;
 	dataAvailable[1] = false;
-	samples = ui.displayMode == DispMode::Fourier ? fftSamples : waterfallSamples;
+	samples = ui.config.displayMode == DispMode::Fourier ? fftSamples : waterfallSamples;
 }
 
 
@@ -35,7 +35,7 @@ void FFT::Run()
 	if (dataAvailable[0] || dataAvailable[1]) {
 		fftBufferNumber = dataAvailable[0] ? 0 : 1;			// select correct draw buffer based on whether buffer 0 or 1 contains data
 
-		if (ui.displayMode == DispMode::Fourier && traceOverlay) {
+		if (ui.config.displayMode == DispMode::Fourier && config.traceOverlay) {
 			PopulateOverlayBuffer(fftBuffer[fftBufferNumber]);		// If in FFT mode with trace overlay will fill draw buffer before samples overwritten by FFT process
 		}
 		CalcFFT(fftBuffer[fftBufferNumber], samples);
@@ -44,7 +44,7 @@ void FFT::Run()
 		lcd.DrawString(115, lcd.drawHeight + 8, ui.FloatToString(HarmonicFreq(1), true) + " - " + ui.FloatToString(HarmonicFreq(319), true) + "Hz  ",
 				&lcd.Font_Small, LCD_WHITE, LCD_BLACK);
 
-		if (ui.displayMode == DispMode::Fourier) {
+		if (ui.config.displayMode == DispMode::Fourier) {
 			DisplayFFT(fftBuffer[fftBufferNumber]);
 		} else {
 			DisplayWaterfall(fftBuffer[fftBufferNumber]);
@@ -74,9 +74,9 @@ void FFT::Capture()
 	// Called from interrupt routine for each sample capture
 	if (capturing) {
 		// For FFT Mode we want a value between +- 2047
-		const uint32_t adcSummed =  channel == channelA ? ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9] :
-									channel == channelB ? ADC_array[1] + ADC_array[4] + ADC_array[7] + ADC_array[10] :
-														  ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11];
+		const uint32_t adcSummed =  config.channel == channelA ? ADC_array[0] + ADC_array[3] + ADC_array[6] + ADC_array[9] :
+									config.channel == channelB ? ADC_array[1] + ADC_array[4] + ADC_array[7] + ADC_array[10] :
+																 ADC_array[2] + ADC_array[5] + ADC_array[8] + ADC_array[11];
 
 		fftBuffer[captureBufferIndex][capturePos] = 2047.0f - (static_cast<float>(adcSummed) / 4.0f);
 
@@ -183,7 +183,7 @@ void FFT::PopulateOverlayBuffer(const float* sampleBuffer)
 	uint16_t start = 0;
 	uint16_t trigger = 4 * (2047 - sampleBuffer[0]);
 	for (uint16_t p = 0; p < fftSamples - lcd.drawWidth; p++) {
-		if (trigger > osc.triggerY && (4 * (2047 - sampleBuffer[p])) < osc.triggerY) {
+		if (trigger > osc.config.triggerY && (4 * (2047 - sampleBuffer[p])) < osc.config.triggerY) {
 			start = p;
 			break;
 		}
@@ -205,7 +205,7 @@ void FFT::DisplayFFT(const float* sinBuffer)
 	int16_t badFFT = 0, currHarmonic = -1, smearHarmonic = 0;
 	uint32_t maxHyp = 0;
 
-	const uint16_t overlayColour = channel == channelA ? LCD_DULLGREEN : channel == channelB ? LCD_DULLBLUE : LCD_DULLORANGE;
+	const uint16_t overlayColour = config.channel == channelA ? LCD_DULLGREEN : config.channel == channelB ? LCD_DULLBLUE : LCD_DULLORANGE;
 
 	// Cycle through each column in the display and draw
 	for (uint16_t i = 1; i <= lcd.drawWidth; i++) {
@@ -250,7 +250,7 @@ void FFT::DisplayFFT(const float* sinBuffer)
 				}
 				lcd.drawBuffer[fftDrawBufferNumber][buffPos] = harmColour;
 
-			} else if (traceOverlay && h >= AY.first && h <= AY.second) {		// Draw oscilloscope trace as overlay
+			} else if (config.traceOverlay && h >= AY.first && h <= AY.second) {		// Draw oscilloscope trace as overlay
 				lcd.drawBuffer[fftDrawBufferNumber][buffPos] = overlayColour;
 
 			} else {
@@ -290,7 +290,7 @@ void FFT::DisplayFFT(const float* sinBuffer)
 	}
 
 	// autotune attempts to lock the capture to an integer multiple of the fundamental for a clear display
-	if (autoTune && harmonic[0] > 0) {
+	if (config.autoTune && harmonic[0] > 0) {
 		const float freqFund = HarmonicFreq(harmonic[0]);
 
 		// work out which harmonic we want the fundamental to be - to adjust the sampling rate so a change in ARR affects the tuning of the FFT proportionally
@@ -389,7 +389,7 @@ void FFT::DisplayWaterfall(const float* sinBuffer)
 		for (uint16_t w = 0; w < waterfallBuffers; ++w) {
 
 			//	Darken green has less effect than darkening orange or blue - adjust accordingly
-			const uint16_t colourShade = ui.DarkenColour(channel == channelA ? LCD_GREEN : channel == channelB ? LCD_LIGHTBLUE : LCD_ORANGE,  (uint16_t)w * 2 * (channel == channelA ? 1 : 0.8));
+			const uint16_t colourShade = ui.DarkenColour(config.channel == channelA ? LCD_GREEN : config.channel == channelB ? LCD_LIGHTBLUE : LCD_ORANGE,  (uint16_t)w * 2 * (config.channel == channelA ? 1 : 0.8));
 
 			const int16_t buff = (waterfallBuffer + w) % waterfallBuffers;
 			int xOffset = w * 2 + 3;
@@ -428,4 +428,20 @@ void FFT::DisplayWaterfall(const float* sinBuffer)
 			lcd.PatternFill(col - lcd.drawBufferWidth, 0, col - 1, lcd.drawHeight, lcd.drawBuffer[fftDrawBufferNumber]);
 		}
 	}
+}
+
+
+uint32_t FFT::SerialiseConfig(uint8_t** buff)
+{
+	*buff = reinterpret_cast<uint8_t*>(&config);
+	return sizeof(config);
+}
+
+
+uint32_t FFT::StoreConfig(uint8_t* buff)
+{
+	if (buff != nullptr) {
+		memcpy(&config, buff, sizeof(config));
+	}
+	return sizeof(config);
 }

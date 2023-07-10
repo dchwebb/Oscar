@@ -10,26 +10,15 @@
 extern uint32_t SystemCoreClock;
 volatile uint32_t SysTickVal = 0;
 
-int16_t vCalibOffset = -3590;				// Dev board with 14k resistors: -3940, 1.499999
-float vCalibScale = 1.46f;
-uint16_t calibZeroPos = 9985;
-
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 
 uint32_t coverageTimer = 0, coverageTotal = 0;
-
 
 LCD lcd;
 UI ui;
 MIDIHandler midi;
 Osc osc;
 Config cfg;
-
-
-
-inline uint16_t CalcZeroSize() {			// returns ADC size that corresponds to 0v
-	return (8192 - vCalibOffset) / vCalibScale;
-}
 
 
 extern "C"
@@ -58,7 +47,7 @@ int main(void) {
 
 	InitSampleAcquisition();
 	ui.ResetMode();
-	calibZeroPos = CalcZeroSize();
+	osc.CalcZeroSize();
 
 
 	while (1) {
@@ -70,16 +59,16 @@ int main(void) {
 
 		if (ui.menuMode) {
 
-		} else if (ui.displayMode == DispMode::Oscilloscope) {
+		} else if (ui.config.displayMode == DispMode::Oscilloscope) {
 			osc.OscRun();
 
-		} else if (ui.displayMode == DispMode::Tuner) {
+		} else if (ui.config.displayMode == DispMode::Tuner) {
 			tuner.Run();
 
-		} else if (ui.displayMode == DispMode::Fourier || ui.displayMode == DispMode::Waterfall) {
+		} else if (ui.config.displayMode == DispMode::Fourier || ui.config.displayMode == DispMode::Waterfall) {
 			fft.Run();
 
-		} else if (ui.displayMode == DispMode::MIDI) {
+		} else if (ui.config.displayMode == DispMode::MIDI) {
 			midi.ProcessMidi();
 
 		}
