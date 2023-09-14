@@ -16,7 +16,7 @@ public:
 	uint32_t StoreConfig(uint8_t* buff);
 
 	struct Config {
-		encoderType encModeL = TunerMode;
+		encoderType encModeL = VoltScale;
 		encoderType encModeR = ActiveChannel;
 		tunerMode mode = FFT;
 		bool traceOverlay = true;					// Display trace overlaid on tuner display

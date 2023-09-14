@@ -4,7 +4,6 @@
 #include "lcd.h"
 
 
-
 class Osc {
 public:
 	void OscRun();

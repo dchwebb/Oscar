@@ -108,7 +108,7 @@ void Tuner::DrawOverlay()
 		lastPoint = fft.fftBuffer[0][p];
 	}
 
-	uint16_t* overlayDrawBuffer = &lcd.drawBuffer[0][0];					// lcd draw buffer is wrong dimensions for overlay
+	uint16_t* overlayDrawBuffer = &lcd.drawBuffer[0][0];					// lcd draw buffer is wrong dimensions for overlay so use raw pointer
 
 	const uint16_t overlayColour = fft.config.channel == channelA ? LCD_DULLGREEN : fft.config.channel == channelB ? LCD_DULLBLUE : LCD_DULLORANGE;
 
