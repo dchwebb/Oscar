@@ -1,16 +1,9 @@
 ################################################################################
 # Automatically-generated file. Do not edit!
-# Toolchain: GNU Tools for STM32 (11.3.rel1)
+# Toolchain: GNU Tools for STM32 (12.3.rel1)
 ################################################################################
 
 # Add inputs and outputs from these tool invocations to the build variables 
-S_SRCS += \
-../src/startup_stm32f446xx.s 
-
-C_SRCS += \
-../src/syscalls.c \
-../src/system_stm32f4xx.c 
-
 CPP_SRCS += \
 ../src/config.cpp \
 ../src/fft.cpp \
@@ -21,6 +14,13 @@ CPP_SRCS += \
 ../src/osc.cpp \
 ../src/tuner.cpp \
 ../src/ui.cpp 
+
+S_SRCS += \
+../src/startup_stm32f446xx.s 
+
+C_SRCS += \
+../src/syscalls.c \
+../src/system_stm32f4xx.c 
 
 S_DEPS += \
 ./src/startup_stm32f446xx.d 
