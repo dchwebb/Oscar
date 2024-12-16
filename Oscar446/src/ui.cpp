@@ -11,7 +11,7 @@ UI ui;
 void UI::DrawUI()
 {
 	if (config.displayMode == DispMode::MIDI) {
-		lcd.DrawString(120, lcd.drawHeight + 8, "MIDI Eventsa", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
+		lcd.DrawString(120, lcd.drawHeight + 8, "MIDI Events", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 		return;
 	}
 
