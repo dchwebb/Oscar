@@ -9,11 +9,11 @@ public:
 	void ProcessMidi();
 
 	//	Variables used by interrupt routine to insert raw MIDI events into processing queue
-	static constexpr uint8_t queueSize = 100;
-	uint8_t queue[queueSize];
-	uint8_t queueRead = 0;
-	uint8_t queueWrite = 0;
-	uint8_t queueCount = 0;
+	static constexpr uint8_t queueSize = 200;
+	uint8_t queue[queueSize];		// Raw MIDI events inserted by interrupt handler
+	uint8_t queueRead = 0;			// Used by ProcessMidi() to read out events from queue
+	uint8_t queueWrite = 0;			// Used by interrupt handler to add event at next position in queue
+	uint8_t queueCount = 0;			// Incremented each time MIDI interrupt fires; decremented in ProcessMidi()
 private:
 	enum MIDIType {Unknown = 0, NoteOn = 0x9, NoteOff = 0x8, PolyPressure = 0xA, ControlChange = 0xB, ProgramChange = 0xC,
 		ChannelPressure = 0xD, PitchBend = 0xE, System = 0xF };
@@ -27,11 +27,11 @@ private:
 	};
 
 	static constexpr uint8_t drawHeight = 17;
-	static constexpr uint32_t eventSize = 12;
+	static constexpr uint32_t eventSize = 12;			// Number of events that can be displayed in list in UI
 
 	std::array<MIDIEvent, eventSize> midiEvents;		// Circular buffer to hold processed MIDI events
 	uint8_t eventTail = eventSize;
-	uint8_t eventCount = 0;
+	uint8_t eventCount = 0;								// Number of MIDI events in list - will max out at eventSize (12)
 
 	uint8_t drawIndex = 0;								// Index of current MIDI event being drawn
 	uint64_t timer;

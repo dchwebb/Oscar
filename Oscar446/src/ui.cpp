@@ -11,7 +11,7 @@ UI ui;
 void UI::DrawUI()
 {
 	if (config.displayMode == DispMode::MIDI) {
-		lcd.DrawString(120, lcd.drawHeight + 8, "MIDI Events", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
+		lcd.DrawString(120, lcd.drawHeight + 8, "MIDI Eventsa", &lcd.Font_Small, LCD_GREY, LCD_BLACK);
 		return;
 	}
 
@@ -181,7 +181,11 @@ void UI::handleEncoders()
 {
 	// encoders count in fours with the zero point set to 100
 	if (std::abs((int16_t)32000 - (int16_t)TIM4->CNT) > 3) {
+#ifdef REVERSEENCODERS
+		int8_t v = TIM4->CNT > 32000 ? -1 : 1;
+#else
 		int8_t v = TIM4->CNT > 32000 ? 1 : -1;
+#endif
 		if (menuMode)	MenuAction(&encoderModeL, v);
 		else			EncoderAction(encoderModeL, v);
 
@@ -190,7 +194,11 @@ void UI::handleEncoders()
 	}
 
 	if (std::abs((int16_t)32000 - (int16_t)TIM8->CNT) > 3) {
+#ifdef REVERSEENCODERS
+		int8_t v = TIM8->CNT > 32000 ? -1 : 1;
+#else
 		int8_t v = TIM8->CNT > 32000 ? 1 : -1;
+#endif
 		if (menuMode)	MenuAction(&encoderModeR, v);
 		else			EncoderAction(encoderModeR, v);
 

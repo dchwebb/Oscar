@@ -72,7 +72,7 @@ void MIDIHandler::ProcessMidi()
 		}
 
 		// Clock
-		if (queueCount > 0 && queue[queueRead] == 0xF8) {
+		while (queueCount > 0 && queue[queueRead] == 0xF8) {
 			clockCount++;
 			// MIDI clock triggers at 24 pulses per quarter note
 			if (clockCount == 6) {
@@ -80,6 +80,7 @@ void MIDIHandler::ProcessMidi()
 				clockCount = 0;
 			}
 			QueueInc();
+			type = static_cast<MIDIType>(queue[queueRead] >> 4);
 		}
 
 		//	handle unknown data in queue
