@@ -19,3 +19,10 @@ Hardware/\#auto_saved_files\#
 *.cyclo
 Hardware/_autosave-oscar.sch
 Hardware/_autosave-lcd_Daughterboard.sch
+*#auto_saved_files*
+Hardware_v2/fp-info-cache
+_autosave*
+*.lck
+Hardware_v2/Graphics/signal-sine-wave-01.svg
+Hardware_v2/lcd_18pin.jpg
+Hardware_v2/Graphics/sine.png

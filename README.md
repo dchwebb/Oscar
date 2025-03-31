@@ -48,3 +48,9 @@ The Eurorack +/-12V rails have reverse polarity protection and filtering. The 3.
 - +12V Current Draw: 157mA
 - -12V Current Draw: 6mA
 
+### Construction Images
+
+![Image](https://raw.githubusercontent.com/dchwebb/Oscar/master/Graphics/construction1.jpg "icon")
+![Image](https://raw.githubusercontent.com/dchwebb/Oscar/master/Graphics/construction2.jpg "icon")
+![Image](https://raw.githubusercontent.com/dchwebb/Oscar/master/Graphics/construction3.jpg "icon")
+![Image](https://raw.githubusercontent.com/dchwebb/Oscar/master/Graphics/construction4.jpg "icon")
