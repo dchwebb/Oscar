@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "ili9341_spi")(type "KiCad")(uri "D:/kiCad/custom_components/ili9341_spi.kicad_sym")(options "")(descr ""))
+)

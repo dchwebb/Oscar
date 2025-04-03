@@ -1,12 +1,10 @@
 {
   "board": {
-    "active_layer": 31,
+    "active_layer": 0,
     "active_layer_preset": "",
-    "auto_track_width": false,
+    "auto_track_width": true,
     "hidden_netclasses": [],
-    "hidden_nets": [
-      "GND"
-    ],
+    "hidden_nets": [],
     "high_contrast_mode": 0,
     "net_color_mode": 1,
     "opacity": {
@@ -36,11 +34,14 @@
       3,
       4,
       5,
+      6,
       8,
       9,
       10,
+      11,
       12,
       13,
+      14,
       15,
       16,
       17,
@@ -64,7 +65,7 @@
       36,
       40
     ],
-    "visible_layers": "ffcf9fb_ffffffff",
+    "visible_layers": "000ffff_80000001",
     "zone_display_mode": 1
   },
   "git": {
@@ -74,7 +75,7 @@
     "ssh_key": ""
   },
   "meta": {
-    "filename": "oscar_components.kicad_prl",
+    "filename": "lcd_Daughterboard.kicad_prl",
     "version": 3
   },
   "project": {

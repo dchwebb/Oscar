@@ -19,9 +19,9 @@
       "footprints": true,
       "graphics": true,
       "keepouts": true,
-      "lockedItems": true,
+      "lockedItems": false,
       "otherItems": true,
-      "pads": false,
+      "pads": true,
       "text": true,
       "tracks": true,
       "vias": true,
@@ -63,10 +63,11 @@
       34,
       35,
       36,
+      39,
       40
     ],
-    "visible_layers": "000ffff_80000001",
-    "zone_display_mode": 1
+    "visible_layers": "003ffff_00000001",
+    "zone_display_mode": 0
   },
   "git": {
     "repo_password": "",

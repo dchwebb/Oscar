@@ -1,5 +1,0 @@
-(sym_lib_table
-  (version 7)
-  (lib (name "oscar-rescue")(type "Legacy")(uri "${KIPRJMOD}/oscar-rescue.lib")(options "")(descr ""))
-  (lib (name "lcd_Daughterboard-rescue")(type "KiCad")(uri "${KIPRJMOD}/lcd_Daughterboard-rescue.kicad_sym")(options "")(descr ""))
-)

@@ -1,10 +1,12 @@
 {
   "board": {
-    "active_layer": 0,
+    "active_layer": 31,
     "active_layer_preset": "",
-    "auto_track_width": true,
+    "auto_track_width": false,
     "hidden_netclasses": [],
-    "hidden_nets": [],
+    "hidden_nets": [
+      "GND"
+    ],
     "high_contrast_mode": 0,
     "net_color_mode": 1,
     "opacity": {
@@ -21,7 +23,7 @@
       "keepouts": true,
       "lockedItems": false,
       "otherItems": true,
-      "pads": true,
+      "pads": false,
       "text": true,
       "tracks": true,
       "vias": true,
@@ -34,14 +36,11 @@
       3,
       4,
       5,
-      6,
       8,
       9,
       10,
-      11,
       12,
       13,
-      14,
       15,
       16,
       17,
@@ -63,11 +62,10 @@
       34,
       35,
       36,
-      39,
       40
     ],
-    "visible_layers": "003ffff_00000001",
-    "zone_display_mode": 0
+    "visible_layers": "ffcf9fb_ffffffff",
+    "zone_display_mode": 1
   },
   "git": {
     "repo_password": "",
@@ -76,7 +74,7 @@
     "ssh_key": ""
   },
   "meta": {
-    "filename": "lcd_Daughterboard.kicad_prl",
+    "filename": "oscar_components.kicad_prl",
     "version": 3
   },
   "project": {
