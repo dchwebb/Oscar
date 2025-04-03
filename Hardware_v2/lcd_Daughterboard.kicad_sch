@@ -1540,7 +1540,7 @@
 		(uuid "ad37ac06-943e-49c1-8500-48330a214916")
 	)
 	(label "LCD_DC"
-		(at 35.56 36.83 0)
+		(at 35.56 31.75 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1580,7 +1580,7 @@
 		(uuid "eb497255-92d6-485a-8749-27a006daa218")
 	)
 	(label "LCD_RESET"
-		(at 35.56 31.75 0)
+		(at 35.56 36.83 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2216,7 +2216,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical"
 			(at 60.96 34.29 0)
 			(effects
 				(font
