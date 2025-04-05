@@ -1,4 +1,4 @@
-24752935877150719
+24749975554595197
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -55370,6 +55370,13 @@ mounting hole 6mm no annular
 0
 0
 Custom_Footprints
+MountingHole_6.3mm
+Mounting Hole 6mm, no annular
+mounting hole 6mm no annular
+0
+0
+0
+Custom_Footprints
 MountingHole_6.7mm_Button
 Mounting Hole 6mm, no annular
 mounting hole 6mm no annular
@@ -99819,24 +99826,3 @@ Varistor VF
 0
 2
 2
-oscar_logo
-oscar_logo
-
-
-0
-5
-5
-oscar_logo
-oscar_logo2
-
-
-0
-0
-0
-oscar_logo
-sine
-
-
-0
-0
-0
