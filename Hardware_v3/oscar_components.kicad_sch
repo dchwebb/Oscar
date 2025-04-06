@@ -21415,7 +21415,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Button_Switch_THT:SW_PUSH_6mm"
+		(property "Footprint" "Custom_Footprints:SW_PUSH_6mm_aligned"
 			(at 194.31 29.21 0)
 			(effects
 				(font
