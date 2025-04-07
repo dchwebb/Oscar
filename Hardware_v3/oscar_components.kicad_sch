@@ -4883,6 +4883,226 @@
 				)
 			)
 		)
+		(symbol "Low-Profile Push Button:Low-Profile_Push_Button"
+			(pin_names
+				(offset 0) hide)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "SW"
+				(at 0 4.318 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Low-Profile_Push_Button"
+				(at 0 -5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Switch, single pole double throw"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "switch double-pole double-throw spdt ON-ON"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Low-Profile_Push_Button_0_0"
+				(circle
+					(center -2.032 0)
+					(radius 0.508)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 2.032 -2.54)
+					(radius 0.508)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "Low-Profile_Push_Button_0_1"
+				(polyline
+					(pts
+						(xy -1.524 0.254) (xy 1.651 2.286)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 2.032 2.54)
+					(radius 0.508)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "Low-Profile_Push_Button_1_1"
+				(pin passive line
+					(at 5.08 2.54 180)
+					(length 2.54)
+					(name "A"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 0 0)
+					(length 2.54)
+					(name "B"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 -2.54 180)
+					(length 2.54)
+					(name "C"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(symbol "Low-Profile_Push_Button_2_1"
+				(pin passive line
+					(at 5.08 2.54 180)
+					(length 2.54)
+					(name "A"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 0 0)
+					(length 2.54)
+					(name "B"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 -2.54 180)
+					(length 2.54)
+					(name "C"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
 		(symbol "MCU_ST_STM32F4:STM32F446RETx"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -9453,7 +9673,7 @@
 	)
 	(wire
 		(pts
-			(xy 200.66 34.29) (xy 200.66 35.56)
+			(xy 200.66 36.83) (xy 200.66 38.1)
 		)
 		(stroke
 			(width 0)
@@ -11093,6 +11313,16 @@
 	)
 	(wire
 		(pts
+			(xy 200.66 30.48) (xy 200.66 31.75)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b6d8d3b8-5778-46e5-a657-fce85c5fc199")
+	)
+	(wire
+		(pts
 			(xy 187.96 252.73) (xy 187.96 254)
 		)
 		(stroke
@@ -11453,6 +11683,16 @@
 	)
 	(wire
 		(pts
+			(xy 200.66 31.75) (xy 199.39 31.75)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d0fd8d31-05a0-4242-b844-98f77de8bfbe")
+	)
+	(wire
+		(pts
 			(xy 365.76 92.71) (xy 365.76 83.82)
 		)
 		(stroke
@@ -11473,7 +11713,7 @@
 	)
 	(wire
 		(pts
-			(xy 200.66 34.29) (xy 199.39 34.29)
+			(xy 200.66 36.83) (xy 199.39 36.83)
 		)
 		(stroke
 			(width 0)
@@ -14584,73 +14824,6 @@
 			(project ""
 				(path "/258e4395-9768-4091-8bcd-6165e2841a11"
 					(reference "#PWR039")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:C_Small")
-		(at 50.8 254 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "00000000-0000-0000-0000-00005c7ebe36")
-		(property "Reference" "C8"
-			(at 54.61 254 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "10uF"
-			(at 55.88 256.54 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Capacitor_SMD:CP_Elec_4x5.8"
-			(at 50.8 254 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 50.8 254 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 50.8 254 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "eb9de604-db01-4b05-bb28-b3c96ba99e29")
-		)
-		(pin "2"
-			(uuid "cb2b75ef-932f-4db7-8c3f-846c6d55b3c3")
-		)
-		(instances
-			(project ""
-				(path "/258e4395-9768-4091-8bcd-6165e2841a11"
-					(reference "C8")
 					(unit 1)
 				)
 			)
@@ -19746,7 +19919,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 200.66 35.56 0)
+		(at 200.66 38.1 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -19754,7 +19927,7 @@
 		(dnp no)
 		(uuid "4aa21622-e8bb-488f-bda6-dfbd98d566b0")
 		(property "Reference" "#PWR058"
-			(at 200.66 41.91 0)
+			(at 200.66 44.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19763,7 +19936,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 200.787 39.9542 0)
+			(at 200.787 42.4942 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19771,7 +19944,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 200.66 35.56 0)
+			(at 200.66 38.1 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19780,7 +19953,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 200.66 35.56 0)
+			(at 200.66 38.1 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19789,7 +19962,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 200.66 35.56 0)
+			(at 200.66 38.1 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -20287,6 +20460,71 @@
 			(project "oscar_components"
 				(path "/258e4395-9768-4091-8bcd-6165e2841a11"
 					(reference "#PWR036")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3.3V")
+		(at 200.66 30.48 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "5a256797-e038-446e-bf88-30a1c7a75b57")
+		(property "Reference" "#PWR068"
+			(at 200.66 34.29 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3.3V"
+			(at 200.152 26.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 200.66 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 200.66 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
+			(at 200.66 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "2ba1326d-709d-4aa8-9aae-92a1f817b126")
+		)
+		(instances
+			(project "oscar_components"
+				(path "/258e4395-9768-4091-8bcd-6165e2841a11"
+					(reference "#PWR068")
 					(unit 1)
 				)
 			)
@@ -21391,8 +21629,9 @@
 		)
 	)
 	(symbol
-		(lib_id "Switch:SW_Push")
+		(lib_id "Low-Profile Push Button:Low-Profile_Push_Button")
 		(at 194.31 34.29 0)
+		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -21400,7 +21639,7 @@
 		(dnp no)
 		(uuid "891942ef-79ac-4ea5-b7ca-8eb68622f85d")
 		(property "Reference" "SW2"
-			(at 194.31 27.051 0)
+			(at 190.5 25.654 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21408,15 +21647,15 @@
 			)
 		)
 		(property "Value" "Menu_Button"
-			(at 194.31 29.3624 0)
+			(at 190.5 28.194 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Footprint" "Custom_Footprints:SW_PUSH_6mm_aligned"
-			(at 194.31 29.21 0)
+		(property "Footprint" "Custom_Footprints:Low-Profile_Push_Button"
+			(at 194.31 34.29 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21425,7 +21664,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 194.31 29.21 0)
+			(at 194.31 34.29 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21433,7 +21672,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Push button switch, generic, two pins"
+		(property "Description" "Switch, single pole double throw"
 			(at 194.31 34.29 0)
 			(effects
 				(font
@@ -21447,6 +21686,18 @@
 		)
 		(pin "2"
 			(uuid "c05fe503-e590-4c78-9c98-28787e31bf9e")
+		)
+		(pin "3"
+			(uuid "6b7b1d8f-d091-4e3d-a37d-0b9d8bb7d039")
+		)
+		(pin "6"
+			(uuid "7a5d60c5-0d1e-488b-b8ed-7b53e4694696")
+		)
+		(pin "4"
+			(uuid "d84b3bcd-a625-4d36-a98e-d79c49176ca1")
+		)
+		(pin "5"
+			(uuid "91f8325e-177e-41c9-9942-01642ecd9719")
 		)
 		(instances
 			(project "oscar_components"
@@ -21517,6 +21768,76 @@
 			(project "oscar_components"
 				(path "/258e4395-9768-4091-8bcd-6165e2841a11"
 					(reference "#PWR062")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C_Polarized_Small")
+		(at 50.8 254 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "8e28acc5-f5d8-44b1-8f0c-fea1004d124c")
+		(property "Reference" "C8"
+			(at 53.34 252.1838 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "22uF"
+			(at 53.34 254.7238 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:CP_Elec_4x5.8"
+			(at 50.8 254 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 50.8 254 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Polarized capacitor, small symbol"
+			(at 50.8 254 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "df1b049a-6950-4975-ac90-580a986a69ac")
+		)
+		(pin "2"
+			(uuid "60f63dd8-b96e-4a7d-92db-f09b385ef91f")
+		)
+		(instances
+			(project "oscar_components"
+				(path "/258e4395-9768-4091-8bcd-6165e2841a11"
+					(reference "C8")
 					(unit 1)
 				)
 			)

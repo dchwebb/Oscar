@@ -1,4 +1,4 @@
-24754679925815417
+24758147206988659
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -55188,6 +55188,13 @@ FBGA-24
 24
 24
 Custom_Footprints
+H11L1
+
+
+0
+0
+0
+Custom_Footprints
 HTSSOP-38_4.4x9.7mm_P0.5mm
 TSSOP, 38 Pin (JEDEC MO-153 Var BD https://www.jedec.org/document_search?search_api_views_fulltext=MO-153), generated with kicad-footprint-generator ipc_gullwing_generator.py
 TSSOP SO
@@ -55320,6 +55327,13 @@ resistor 0805
 0
 2
 2
+Custom_Footprints
+Low-Profile_Push_Button
+
+
+0
+6
+6
 Custom_Footprints
 Low_Profile_LED_Button
 
