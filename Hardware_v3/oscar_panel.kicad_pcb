@@ -866,7 +866,7 @@
 	(footprint "Custom_Footprints:Alpha_9mm_pot_hole"
 		(layer "F.Cu")
 		(uuid "00000000-0000-0000-0000-00005d714682")
-		(at 159.2 105)
+		(at 159.2 104)
 		(descr "Mounting Hole 7mm")
 		(tags "mounting hole 7mm")
 		(property "Reference" "Ref**"
@@ -974,7 +974,7 @@
 	(footprint "Custom_Footprints:Alpha_9mm_pot_hole"
 		(layer "F.Cu")
 		(uuid "00000000-0000-0000-0000-00005d7146c7")
-		(at 111.2 105)
+		(at 111.2 104)
 		(descr "Mounting Hole 7mm")
 		(tags "mounting hole 7mm")
 		(property "Reference" "Ref**"
@@ -3624,8 +3624,8 @@
 		(uuid "3da96916-7da8-4591-8551-3d4a5e6fb988")
 	)
 	(gr_circle
-		(center 111.2 105)
-		(end 119.3 105.8)
+		(center 111.2 104)
+		(end 119.3 104.8)
 		(stroke
 			(width 0.05)
 			(type default)
@@ -3670,7 +3670,7 @@
 	)
 	(gr_poly
 		(pts
-			(xy 112 96) (xy 109 93) (xy 112 90)
+			(xy 112 95) (xy 109 92) (xy 112 89)
 		)
 		(stroke
 			(width 0.1)
@@ -3691,8 +3691,8 @@
 		(uuid "5a825dd5-03b7-4e69-ae24-8f51b3f17d21")
 	)
 	(gr_circle
-		(center 159.2 105)
-		(end 167.3 105.8)
+		(center 159.2 104)
+		(end 167.3 104.8)
 		(stroke
 			(width 0.05)
 			(type default)

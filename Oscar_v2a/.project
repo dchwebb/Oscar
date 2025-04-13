@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>Oscar446</name>
+	<name>Oscar_v2a</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -19,9 +19,11 @@
 		</buildCommand>
 	</buildSpec>
 	<natures>
+		<nature>com.st.stm32cube.ide.mcu.MCUProjectNature</nature>
 		<nature>org.eclipse.cdt.core.cnature</nature>
+		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 		<nature>org.eclipse.cdt.core.ccnature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
-		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
+		<nature>com.st.stm32cube.ide.mcu.MCUTSConvertedProjectNature</nature>
 	</natures>
 </projectDescription>
