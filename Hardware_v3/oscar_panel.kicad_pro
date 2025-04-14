@@ -474,7 +474,7 @@
       "gencad": "",
       "idf": "",
       "netlist": "",
-      "plot": "",
+      "plot": "Gerbers/Panel/",
       "pos_files": "",
       "specctra_dsn": "",
       "step": "",

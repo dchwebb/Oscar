@@ -4511,7 +4511,7 @@
 					(hide yes)
 				)
 			)
-			(property "Datasheet" "~"
+			(property "Datasheet" "https://www.thonk.co.uk/wp-content/uploads/2021/12/LowProfileButton.pdf"
 				(at 0 7.62 0)
 				(effects
 					(font
@@ -4520,7 +4520,7 @@
 					(hide yes)
 				)
 			)
-			(property "Description" ""
+			(property "Description" "Thonk Low Profile LED Buttons"
 				(at 0 0 0)
 				(effects
 					(font
@@ -11945,7 +11945,7 @@
 		)
 		(uuid "6ec22bb4-9b31-4a67-8a82-9f4ce21160e5")
 	)
-	(text "Input Scaling:\n(-12*-14/100) + (cv*-14/100): 0V > 3.13V; 6.67V > 0V\n"
+	(text "Input Scaling:\n(-12*-15/100) + (cv*-15/100): -10V > 3.3V; 0V > 1.56V; 10V > 0.26V\n"
 		(exclude_from_sim no)
 		(at 325.628 33.274 0)
 		(effects
@@ -13068,7 +13068,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 41.91 60.96 0)
 			(effects
 				(font
@@ -13137,7 +13137,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 41.91 66.04 0)
 			(effects
 				(font
@@ -13842,7 +13842,7 @@
 				)
 			)
 		)
-		(property "Value" "14k"
+		(property "Value" "15k"
 			(at 355.6 50.3936 90)
 			(effects
 				(font
@@ -14212,7 +14212,7 @@
 				)
 			)
 		)
-		(property "Value" "14k"
+		(property "Value" "15k"
 			(at 355.6 115.1636 90)
 			(effects
 				(font
@@ -14715,7 +14715,7 @@
 				)
 			)
 		)
-		(property "Value" "14k"
+		(property "Value" "15k"
 			(at 355.6 182.4736 90)
 			(effects
 				(font
@@ -16776,7 +16776,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://www.mouser.co.uk/datasheet/2/15/SKHH-1370651.pdf"
 			(at 152.4 29.21 0)
 			(effects
 				(font
@@ -16785,7 +16785,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Push button switch, generic, two pins"
+		(property "Description" "Push button switch, Alps SKHHDTA010"
 			(at 152.4 34.29 0)
 			(effects
 				(font
@@ -18269,7 +18269,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://www.mouser.co.uk/datasheet/2/54/PEC11R-777457.pdf"
 			(at 259.08 158.496 0)
 			(effects
 				(font
@@ -18278,7 +18278,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Rotary encoder, dual channel, incremental quadrate outputs, with switch"
+		(property "Description" "Rotary encoder, PEC11R-4220F-S0024"
 			(at 259.08 165.1 0)
 			(effects
 				(font
@@ -18345,7 +18345,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://www.mouser.co.uk/datasheet/2/54/PEC11R-777457.pdf"
 			(at 259.08 191.516 0)
 			(effects
 				(font
@@ -18354,7 +18354,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Rotary encoder, dual channel, incremental quadrate outputs, with switch"
+		(property "Description" "Rotary encoder, PEC11R-4220F-S0024"
 			(at 259.08 198.12 0)
 			(effects
 				(font
@@ -18671,7 +18671,7 @@
 				)
 			)
 		)
-		(property "Value" "Debug"
+		(property "Value" "Debug_Header"
 			(at 103.378 188.722 0)
 			(effects
 				(font
@@ -20339,7 +20339,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "https://www.usb.org/sites/default/files/documents/usb_type-c.zip"
+		(property "Datasheet" "https://cdn.amphenol-cs.com/media/wysiwyg/files/drawing/12401951.pdf"
 			(at 252.73 69.85 0)
 			(effects
 				(font
@@ -21208,7 +21208,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://www.thonk.co.uk/wp-content/uploads/2021/12/LowProfileButton.pdf"
 			(at 177.8 77.47 0)
 			(effects
 				(font
@@ -21217,7 +21217,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thonk Low Profile LED Buttons"
 			(at 177.8 85.09 0)
 			(effects
 				(font
@@ -22351,7 +22351,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://www.thonk.co.uk/wp-content/uploads/2021/12/LowProfileButton.pdf"
 			(at 177.8 58.42 0)
 			(effects
 				(font
@@ -22360,7 +22360,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thonk Low Profile LED Buttons"
 			(at 177.8 66.04 0)
 			(effects
 				(font
@@ -23696,7 +23696,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://www.thonk.co.uk/wp-content/uploads/2021/12/LowProfileButton.pdf"
 			(at 177.8 97.79 0)
 			(effects
 				(font
@@ -23705,7 +23705,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thonk Low Profile LED Buttons"
 			(at 177.8 105.41 0)
 			(effects
 				(font
@@ -23844,7 +23844,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://www.mouser.co.uk/datasheet/2/15/SKHH-1370651.pdf"
 			(at 191.77 29.21 0)
 			(effects
 				(font
@@ -23853,7 +23853,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Push button switch, generic, two pins"
+		(property "Description" "Push button switch, Alps SKHHDTA010"
 			(at 191.77 34.29 0)
 			(effects
 				(font

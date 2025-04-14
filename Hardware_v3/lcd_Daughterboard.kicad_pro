@@ -530,7 +530,7 @@
       "gencad": "",
       "idf": "",
       "netlist": "lcd_Daughterboard.net",
-      "plot": "",
+      "plot": "Gerbers/LCD_Daughterboard",
       "pos_files": "",
       "specctra_dsn": "",
       "step": "",
