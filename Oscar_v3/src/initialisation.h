@@ -39,10 +39,12 @@ extern volatile ADCValues adc;
 extern volatile uint32_t SysTickVal;
 
 
-
 void InitHardware();
 void InitClocks(void);
+void InitBackupRAM();
 void InitSysTick();
+void InitWatchdog();
+void ResetWatchdog();
 void InitLCDHardware(void);
 void InitADC(void);
 void InitSampleAcquisition();

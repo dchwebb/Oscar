@@ -37,8 +37,10 @@ int main(void)
 	ui.ResetMode();
 	osc.CalcZeroSize();
 	//usb.Init(false);
+	InitWatchdog();
 
 	while (1) {
+		ResetWatchdog();					// Reloads watchdog counter to prevent hardware reset
 		ui.handleEncoders();
 		config.SaveConfig();				// Save any scheduled changes
 //		usb.cdc.ProcessCommand();			// Check for incoming CDC commands

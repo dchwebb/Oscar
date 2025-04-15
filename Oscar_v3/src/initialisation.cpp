@@ -12,7 +12,6 @@ const PLLDividers mainPLL {4, 180, 2, 7};		// Clock: 8MHz / 4(M) * 180(N) / 2(P)
 
 void InitClocks()
 {
-
 	RCC->APB1ENR |= RCC_APB1ENR_PWREN;				// Enable Power Control clock
 	PWR->CR |= PWR_CR_VOS;							// Enable VOS voltage scaling - allows maximum clock speed
 
@@ -51,6 +50,7 @@ void InitClocks()
 void InitHardware()
 {
 	InitClocks();									// Activates floating point coprocessor and resets clock
+	InitBackupRAM();
 	InitSysTick();
 	InitLCDHardware();
 	InitADC();
@@ -59,10 +59,32 @@ void InitHardware()
 }
 
 
+
+void InitBackupRAM()
+{
+	RCC->APB1ENR |= RCC_APB1ENR_PWREN;				// Enable the power interface clock
+	PWR->CR |= PWR_CR_DBP;							// Enable access to the	backup domain
+	RCC->AHB1ENR |= RCC_AHB1ENR_BKPSRAMEN;			// Enable the backup SRAM clock
+}
+
 void InitSysTick()
 {
 	SysTick_Config(SystemCoreClock / sysTickInterval);	// gives 1ms
 	NVIC_SetPriority(SysTick_IRQn, 1);
+}
+
+
+void InitWatchdog()
+{
+	IWDG->KR = 0x5555;								// Enable access to prescaler register
+	IWDG->PR = 0b011;								// divider /32 gives around 4 seconds with default reload of 0xFFF
+	IWDG->KR = 0xCCCC;								// Start watchdog
+}
+
+
+void ResetWatchdog()
+{
+	IWDG->KR = 0xAAAA;								// Triggers reload of RL register into counter
 }
 
 
@@ -224,10 +246,9 @@ void InitUART()
 
 	RCC->APB1ENR |= RCC_APB1ENR_UART4EN;			// UART4 clock enable
 
-	GPIOC->MODER |= GPIO_MODER_MODER11_1;			// Set alternate function on PC11
-	GPIOC->AFR[1] |= 0b1000 << 12;					// Alternate function on PC11 for UART4_RX is 1000: AF8
+	GpioPin::Init(GPIOC, 11, GpioPin::Type::AlternateFunction, 8);	 // Alternate function 8 is UART4_RX
 
-	int Baud = (SystemCoreClock / 4) / (16 * 31250);
+	const uint32_t Baud = (SystemCoreClock / 4) / (16 * 31250);
 	UART4->BRR |= Baud << 4;						// Baud Rate (called USART_BRR_DIV_Mantissa) = (Sys Clock: 180MHz / APB1 Prescaler DIV4: 45MHz) / (16 * 31250) = 90
 	UART4->CR1 &= ~USART_CR1_M;						// Clear bit to set 8 bit word length
 	UART4->CR1 |= USART_CR1_RE;						// Receive enable
@@ -251,14 +272,14 @@ void DelayMS(uint32_t ms)
 
 void JumpToBootloader()
 {
-	*reinterpret_cast<unsigned long *>(0x10000000) = 0xDEADBEEF; 	// Use ITCM RAM for DFU flag as this is not cleared at restart
+	*reinterpret_cast<unsigned long *>(BKPSRAM_BASE) = 0xDEADBEEF; 	// Use Backup SRAM for DFU flag as this is not cleared at restart
 
 	__disable_irq();
 
 	FLASH->ACR &= ~FLASH_ACR_DCEN;					// Disable data cache
 
 	// Not sure why but seem to need to write this value twice or gets lost - caching issue?
-	*reinterpret_cast<unsigned long *>(0x10000000) = 0xDEADBEEF;
+	*reinterpret_cast<unsigned long *>(BKPSRAM_BASE) = 0xDEADBEEF;
 
 	__DSB();
 	NVIC_SystemReset();
