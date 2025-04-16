@@ -23,7 +23,6 @@ public:
 
 	std::string FloatToString(float f, bool smartFormat);
 	std::string IntToString(const int32_t v);
-	uint16_t DarkenColour(const uint16_t& colour, uint16_t amount);
 
 	bool menuMode = false, encoderBtnL = false, encoderBtnR = false;
 

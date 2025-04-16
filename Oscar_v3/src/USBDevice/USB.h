@@ -68,10 +68,10 @@ private:
 	enum class EP0State {Idle, Setup, DataIn, DataOut, StatusIn, StatusOut, Stall};
 
 	static constexpr std::string_view manufacturerString 	= "Mountjoy Modular";
-	static constexpr std::string_view productString 		= "Mountjoy MidiMonger";
-	static constexpr std::string_view cfgString 			= "Mountjoy MidiMonger Config";
-	static constexpr std::string_view cdcString 			= "Mountjoy MidiMonger Serial";
-	static constexpr std::string_view midiString			= "Mountjoy MidiMonger MIDI";
+	static constexpr std::string_view productString 		= "Mountjoy Oscar";
+	static constexpr std::string_view cfgString 			= "Mountjoy Oscar Config";
+	static constexpr std::string_view cdcString 			= "Mountjoy Oscar Serial";
+	static constexpr std::string_view midiString			= "Mountjoy Oscar MIDI";
 	static constexpr uint8_t selfPowered = 0;				// Set to 1 if self powered
 	static constexpr uint8_t usbSerialNoSize = 24;
 	static constexpr uint32_t usbTimeout = 0xF000000;
@@ -101,7 +101,7 @@ private:
 
 	// USB standard device descriptor
 	static constexpr uint16_t VendorID = 1155;	// STMicroelectronics
-	static constexpr uint16_t ProductId = 65443;
+	static constexpr uint16_t ProductId = 65446;
 
 	const uint8_t deviceDescr[0x12] = {
 			0x12,								// bLength

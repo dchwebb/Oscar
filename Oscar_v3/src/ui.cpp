@@ -370,16 +370,4 @@ std::string UI::IntToString(const int32_t v)
 }
 
 
-//	Takes an RGB colour and darkens by the specified amount
-uint16_t UI::DarkenColour(const uint16_t& colour, uint16_t amount) {
-	uint16_t r = (colour >> 11) << 1;
-	uint16_t g = (colour >> 5) & 0b111111;
-	uint16_t b = (colour & 0b11111) << 1;
-	r -= std::min(amount, r);
-	g -= std::min(amount, g);
-	b -= std::min(amount, b);;
-	return ((r >> 1) << 11) + (g << 5) + (b >> 1);
-}
-
-
 

@@ -14,6 +14,21 @@ union RGBColour  {
 		uint16_t red : 5;
 	};
 
+	constexpr RGBColour(uint8_t r, uint8_t g, uint8_t b) {
+		colour = (r << 11) + (g << 5) + b;
+	}
+	constexpr RGBColour(int col) : colour {static_cast<uint16_t>(col)} {};
+	constexpr RGBColour(uint16_t col) : colour {col} {};
+
+	RGBColour DarkenColour(const uint16_t amount) const
+	{
+		//	Darken an RGB colour by the specified amount (apply bit offset so that all colours are treated as 6 bit values)
+		const uint8_t r = (red << 1) - std::min(amount, (uint16_t)(red << 1));
+		const uint8_t g = green - std::min(amount, green);
+		const uint8_t b = (blue << 1) - std::min(amount, (uint16_t)(blue << 1));
+		return RGBColour{uint8_t(r >> 1), g, uint8_t(b >> 1)};
+	}
+
 	enum colours : uint16_t {
 		White = 0xFFFF,
 		Black = 0x0000,
@@ -101,14 +116,14 @@ public:
 
 	void Init(void);
 	void ScreenFill(const uint16_t colour);
-	void ColourFill(const uint16_t x0, const uint16_t y0, const uint16_t x1, const uint16_t y1, const uint16_t colour);
+	void ColourFill(const uint16_t x0, const uint16_t y0, const uint16_t x1, const uint16_t y1, const RGBColour colour);
 	void PatternFill(const uint16_t x0, const uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t* PixelData);
 	void DrawPixel(const uint16_t x, const uint16_t y, const uint16_t colour);
 	void DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t colour);
-	void DrawRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t colour);
-	void DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const uint32_t& foreground, const uint16_t background);
+	void DrawRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const RGBColour colour);
+	void DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const RGBColour& foreground, const RGBColour background);
 	void DrawCharMem(uint16_t x, uint16_t y, uint16_t memWidth, uint16_t* memBuffer, char c, const FontData *font, const uint16_t foreground, const uint16_t background);
-	void DrawString(uint16_t x0, const uint16_t y0, std::string_view s, const FontData *font, const uint16_t foreground, const uint16_t background);
+	void DrawString(uint16_t x0, const uint16_t y0, std::string_view s, const FontData *font, const RGBColour foreground, const RGBColour background);
 	void DrawStringMem(uint16_t x0, const uint16_t y0, uint16_t memWidth, uint16_t* memBuffer, std::string_view s, const FontData *font, const uint16_t foreground, const uint16_t background);
 
 private:

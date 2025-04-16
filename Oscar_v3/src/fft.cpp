@@ -390,7 +390,8 @@ void FFT::DisplayWaterfall(const float* sinBuffer)
 		for (uint16_t w = 0; w < waterfallBuffers; ++w) {
 
 			//	Darken green has less effect than darkening orange or blue - adjust accordingly
-			const uint16_t colourShade = ui.DarkenColour(cfg.channel == channelA ? RGBColour::Green : cfg.channel == channelB ? RGBColour::LightBlue : RGBColour::Orange,  (uint16_t)w * 2 * (cfg.channel == channelA ? 1 : 0.8));
+			const RGBColour colour = cfg.channel == channelA ? RGBColour::Green : cfg.channel == channelB ? RGBColour::LightBlue : RGBColour::Orange;
+			const RGBColour shade = colour.DarkenColour((uint16_t)(w * (cfg.channel == channelA ? 2 : 1.6)));
 
 			const int16_t buff = (waterfallBuffer + w) % waterfallBuffers;
 			int xOffset = w * 2 + 3;
@@ -411,7 +412,7 @@ void FFT::DisplayWaterfall(const float* sinBuffer)
 					if (vPos > h1 && vPos > h0) {
 						lcd.drawBuffer[fftDrawBufferNumber][buffPos] = RGBColour::Black;
 					} else {
-						lcd.drawBuffer[fftDrawBufferNumber][buffPos] = colourShade;
+						lcd.drawBuffer[fftDrawBufferNumber][buffPos] = shade.colour;
 					}
 					--vPos;
 				}

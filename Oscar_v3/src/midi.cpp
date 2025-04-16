@@ -5,7 +5,7 @@ MIDIHandler midi;
 
 void MIDIHandler::ProcessMidi()
 {
-	timer += 1;
+	++timer;
 
 	if (queueCount > 0) {
 		bool edited = false;
@@ -121,7 +121,7 @@ inline void MIDIHandler::QueueInc()
 void MIDIHandler::DrawEvent(const MIDIEvent& event)
 {
 	// Darken colour based on age of event
-	const uint16_t colour = ui.DarkenColour(MIDIColours[event.channel], (timer - event.time) >> 7);
+	const RGBColour colour = RGBColour(MIDIColours[event.channel]).DarkenColour((timer - event.time) >> 7);
 
 	const uint8_t top = drawHeight * drawIndex;
 

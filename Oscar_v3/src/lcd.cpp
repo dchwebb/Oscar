@@ -128,12 +128,12 @@ void LCD::ScreenFill(const uint16_t colour)
 }
 
 
-void LCD::ColourFill(const uint16_t x0, const uint16_t y0, const uint16_t x1, const uint16_t y1, const uint16_t colour)
+void LCD::ColourFill(const uint16_t x0, const uint16_t y0, const uint16_t x1, const uint16_t y1, const RGBColour colour)
 {
 	uint32_t pixelCount = (x1 - x0 + 1) * (y1 - y0 + 1);
 
 	SetCursorPosition(x0, y0, x1, y1);
-	dmaInt16 = colour;								// data to transfer - set early to avoid problem where F722 doesn't update buffer until midway through send
+	dmaInt16 = colour.colour;								// data to transfer - set early to avoid problem where F722 doesn't update buffer until midway through send
 	Command(cmdILI9341::GRAM);
 
 	lcdDCPin.SetHigh();
@@ -228,7 +228,7 @@ void LCD::DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uin
 }
 
 
-void LCD::DrawRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uint16_t colour)
+void LCD::DrawRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const RGBColour rgb)
 {
 	// Check lines are not too long
 	if (x0 >= width)	x0 = width - 1;
@@ -242,14 +242,14 @@ void LCD::DrawRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const uin
 	if (x0 > x1) 		std::swap(x0, x1);
 	if (y0 > y1) 		std::swap(y0, y1);
 
-	ColourFill(x0, y0, x1, y0, colour);
-	ColourFill(x0, y0, x0, y1, colour);
-	ColourFill(x0, y1, x1, y1, colour);
-	ColourFill(x1, y0, x1, y1, colour);
+	ColourFill(x0, y0, x1, y0, rgb.colour);
+	ColourFill(x0, y0, x0, y1, rgb.colour);
+	ColourFill(x0, y1, x1, y1, rgb.colour);
+	ColourFill(x1, y0, x1, y1, rgb.colour);
 }
 
 
-void LCD::DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const uint32_t& foreground, const uint16_t background)
+void LCD::DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const RGBColour& foreground, const RGBColour background)
 {
 	// If at the end of a line of display, go to new line and set x to 0 position
 	if ((x + font->Width) > width) {
@@ -263,9 +263,9 @@ void LCD::DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const u
 		const uint16_t fontRow = font->data[(c - 32) * font->Height + py];
 		for (px = 0; px < font->Width; ++px) {
 			if ((fontRow << (px)) & 0x8000) {			// for one byte characters use if ((fontRow << px) & 0x200) {
-				charBuffer[currentCharBuffer][i] = foreground;
+				charBuffer[currentCharBuffer][i] = foreground.colour;
 			} else {
-				charBuffer[currentCharBuffer][i] = background;
+				charBuffer[currentCharBuffer][i] = background.colour;
 			}
 			++i;
 		}
@@ -302,7 +302,7 @@ void LCD::DrawCharMem(const uint16_t x, const uint16_t y, const uint16_t memWidt
 }
 
 
-void LCD::DrawString(uint16_t x0, const uint16_t y0, const std::string_view s, const FontData *font, const uint16_t foreground, const uint16_t background)
+void LCD::DrawString(uint16_t x0, const uint16_t y0, const std::string_view s, const FontData *font, const RGBColour foreground, const RGBColour background)
 {
 	for (const char& c : s) {
 		DrawChar(x0, y0, c, font, foreground, background);
