@@ -38,9 +38,9 @@ void Osc::Capture()
 	// If capturing or buffering samples waiting for trigger store current readings in buffer and increment counters
 	if (capturing || !drawing || captureBufferNumber != oscBufferNumber) {
 
-		OscBufferA[captureBufferNumber][capturePos] = adcA;
-		OscBufferB[captureBufferNumber][capturePos] = adcB;
-		OscBufferC[captureBufferNumber][capturePos] = adcC;
+		OscBuffer[Channel::A][captureBufferNumber][capturePos] = adcA;
+		OscBuffer[Channel::B][captureBufferNumber][capturePos] = adcB;
+		OscBuffer[Channel::C][captureBufferNumber][capturePos] = adcC;
 		oldAdc = *triggerTest;
 
 		if (capturePos == lcd.drawWidth - 1) {
@@ -83,93 +83,106 @@ void Osc::OscRun()
 
 	// Check if drawing and that the sample capture is at or ahead of the draw position
 	if (drawing && (oscBufferNumber != captureBufferNumber || capturedSamples[captureBufferNumber] >= drawPos || noTriggerDraw)) {
-		// Calculate offset between capture and drawing positions to display correct sample
-		const uint16_t calculatedOffsetX = (drawOffset[oscBufferNumber] + drawPos) % lcd.drawWidth;
-
-		const uint16_t pixelA = CalcVertOffset(OscBufferA[oscBufferNumber][calculatedOffsetX]);
-		const uint16_t pixelB = CalcVertOffset(OscBufferB[oscBufferNumber][calculatedOffsetX]) + calculatedOffsetYB;
-		const uint16_t pixelC = CalcVertOffset(OscBufferC[oscBufferNumber][calculatedOffsetX]) + calculatedOffsetYC;
-
-		// Starting a new screen: Set previous pixel to current pixel and clear frequency calculations
-		if (drawPos == 0) {
-			prevPixelA = pixelA;
-			prevPixelB = pixelB;
-			prevPixelC = pixelC;
-			freqBelowZero = false;
-			freqCrossZero = 0;
+		// Calculate how many vertical strips can be drawn
+		volatile uint32_t colsToDraw = 1;
+		if (drawPos < 27) {
+			//colsToDraw = std::min(capturedSamples[oscBufferNumber], (uint16_t)27) - drawPos;
+		} else if (drawPos > 250) {
+			//colsToDraw = capturedSamples[oscBufferNumber] - drawPos;
+		} else {
+			colsToDraw = std::min(std::min(capturedSamples[oscBufferNumber], (uint16_t)251) - drawPos, (int)lcd.drawBufferWidth);
 		}
-
-		//	frequency calculation - detect upwards zero crossings
-		const uint16_t currentChannelY = (cfg.oscDisplay & 1) ? OscBufferA[oscBufferNumber][calculatedOffsetX] :
-										 (cfg.oscDisplay & 2) ? OscBufferB[oscBufferNumber][calculatedOffsetX] :
-										  OscBufferC[oscBufferNumber][calculatedOffsetX];
-
-		if (!freqBelowZero && currentChannelY < calibZeroPos) {		// first time reading goes below zero
-			freqBelowZero = true;
+		if (colsToDraw > 106) {
+			volatile int sus = 0;
+			++sus;
 		}
-		if (freqBelowZero && currentChannelY >= calibZeroPos) {		// zero crossing
-			//	second zero crossing - calculate frequency averaged over a number passes to smooth
-			if (freqCrossZero > 0 && drawPos - freqCrossZero > 3) {
-				if (freq > 0) {
-					freq = (3 * freq + FreqFromPos(drawPos - freqCrossZero)) / 4;
-				} else {
-					freq = FreqFromPos(drawPos - freqCrossZero);
-				}
-			}
-			freqCrossZero = drawPos;
-			freqBelowZero = false;
-		}
-
-		// create draw buffer
-		const std::pair<uint16_t, uint16_t> AY = std::minmax(pixelA, prevPixelA);
-		const std::pair<uint16_t, uint16_t> BY = std::minmax(pixelB, prevPixelB);
-		const std::pair<uint16_t, uint16_t> CY = std::minmax(pixelC, prevPixelC);
 
 		const uint8_t vOffset = (drawPos < 27 || drawPos > 250) ? 11 : 0;		// offset draw area so as not to overwrite voltage and freq labels
-		for (uint8_t h = 0; h <= lcd.drawHeight - (drawPos < 27 ? 12 : 0); ++h) {
+		const uint8_t drawHeight = lcd.drawHeight - (drawPos < 27 ? 12 : 0);
 
-			if (h < vOffset) {
-				// do not draw
-			} else if (cfg.oscDisplay & 1 && h >= AY.first && h <= AY.second) {
-				lcd.drawBuffer[drawBufferNumber][h - vOffset] = RGBColour::Green;
-			} else if (cfg.oscDisplay & 2 && h >= BY.first && h <= BY.second) {
-				lcd.drawBuffer[drawBufferNumber][h - vOffset] = RGBColour::LightBlue;
-			} else if (cfg.oscDisplay & 4 && h >= CY.first && h <= CY.second) {
-				lcd.drawBuffer[drawBufferNumber][h - vOffset] = RGBColour::Orange;
-			} else if (drawPos % 4 == 0 && (h + (lcd.drawHeight / (laneCount * 2))) % (lcd.drawHeight / (laneCount)) == 0) {						// 0v center mark
-				lcd.drawBuffer[drawBufferNumber][h - vOffset] = RGBColour::Grey;
-			} else {
-				lcd.drawBuffer[drawBufferNumber][h - vOffset] = RGBColour::Black;
+		for (uint32_t col = 0; col < colsToDraw; ++col) {
+
+			// Calculate offset between capture and drawing positions to display correct sample
+			const uint16_t offsetX = (drawOffset[oscBufferNumber] + drawPos) % lcd.drawWidth;
+
+			SamplePos currentPos = VertOffsets(offsetX);
+
+			// Starting a new screen: Set previous pixel to current pixel and clear frequency calculations
+			if (drawPos == 0) {
+				prevPixel = currentPos;
+				freqBelowZero = false;
+				freqCrossZero = 0;
 			}
-		}
 
-		// Draw grey lines indicating voltage range for one channel or channel divisions for 2 or 3 channels
-		if (drawPos < 5) {
-			for (int m = 1; m < (laneCount == 1 ? cfg.voltScale * 2 : (laneCount * 2)); ++m) {
-				int vPos = m * lcd.drawHeight / (laneCount == 1 ? cfg.voltScale * 2 : (laneCount * 2)) - 11;
-				if (vPos > 0) {
-					lcd.drawBuffer[drawBufferNumber][vPos] = RGBColour::Grey;
+			//	frequency calculation - detect upwards zero crossings
+			const uint16_t currentChannelY = (cfg.oscDisplay & 1) ? OscBuffer[Channel::A][oscBufferNumber][offsetX] :
+											 (cfg.oscDisplay & 2) ? OscBuffer[Channel::B][oscBufferNumber][offsetX] :
+											  OscBuffer[Channel::C][oscBufferNumber][offsetX];
+
+			if (!freqBelowZero && currentChannelY < calibZeroPos) {		// first time reading goes below zero
+				freqBelowZero = true;
+			}
+			if (freqBelowZero && currentChannelY >= calibZeroPos) {		// zero crossing
+				//	second zero crossing - calculate frequency averaged over a number passes to smooth
+				if (freqCrossZero > 0 && drawPos - freqCrossZero > 3) {
+					if (freq > 0) {
+						freq = (3 * freq + FreqFromPos(drawPos - freqCrossZero)) / 4;
+					} else {
+						freq = FreqFromPos(drawPos - freqCrossZero);
+					}
+				}
+				freqCrossZero = drawPos;
+				freqBelowZero = false;
+			}
+
+			std::pair<uint16_t, uint16_t> AY = std::minmax(currentPos.pos[Channel::A], prevPixel.pos[Channel::A]);
+			std::pair<uint16_t, uint16_t> BY = std::minmax(currentPos.pos[Channel::B], prevPixel.pos[Channel::B]);
+			std::pair<uint16_t, uint16_t> CY = std::minmax(currentPos.pos[Channel::C], prevPixel.pos[Channel::C]);
+
+			int32_t pos = col - vOffset;
+
+			for (uint8_t h = 0; h <= drawHeight; ++h) {
+				if (h < vOffset) {
+					// do not draw
+				} else if (cfg.oscDisplay & 1 && h >= AY.first && h <= AY.second) {
+					lcd.drawBuffer[drawBufferNumber][pos] = RGBColour::Green;
+				} else if (cfg.oscDisplay & 2 && h >= BY.first && h <= BY.second) {
+					lcd.drawBuffer[drawBufferNumber][pos] = RGBColour::LightBlue;
+				} else if (cfg.oscDisplay & 4 && h >= CY.first && h <= CY.second) {
+					lcd.drawBuffer[drawBufferNumber][pos] = RGBColour::Orange;
+				} else if ((drawPos & 0b11) == 0 && (h + (lcd.drawHeight / (laneCount * 2))) % (lcd.drawHeight / (laneCount)) == 0) {						// 0v center mark
+					lcd.drawBuffer[drawBufferNumber][pos] = RGBColour::Grey;
+				} else {
+					lcd.drawBuffer[drawBufferNumber][pos] = RGBColour::Black;
+				}
+				pos += colsToDraw;
+			}
+
+			// Draw grey lines indicating voltage range for one channel or channel divisions for 2 or 3 channels
+			if (drawPos < 5) {
+				for (int m = 1; m < (laneCount == 1 ? cfg.voltScale * 2 : (laneCount * 2)); ++m) {
+					int vPos = m * lcd.drawHeight / (laneCount == 1 ? cfg.voltScale * 2 : (laneCount * 2)) - 11;
+					if (vPos > 0) {
+						lcd.drawBuffer[drawBufferNumber][vPos] = RGBColour::Grey;
+					}
 				}
 			}
+
+			prevPixel = currentPos;			// Store previous sample so next sample can be drawn as a line from old to new
+			++drawPos;
 		}
 
-		lcd.PatternFill(drawPos, vOffset, drawPos, lcd.drawHeight - (drawPos < 27 ? 12 : 0), lcd.drawBuffer[drawBufferNumber]);
+		lcd.PatternFill(drawPos + 1 - colsToDraw, vOffset, drawPos, drawHeight, lcd.drawBuffer[drawBufferNumber]);
 		drawBufferNumber = drawBufferNumber == 0 ? 1 : 0;
 
-		// Store previous sample so next sample can be drawn as a line from old to new
-		prevPixelA = pixelA;
-		prevPixelB = pixelB;
-		prevPixelC = pixelC;
-
-		++drawPos;
-		if (drawPos == lcd.drawWidth){
-			drawing = false;
-			noTriggerDraw = false;
-			debugPin.SetLow();
+		if (drawPos >= 26){
+			// Write voltage
+			lcd.DrawString(0, 1, " " + ui.IntToString(cfg.voltScale) + "v ", &lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
+			lcd.DrawString(0, lcd.drawHeight - 10, "-" + ui.IntToString(cfg.voltScale) + "v ", &lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
 		}
 
-		// Draw trigger as a yellow cross
-		if (drawPos == cfg.triggerX + 4) {
+		if (drawPos >= cfg.triggerX + 4){
+			// Draw trigger as a yellow cross
 			const uint16_t vo = CalcVertOffset(cfg.triggerY) + (triggerTest == &adcB ? calculatedOffsetYB : triggerTest == &adcC ? calculatedOffsetYC : 0);
 			if (vo > 4 && vo < lcd.drawHeight - 4) {
 				lcd.DrawLine(cfg.triggerX, vo - 4, cfg.triggerX, vo + 4, RGBColour::Yellow);
@@ -177,10 +190,11 @@ void Osc::OscRun()
 			}
 		}
 
-		if (drawPos == 1) {
-			// Write voltage
-			lcd.DrawString(0, 1, " " + ui.IntToString(cfg.voltScale) + "v ", &lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
-			lcd.DrawString(0, lcd.drawHeight - 10, "-" + ui.IntToString(cfg.voltScale) + "v ", &lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
+		if (drawPos >= lcd.drawWidth - 1){
+			drawing = false;
+			noTriggerDraw = false;
+			debugPin.SetLow();
+
 
 			// Write frequency
 			if (noTriggerDraw) {
@@ -191,7 +205,21 @@ void Osc::OscRun()
 			}
 		}
 
+
+
+
 	}
+}
+
+
+Osc::SamplePos Osc::VertOffsets(uint16_t offsetX)
+{
+	return SamplePos {
+		CalcVertOffset(OscBuffer[Channel::A][oscBufferNumber][offsetX]),
+		CalcVertOffset(OscBuffer[Channel::B][oscBufferNumber][offsetX]) + calculatedOffsetYB,
+		CalcVertOffset(OscBuffer[Channel::C][oscBufferNumber][offsetX]) + calculatedOffsetYC
+
+	};
 }
 
 

@@ -193,9 +193,9 @@ void FFT::PopulateOverlayBuffer(const float* sampleBuffer)
 
 	for (uint16_t p = 0; p < lcd.drawWidth ; ++p) {
 		const uint32_t vPos = 4 * (2047 - sampleBuffer[start + p]);
-		osc.OscBufferA[0][p] = osc.CalcVertOffset(vPos) + (lcd.drawHeight / 4);
+		osc.OscBuffer[0][0][p] = osc.CalcVertOffset(vPos) + (lcd.drawHeight / 4);
 	}
-	osc.prevPixelA = osc.OscBufferA[0][0];
+	osc.prevPixel.pos[0] = osc.OscBuffer[0][0][0];
 }
 
 
@@ -239,7 +239,7 @@ void FFT::DisplayFFT(const float* sinBuffer)
 		for (uint32_t h = 0; h <= lcd.drawHeight; ++h) {
 			uint16_t buffPos = h * lcd.drawBufferWidth + ((i - 1) % lcd.drawBufferWidth);
 
-			const std::pair<uint16_t, uint16_t> AY = std::minmax(osc.OscBufferA[0][i - 1], osc.prevPixelA);		// Index i is offset by 1 from start of buffer
+			const std::pair<uint16_t, uint16_t> AY = std::minmax(osc.OscBuffer[0][0][i - 1], osc.prevPixel.pos[0]);		// Index i is offset by 1 from start of buffer
 
 			// depending on harmonic height draw either harmonic or black, using different colours to indicate main harmonics
 			if (h >= top) {
@@ -259,7 +259,7 @@ void FFT::DisplayFFT(const float* sinBuffer)
 			}
 		}
 
-		osc.prevPixelA = osc.OscBufferA[0][i - 1];
+		osc.prevPixel.pos[0] = osc.OscBuffer[0][0][i - 1];
 
 		// check if ready to draw next buffer
 		if (i % lcd.drawBufferWidth == 0) {

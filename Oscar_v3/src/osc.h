@@ -15,18 +15,20 @@ public:
 	uint32_t StoreConfig(uint8_t* buff);
 	void CalcZeroSize();							// returns ADC size that corresponds to 0v
 
+	enum Channel {A = 0, B = 1, C = 2};
+
 	// Oscilloscope settings
 	uint16_t calibZeroPos = 9985;
 	uint16_t* triggerTest = &adcA;					// store the currently active trigger channel as a reference for faster interrupt performance
 
 	// Oscilloscope working variables
 	uint16_t adcA, adcB, adcC, oldAdc;
-	uint16_t OscBufferA[2][lcd.drawWidth], OscBufferB[2][lcd.drawWidth], OscBufferC[2][lcd.drawWidth];
+	uint16_t OscBuffer[3][2][lcd.drawWidth];
 	uint8_t oscBufferNumber = 0;
 	uint16_t noTriggerDraw = 0;						// set to true if no trigger signal but a draw buffer is available
 	uint8_t laneCount = 1;							// holds current number of lanes to display based on number of visible channels and multi lane setting
 
-	bool capturing;
+	bool capturing;									// true if capturing a valid trace
 	uint16_t capturedSamples[2] {0, 0};
 	uint16_t bufferSamples;							// Stores number of samples captured since switching buffers to ensure triggered mode works correctly
 	uint8_t captureBufferNumber = 0;				// Index of capture buffer
@@ -34,7 +36,12 @@ public:
 
 	bool drawing = false;
 	int16_t drawOffset[2] {0, 0};
-	uint16_t prevPixelA = 0, prevPixelB = 0, prevPixelC = 0, drawPos = 0;
+	uint16_t drawPos = 0;
+
+	struct SamplePos {
+		uint16_t pos[3];
+	};
+	SamplePos prevPixel;
 
 	struct Config {
 		int16_t vCalibOffset = -3590;				// Dev board with 14k resistors: -3940, 1.499999
@@ -57,8 +64,14 @@ public:
 	};
 
 private:
+
 	void SetDrawBuffer(uint16_t* buff1, uint16_t* buff2);
 	void CircRun();
+	SamplePos VertOffsets(uint16_t offsetX);
+
+	struct {
+		std::pair<uint16_t, uint16_t> ch[3];
+	} highLow;
 
 	uint8_t drawBufferNumber = 0;
 

@@ -57,34 +57,34 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := Oscar_v3
+BUILD_ARTIFACT_NAME := Oscar_v2a
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-Oscar_v3.elf \
+Oscar_v2a.elf \
 
 MAP_FILES += \
-Oscar_v3.map \
+Oscar_v2a.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-Oscar_v3.list \
+Oscar_v2a.list \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: Oscar_v3.elf secondary-outputs
+main-build: Oscar_v2a.elf secondary-outputs
 
 # Tool invocations
-Oscar_v3.elf Oscar_v3.map: $(OBJS) $(USER_OBJS) D:\Eurorack\Oscar\Oscar_v3\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-g++ -o "Oscar_v3.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\Eurorack\Oscar\Oscar_v3\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Oscar_v3.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+Oscar_v2a.elf Oscar_v2a.map: $(OBJS) $(USER_OBJS) D:\Eurorack\Oscar\Oscar_v2a\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-g++ -o "Oscar_v2a.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\Eurorack\Oscar\Oscar_v2a\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Oscar_v2a.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -93,14 +93,14 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-Oscar_v3.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "Oscar_v3.list"
+Oscar_v2a.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "Oscar_v2a.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) Oscar_v3.elf Oscar_v3.list Oscar_v3.map default.size.stdout
+	-$(RM) Oscar_v2a.elf Oscar_v2a.list Oscar_v2a.map default.size.stdout
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
