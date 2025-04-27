@@ -11903,6 +11903,16 @@
 		)
 		(uuid "1aca8e3b-e82d-4a47-ae27-ec9063ba581f")
 	)
+	(text "USART3_TX"
+		(exclude_from_sim no)
+		(at 42.164 98.298 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "2adca740-b2f6-4f1c-a2dc-cd65efaec232")
+	)
 	(text "Encoders"
 		(exclude_from_sim no)
 		(at 226.822 222.25 0)
@@ -11939,6 +11949,16 @@
 			(justify left bottom)
 		)
 		(uuid "7165722c-25f0-418f-bf62-fa9041a081c4")
+	)
+	(text "USART3_RX"
+		(exclude_from_sim no)
+		(at 42.164 100.838 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "9418acce-6009-4822-97a1-a5ad8217b904")
 	)
 	(text "UART4_RX"
 		(exclude_from_sim no)
