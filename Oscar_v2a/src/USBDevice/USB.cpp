@@ -3,6 +3,18 @@
 
 USB usb;
 
+extern "C" {
+// To enable USB for printf commands (To print floats enable 'Use float with printf from newlib-nano' MCU Build Settings)
+size_t _write(int handle, const unsigned char* buf, size_t bufSize)
+{
+	if (usb.devState == USB::DeviceState::Configured) {
+		return usb.SendString(buf, bufSize);
+	} else {
+		return 0;
+	}
+}
+}
+
 volatile bool debugStart = true;
 
 
@@ -326,8 +338,8 @@ void USB::Init(bool softReset)
 
 	if (!softReset) {
 		GpioPin::Init(GPIOA, 9, GpioPin::Type::Input);						// PA9: USB_OTG_HS_VBUS
-		GpioPin::Init(GPIOA, 11, GpioPin::Type::AlternateFunction, 10);		// PA11: USB_OTG_HS_DM
-		GpioPin::Init(GPIOA, 12, GpioPin::Type::AlternateFunction, 10);		// PA12: USB_OTG_HS_DP
+		GpioPin::Init(GPIOA, 11, GpioPin::Type::AlternateFunction, 10, GpioPin::DriveStrength::VeryHigh);		// PA11: USB_OTG_HS_DM
+		GpioPin::Init(GPIOA, 12, GpioPin::Type::AlternateFunction, 10, GpioPin::DriveStrength::VeryHigh);		// PA12: USB_OTG_HS_DP
 
 		RCC->DCKCFGR2 |= RCC_DCKCFGR2_CK48MSEL;			// 0 = PLLQ Clock; 1 = PLLSAI_P
 		RCC->AHB2ENR |= RCC_AHB2ENR_OTGFSEN;			// USB OTG FS clock enable
@@ -346,7 +358,10 @@ void USB::Init(bool softReset)
 		USB_OTG_FS->DIEPTXF[i] = 0;
 	}
 
-	USB_OTG_FS->GCCFG |= USB_OTG_GCCFG_VBDEN; 			// Enable HW VBUS sensing
+	USB_OTG_FS->GOTGCTL |= USB_OTG_GOTGCTL_BVALOEN;
+	USB_OTG_FS->GOTGCTL |= USB_OTG_GOTGCTL_BVALOVAL;
+
+//	USB_OTG_FS->GCCFG |= USB_OTG_GCCFG_VBDEN; 			// Enable HW VBUS sensing
 	USBx_DEVICE->DCFG |= USB_OTG_DCFG_DSPD;				// 11: Full speed using internal FS PHY
 
 	USB_OTG_FS->GRSTCTL |= USB_OTG_GRSTCTL_TXFNUM_4;	// Select buffers to flush. 10000: Flush all the transmit FIFOs in device or host mode
@@ -838,7 +853,7 @@ std::string HexByte(const uint16_t& v) {
 
 }
 
-
+/*
 void USB::OutputDebug() {
 
 	uart.SendString("Event,Interrupt,Desc,Int Data,Desc,Endpoint,mRequest,Request,Value,Index,Length,Scsi,PacketSize,XferBuff\n");
@@ -933,7 +948,7 @@ void USB::OutputDebug() {
 		evNo = (evNo + 1) % USB_DEBUG_COUNT;
 	}
 }
-
+*/
 
 /*
 startup sequence:

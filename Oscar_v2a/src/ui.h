@@ -33,8 +33,6 @@ private:
 	std::string EncoderLabel(encoderType type);
 
 	encoderType encoderModeL, encoderModeR;
-	uint32_t leftBtnReleased = 0;		// Debounce counters
-	uint32_t rightBtnReleased = 0;
 
 	struct MenuItem {
 		int8_t pos;
@@ -69,14 +67,8 @@ private:
 
 	char charBuff[100];
 
-	// configure PA10 Left encoder button
-	GpioPin encBtnL {GPIOA, 10, GpioPin::Type::InputPullup};
-	//GPIOA->PUPDR |= GPIO_PUPDR_PUPDR10_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
-
-
-	// configure PB13 right encoder button
-	GpioPin encBtnR {GPIOB, 13, GpioPin::Type::InputPullup};
-	//GPIOB->PUPDR |= GPIO_PUPDR_PUPDR13_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
+	Btn encBtnL {{GPIOB, 1, GpioPin::Type::InputPullup}};			// configure PB1 Left encoder button
+	Btn encBtnR {{GPIOC, 13, GpioPin::Type::InputPullup}};		// configure PC13 right encoder button
 };
 
 extern UI ui;

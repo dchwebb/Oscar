@@ -49,6 +49,6 @@ void InitLCDHardware(void);
 void InitADC(void);
 void InitSampleAcquisition();
 void InitEncoders();
-void InitUART();
+void InitMIDIUART();
 void DelayMS(uint32_t ms);
 void JumpToBootloader();

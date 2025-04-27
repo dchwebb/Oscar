@@ -183,48 +183,28 @@ void UI::handleEncoders()
 #else
 		int8_t v = TIM4->CNT > 32000 ? 1 : -1;
 #endif
-		if (menuMode)	MenuAction(&encoderModeL, v);
-		else			EncoderAction(encoderModeL, v);
+		if (menuMode)	MenuAction(&encoderModeR, v);
+		else			EncoderAction(encoderModeR, v);
 
 		TIM4->CNT -= TIM4->CNT > 32000 ? 4 : -4;
 		config.ScheduleSave();
 	}
 
-	if (std::abs((int16_t)32000 - (int16_t)TIM8->CNT) > 3) {
+	if (std::abs((int16_t)32000 - (int16_t)TIM2->CNT) > 3) {
 #ifdef REVERSEENCODERS
-		int8_t v = TIM8->CNT > 32000 ? -1 : 1;
+		int8_t v = TIM2->CNT > 32000 ? -1 : 1;
 #else
-		int8_t v = TIM8->CNT > 32000 ? 1 : -1;
+		int8_t v = TIM2->CNT > 32000 ? 1 : -1;
 #endif
-		if (menuMode)	MenuAction(&encoderModeR, v);
-		else			EncoderAction(encoderModeR, v);
+		if (menuMode)	MenuAction(&encoderModeL, v);
+		else			EncoderAction(encoderModeL, v);
 
-		TIM8->CNT -= TIM8->CNT > 32000 ? 4 : -4;
+		TIM2->CNT -= TIM2->CNT > 32000 ? 4 : -4;
 		config.ScheduleSave();
 	}
 
-
-
-	// Check if encoder buttons are pressed with debounce (L: PA10; R: PB13) 0 = pressed
-	if (GPIOA->IDR & GPIO_IDR_IDR_10 && leftBtnReleased == 0) {
-		leftBtnReleased = SysTickVal;
-	}
-	if ((GPIOA->IDR & GPIO_IDR_IDR_10) == 0) {
-		if (leftBtnReleased > 0 && leftBtnReleased < SysTickVal - 100) {
-			encoderBtnL = true;
-		}
-		leftBtnReleased = 0;
-	}
-	if (GPIOB->IDR & GPIO_IDR_IDR_13 && rightBtnReleased == 0) {
-		rightBtnReleased = SysTickVal;
-	}
-	if ((GPIOB->IDR & GPIO_IDR_IDR_13) == 0) {
-		if (rightBtnReleased > 0 && rightBtnReleased < SysTickVal - 100) {
-			encoderBtnR = true;
-		}
-		rightBtnReleased = 0;
-	}
-
+	encoderBtnL = encBtnL.Pressed();		// FIXME
+	encoderBtnR = encBtnR.Pressed();
 
 	if ((encoderBtnL || encoderBtnR) && menuMode) {
 		encoderBtnL = encoderBtnR = menuMode = false;

@@ -6,7 +6,7 @@
 #include "midi.h"
 #include "osc.h"
 #include "tuner.h"
-
+#include "USB.h"
 
 volatile uint32_t SysTickVal = 0;
 
@@ -22,6 +22,9 @@ Tuner tuner;
 
 Config config{&ui.configSaver, &osc.configSaver, &fft.configSaver, &tuner.configSaver};		// Construct config handler with list of configSavers
 
+// FIXME
+#include "GpioPin.h"
+
 
 int main(void)
 {
@@ -36,14 +39,19 @@ int main(void)
 	InitSampleAcquisition();
 	ui.ResetMode();
 	osc.CalcZeroSize();
-	//usb.Init(false);
-	InitWatchdog();
+	usb.Init(false);
+	//InitWatchdog();
+
+//	GpioPin dm (GPIOA, 11, GpioPin::Type::Output);		// PA11: USB_OTG_HS_DM
+//	GpioPin dp (GPIOA, 12, GpioPin::Type::Output);		// PA12: USB_OTG_HS_DP
+
+//	dm.SetHigh();
 
 	while (1) {
-		ResetWatchdog();					// Reloads watchdog counter to prevent hardware reset
+		//ResetWatchdog();					// Reloads watchdog counter to prevent hardware reset
 		ui.handleEncoders();
 		config.SaveConfig();				// Save any scheduled changes
-//		usb.cdc.ProcessCommand();			// Check for incoming CDC commands
+		usb.cdc.ProcessCommand();			// Check for incoming CDC commands
 
 
 		if (ui.menuMode) {

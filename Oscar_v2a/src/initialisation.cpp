@@ -1,6 +1,6 @@
 #include "initialisation.h"
 
-GpioPin debugPin(GPIOA, 8, GpioPin::Type::Output);
+GpioPin debugPin(GPIOC, 10, GpioPin::Type::Output);
 volatile ADCValues adc;
 
 struct PLLDividers {
@@ -10,16 +10,19 @@ struct PLLDividers {
 	uint32_t Q;
 };
 const PLLDividers mainPLL {4, 180, 2, 7};		// Clock: 8MHz / 4(M) * 180(N) / 2(P) = 180MHz
-
+const PLLDividers saiPLL {6, 144, 4, 0};		// USB:   8MHz / 6(M) * 144(N) / 4(P) = 48MHz
 void InitClocks()
 {
-	RCC->APB1ENR |= RCC_APB1ENR_PWREN;				// Enable Power Control clock
-	PWR->CR |= PWR_CR_VOS;							// Enable VOS voltage scaling - allows maximum clock speed
+	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;		// enable system configuration clock
+	[[maybe_unused]] volatile uint32_t dummy = RCC->APB2ENR & RCC_APB2ENR_SYSCFGEN;		// delay
 
-	SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));	// CPACR register: set full access privileges for coprocessors
+	RCC->APB1ENR |= RCC_APB1ENR_PWREN;			// Enable Power Control clock
+	PWR->CR |= PWR_CR_VOS_0;					// Enable VOS voltage scaling - allows maximum clock speed
 
-	RCC->CR |= RCC_CR_HSEON;						// HSE ON
-	while ((RCC->CR & RCC_CR_HSERDY) == 0);			// Wait till HSE is ready
+	SCB->CPACR |= ((3 << 10 * 2) | (3 << 11 * 2));	// CPACR register: set full access privileges for coprocessors
+
+	RCC->CR |= RCC_CR_HSEON;					// HSE ON
+	while ((RCC->CR & RCC_CR_HSERDY) == 0);		// Wait till HSE is ready
 
 	RCC->PLLCFGR = 	(mainPLL.M << RCC_PLLCFGR_PLLM_Pos) |
 					(mainPLL.N << RCC_PLLCFGR_PLLN_Pos) |
@@ -27,24 +30,29 @@ void InitClocks()
 					(mainPLL.Q << RCC_PLLCFGR_PLLQ_Pos) |
 					RCC_PLLCFGR_PLLSRC_HSE;
 
-    RCC->CFGR |= RCC_CFGR_HPRE_DIV1 |				// HCLK = SYSCLK / 1
-			RCC_CFGR_PPRE1_DIV4 |					// APB1 Prescaler: PCLK1 = HCLK / 4 = 45 MHz
-    		RCC_CFGR_PPRE2_DIV2 |					// APB2 Prescaler: PCLK2 = HCLK / 2 = 90 Mhz
-			RCC_CFGR_SW_1;							// Select PLL as SYSCLK
+	RCC->CFGR |= RCC_CFGR_HPRE_DIV1 |			// HCLK = SYSCLK / 1
+				 RCC_CFGR_PPRE1_DIV4 |			// PCLK1 = HCLK / 4 (APB1)
+				 RCC_CFGR_PPRE2_DIV2;			// PCLK2 = HCLK / 2 (APB2)
 
-	FLASH->ACR |= FLASH_ACR_LATENCY_5WS;			// Clock faster than 150MHz requires 5 Wait States for Flash memory access time
+	RCC->CR |= RCC_CR_PLLON;					// Enable the main PLL
+	while ((RCC->CR & RCC_CR_PLLRDY) == 0);		// Wait till the main PLL is ready
 
-	RCC->CR |= RCC_CR_PLLON;						// Switch ON the PLL
-	while ((RCC->CR & RCC_CR_PLLRDY) == 0);			// Wait till PLL is ready
-	while ((RCC->CFGR & RCC_CFGR_SWS_PLL) == 0);	// System clock switch status SWS = 0b10 = PLL is really selected
+	// PLLSAI used for USB
+	RCC->PLLSAICFGR = (saiPLL.M << RCC_PLLSAICFGR_PLLSAIM_Pos) |
+					  (saiPLL.N << RCC_PLLSAICFGR_PLLSAIN_Pos) |
+					  (((saiPLL.P >> 1) - 1) << RCC_PLLSAICFGR_PLLSAIP_Pos);
 
-	FLASH->ACR |= FLASH_ACR_PRFTEN;					// Enable the Flash prefetch
+	RCC->CR |= RCC_CR_PLLSAION;					// Enable the SAI PLL for USB
 
-	// Enable data and instruction cache
-	FLASH->ACR |= FLASH_ACR_ICEN;
-	FLASH->ACR |= FLASH_ACR_DCEN;
+	// Configure Flash prefetch, Instruction cache, Data cache and wait state
+	FLASH->ACR = FLASH_ACR_PRFTEN | FLASH_ACR_ICEN | FLASH_ACR_DCEN | FLASH_ACR_LATENCY_5WS;
 
-	SystemCoreClockUpdate();						// Update SystemCoreClock variable
+	// Select the main PLL as system clock source
+	RCC->CFGR &= ~RCC_CFGR_SW;
+	RCC->CFGR |= RCC_CFGR_SW_PLL;
+	while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL);
+
+	SystemCoreClockUpdate();					// Update SystemCoreClock variable
 }
 
 
@@ -56,7 +64,7 @@ void InitHardware()
 	InitLCDHardware();
 	InitADC();
 	InitEncoders();
-	InitUART();
+	InitMIDIUART();
 }
 
 
@@ -93,8 +101,6 @@ void InitLCDHardware()
 {
 	RCC->APB1ENR |= RCC_APB1ENR_SPI3EN;			//	Enable SPI clocks
 
-//	GpioPin::Init(GPIOC, 13, GpioPin::Type::Output, 0, GpioPin::DriveStrength::Medium);					// LCD DC (Data/Command) pin
-//	GpioPin::Init(GPIOC, 14, GpioPin::Type::Output);													// LCD Reset pin
 	GpioPin::Init(GPIOB, 5, GpioPin::Type::AlternateFunction, 6, GpioPin::DriveStrength::VeryHigh);		// SPI_MOSI AF6
 	GpioPin::Init(GPIOB, 3, GpioPin::Type::AlternateFunction, 6, GpioPin::DriveStrength::VeryHigh);		// SPI_SCK AF6]
 
@@ -145,30 +151,29 @@ void InitAdcPins(ADC_TypeDef* ADC_No, std::initializer_list<uint8_t> channels)
 void InitADC()
 {
 	//	Setup Timer 2 to trigger ADC
-	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;				// Enable Timer 2 clock
-	TIM2->CR2 |= TIM_CR2_MMS_2;						// 100: Compare - OC1REF signal is used as trigger output (TRGO)
-	TIM2->PSC = 20 - 1;								// Prescaler
-	TIM2->ARR = 50 - 1;								// Auto-reload register (ie reset counter) divided by 100
-	TIM2->CCR1 = 50 - 1;							// Capture and compare - ie when counter hits this number PWM high
-	TIM2->CCER |= TIM_CCER_CC1E;					// Capture/Compare 1 output enable
-	TIM2->CCMR1 |= TIM_CCMR1_OC1M_1 |TIM_CCMR1_OC1M_2;		// 110 PWM Mode 1
-	TIM2->CR1 |= TIM_CR1_CEN;
+	RCC->APB2ENR |= RCC_APB2ENR_TIM8EN;				// Enable Timer clock
+	TIM8->CR2 |= TIM_CR2_MMS_2;						// 100: Compare - OC1REF signal is used as trigger output (TRGO)
+	TIM8->PSC = 20 - 1;								// Prescaler
+	TIM8->ARR = 50 - 1;								// Auto-reload register (ie reset counter) divided by 100
+	TIM8->CCR1 = 50 - 1;							// Capture and compare - ie when counter hits this number PWM high
+	TIM8->CCER |= TIM_CCER_CC1E;					// Capture/Compare 1 output enable
+	TIM8->CCMR1 |= TIM_CCMR1_OC1M_1 |TIM_CCMR1_OC1M_2;		// 110 PWM Mode 1
+	TIM8->CR1 |= TIM_CR1_CEN;
 
 	// Enable ADC1 and GPIO clock sources
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOCEN;
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
 	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
 
-	// Enable ADC - PC3: ADC123_IN13; PA5: ADC12_IN5; PA0: ADC123_IN11
-	GPIOC->MODER |= GPIO_MODER_MODER3;				// Set PC3 to Analog mode (0b11)
-	GPIOA->MODER |= GPIO_MODER_MODER5 | GPIO_MODER_MODER0;	// Set PA5, PA0 to Analog mode (0b11)
+	// Enable ADC - PA7: ADC12_IN7; PA6: ADC12_IN6; PA5: ADC12_IN5
+	GPIOA->MODER |= GPIO_MODER_MODER5 | GPIO_MODER_MODER6 | GPIO_MODER_MODER7;	// Set PA5, PA6, PA7 to Analog mode (0b11)
 
 	ADC1->CR1 |= ADC_CR1_SCAN;						// Activate scan mode
 	ADC1->SQR1 = (3 - 1) << ADC_SQR1_L_Pos;			// Number of conversions in sequence (array is 4 * size of ADC and values averaged)
-	InitAdcPins(ADC1, {13, 5, 0});
+	InitAdcPins(ADC1, {7, 6, 5});
 
-	ADC1->CR2 |= ADC_CR2_EOCS;						// The EOC bit is set at the end of each regular conversion. Overrun detection is enabled.
-	ADC1->CR2 |= ADC_CR2_EXTEN_0;					// ADC hardware trigger 00: Trigger detection disabled; 01: Trigger detection on the rising edge; 10: Trigger detection on the falling edge; 11: Trigger detection on both the rising and falling edges
-	ADC1->CR2 |= ADC_CR2_EXTSEL_1 | ADC_CR2_EXTSEL_2;	// ADC External trigger: 0110 = TIM2_TRGO event
+	ADC1->CR2 |= ADC_CR2_EOCS |						// The EOC bit is set at the end of each regular conversion. Overrun detection is enabled.
+				ADC_CR2_EXTEN_0 |					// ADC hardware trigger 00: Trigger detection disabled; 01: Trigger detection on the rising edge; 10: Trigger detection on the falling edge; 11: Trigger detection on both the rising and falling edges
+				ADC_CR2_EXTSEL_1 | ADC_CR2_EXTSEL_2 | ADC_CR2_EXTSEL_3;	// ADC External trigger: 1110 = TIM8_TRGO event
 
 	// Enable DMA - DMA2, Channel 0, Stream 0  = ADC1 (Manual p207)
 	ADC1->CR2 |= ADC_CR2_DMA;						// Enable DMA Mode on ADC1
@@ -214,7 +219,19 @@ void InitEncoders()
 {
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;			// Enable system configuration clock: used to manage external interrupt line connection to GPIOs
 
-	// L Encoder using timer functionality - PB6 and PB7
+	// L Encoder using timer functionality - PB8 and PB9
+	GpioPin::Init(GPIOB, 8, GpioPin::Type::AlternateFunctionPullUp, 1);	 // Alternate function 1 is TIM2_CH1
+	GpioPin::Init(GPIOB, 9, GpioPin::Type::AlternateFunctionPullUp, 1);	 // Alternate function 1 is TIM2_CH2
+
+	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;				// Enable Timer 2
+	TIM2->PSC = 0;									// Set prescaler
+	TIM2->ARR = 0xFFFF; 							// Set auto reload register to max
+	TIM2->SMCR |= TIM_SMCR_SMS_0 |TIM_SMCR_SMS_1;	// SMS=011 for counting on both TI1 and TI2 edges
+	TIM2->SMCR |= TIM_SMCR_ETF;						// Enable digital filter
+	TIM2->CNT = 32000;								// Start counter at mid way point
+	TIM2->CR1 |= TIM_CR1_CEN;
+
+	// R Encoder using timer functionality - PB6 and PB7
 	GpioPin::Init(GPIOB, 6, GpioPin::Type::AlternateFunctionPullUp, 2);	 // Alternate function 2 is TIM4_CH1
 	GpioPin::Init(GPIOB, 7, GpioPin::Type::AlternateFunctionPullUp, 2);	 // Alternate function 2 is TIM4_CH2
 
@@ -225,29 +242,14 @@ void InitEncoders()
 	TIM4->SMCR |= TIM_SMCR_ETF;						// Enable digital filter
 	TIM4->CNT = 32000;								// Start counter at mid way point
 	TIM4->CR1 |= TIM_CR1_CEN;
-
-	// R Encoder using timer functionality - PC6 and PC7
-	GpioPin::Init(GPIOC, 6, GpioPin::Type::AlternateFunctionPullUp, 3);	 // Alternate function 3 is TIM8_CH1
-	GpioPin::Init(GPIOC, 7, GpioPin::Type::AlternateFunctionPullUp, 3);	 // Alternate function 3 is TIM8_CH2
-
-	RCC->APB2ENR |= RCC_APB2ENR_TIM8EN;				// Enable Timer 8
-	TIM8->PSC = 0;									// Set prescaler
-	TIM8->ARR = 0xFFFF; 							// Set auto reload register to max
-	TIM8->SMCR |= TIM_SMCR_SMS_0 |TIM_SMCR_SMS_1;	// SMS=011 for counting on both TI1 and TI2 edges
-	TIM8->SMCR |= TIM_SMCR_ETF;						// Enable digital filter
-	TIM8->CNT = 32000;								// Start counter at mid way point
-	TIM8->CR1 |= TIM_CR1_CEN;
 }
 
 
-void InitUART()
+void InitMIDIUART()
 {
-	// PC11 UART4_RX 79
-	// [PA1  UART4_RX 24 (AF8) ** NB Dev board seems to have something pulling this pin to ground so can't use]
-
 	RCC->APB1ENR |= RCC_APB1ENR_UART4EN;			// UART4 clock enable
 
-	GpioPin::Init(GPIOC, 11, GpioPin::Type::AlternateFunction, 8);	 // Alternate function 8 is UART4_RX
+	GpioPin::Init(GPIOA, 1, GpioPin::Type::AlternateFunction, 8);	 // PA1 Alternate function 8 is UART4_RX
 
 	const uint32_t Baud = (SystemCoreClock / 4) / (16 * 31250);
 	UART4->BRR |= Baud << 4;						// Baud Rate (called USART_BRR_DIV_Mantissa) = (Sys Clock: 180MHz / APB1 Prescaler DIV4: 45MHz) / (16 * 31250) = 90
