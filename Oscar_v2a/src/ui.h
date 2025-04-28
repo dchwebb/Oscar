@@ -24,7 +24,7 @@ public:
 	std::string FloatToString(float f, bool smartFormat);
 	std::string IntToString(const int32_t v);
 
-	bool menuMode = false, encoderBtnL = false, encoderBtnR = false;
+	bool menuMode = false;
 
 private:
 	void DrawMenu();
@@ -67,8 +67,19 @@ private:
 
 	char charBuff[100];
 
-	Btn encBtnL {{GPIOB, 1, GpioPin::Type::InputPullup}};			// configure PB1 Left encoder button
-	Btn encBtnR {{GPIOC, 13, GpioPin::Type::InputPullup}};		// configure PC13 right encoder button
+	Btn btnEncL {{GPIOB, 1, GpioPin::Type::InputPullup}};
+	Btn btnEncR {{GPIOC, 13, GpioPin::Type::InputPullup}};
+	Btn btnMenu {{GPIOA, 2, GpioPin::Type::InputPullup}};
+
+	struct {
+		Btn btnChA {{GPIOB, 14, GpioPin::Type::InputPullup}};
+		Btn btnChB {{GPIOB, 0, GpioPin::Type::InputPullup}};
+		Btn btnChC {{GPIOA, 3, GpioPin::Type::InputPullup}};
+
+		GpioPin ledChA {GPIOB, 13, GpioPin::Type::Output};
+		GpioPin ledChB {GPIOB, 12, GpioPin::Type::Output};
+		GpioPin ledChC {GPIOB, 15, GpioPin::Type::Output};
+	} channelSelect;
 };
 
 extern UI ui;

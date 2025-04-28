@@ -26,6 +26,19 @@ void UI::DrawUI()
 		std::string s = FloatToString(640000.0f * (TIM3->PSC + 1) * (TIM3->ARR + 1) / SystemCoreClock, false) + "ms    ";
 		lcd.DrawString(140, lcd.drawHeight + 8, s, &lcd.Font_Small, RGBColour::White, RGBColour::Black);
 	}
+
+	// Channel button leds
+	const bool fftMode = (cfg.displayMode == DispMode::Fourier || cfg.displayMode == DispMode::Tuner || cfg.displayMode == DispMode::Waterfall);
+	channelSelect.ledChA.Set(
+			(osc.cfg.oscDisplay & 1 && cfg.displayMode == DispMode::Oscilloscope) ||
+			(fft.cfg.channel == channelA && fftMode));
+	channelSelect.ledChB.Set(
+			(osc.cfg.oscDisplay & 2 && cfg.displayMode == DispMode::Oscilloscope) ||
+			(fft.cfg.channel == channelB && fftMode));
+	channelSelect.ledChC.Set(
+			(osc.cfg.oscDisplay & 4 && cfg.displayMode == DispMode::Oscilloscope) ||
+			(fft.cfg.channel == channelC && fftMode));
+
 }
 
 
@@ -203,48 +216,94 @@ void UI::handleEncoders()
 		config.ScheduleSave();
 	}
 
-	encoderBtnL = encBtnL.Pressed();		// FIXME
-	encoderBtnR = encBtnR.Pressed();
+	bool encoderBtnL = btnEncL.Pressed();
+	bool encoderBtnR = btnEncR.Pressed();
+	bool menuButton = btnMenu.Pressed();
 
-	if ((encoderBtnL || encoderBtnR) && menuMode) {
-		encoderBtnL = encoderBtnR = menuMode = false;
+	if (menuMode && (encoderBtnL || encoderBtnR || menuButton)) {
+		menuMode = false;
 		lcd.ScreenFill(RGBColour::Black);
 		DrawUI();
 		return;
 	}
 
-	// Menu mode
-	if (encoderBtnR) {
-		encoderBtnR = false;
-
-		if (cfg.displayMode == DispMode::Oscilloscope || cfg.displayMode == DispMode::Tuner || cfg.displayMode == DispMode::Fourier) {
-			menuMode = true;
-			lcd.ScreenFill(RGBColour::Black);
-			DrawMenu();
-			return;
-		}
+	if (menuButton && (cfg.displayMode == DispMode::Oscilloscope || cfg.displayMode == DispMode::Tuner || cfg.displayMode == DispMode::Fourier)) {
+		menuMode = true;
+		lcd.ScreenFill(RGBColour::Black);
+		DrawMenu();
+		return;
 	}
 
-	// Change display mode (note recheck menuMode as interrupts can alter this mid-routine)
-	if (encoderBtnL && !menuMode) {
-		encoderBtnL = false;
-
+	// Change display mode
+	if (encoderBtnL || encoderBtnR) {
 		if (cfg.displayMode == DispMode::Oscilloscope) {
 			osc.cfg.sampleTimer = TIM3->ARR;
 		}
-
-		switch (cfg.displayMode) {
-			case DispMode::Oscilloscope:	cfg.displayMode = DispMode::Tuner;			break;
-			case DispMode::Tuner:			cfg.displayMode = DispMode::Fourier;		break;
-			case DispMode::Fourier:			cfg.displayMode = DispMode::Waterfall;		break;
-			case DispMode::Waterfall:		cfg.displayMode = DispMode::MIDI;			break;
-			case DispMode::MIDI:			cfg.displayMode = DispMode::Oscilloscope;	break;
+		if (encoderBtnL) {
+			switch (cfg.displayMode) {
+				case DispMode::Oscilloscope:	cfg.displayMode = DispMode::MIDI;			break;
+				case DispMode::Tuner:			cfg.displayMode = DispMode::Oscilloscope;	break;
+				case DispMode::Fourier:			cfg.displayMode = DispMode::Tuner;			break;
+				case DispMode::Waterfall:		cfg.displayMode = DispMode::Fourier;		break;
+				case DispMode::MIDI:			cfg.displayMode = DispMode::Waterfall;		break;
+			}
+		} else {
+			switch (cfg.displayMode) {
+				case DispMode::Oscilloscope:	cfg.displayMode = DispMode::Tuner;			break;
+				case DispMode::Tuner:			cfg.displayMode = DispMode::Fourier;		break;
+				case DispMode::Fourier:			cfg.displayMode = DispMode::Waterfall;		break;
+				case DispMode::Waterfall:		cfg.displayMode = DispMode::MIDI;			break;
+				case DispMode::MIDI:			cfg.displayMode = DispMode::Oscilloscope;	break;
+			}
 		}
 		config.ScheduleSave();
 		ResetMode();
 		return;
 	}
 
+	// Channel select buttons
+	if (cfg.displayMode != DispMode::MIDI) {
+		if (channelSelect.btnChA.Pressed()) {
+			if (cfg.displayMode == DispMode::Oscilloscope) {
+				bool currentState = (osc.cfg.oscDisplay & 1);
+				osc.cfg.oscDisplay &= 0b110;
+				if (!currentState || osc.cfg.oscDisplay == 0) {
+					osc.cfg.oscDisplay |= 0b001;
+				}
+				osc.setTriggerChannel();
+			} else {						// Tuner, FFT, waterfall
+				fft.cfg.channel = channelA;
+			}
+			DrawUI();
+		}
+		if (channelSelect.btnChB.Pressed()) {
+			if (cfg.displayMode == DispMode::Oscilloscope) {
+				bool currentState = (osc.cfg.oscDisplay & 0b010);
+				osc.cfg.oscDisplay &= 0b101;
+				if (!currentState || osc.cfg.oscDisplay == 0) {
+					osc.cfg.oscDisplay |= 0b010;
+				}
+				osc.setTriggerChannel();
+			} else {						// Tuner, FFT, waterfall
+				fft.cfg.channel = channelB;
+			}
+			DrawUI();
+		}
+		if (channelSelect.btnChC.Pressed()) {
+			if (cfg.displayMode == DispMode::Oscilloscope) {
+				bool currentState = (osc.cfg.oscDisplay & 0b100);
+				osc.cfg.oscDisplay &= 0b011;
+				if (!currentState || osc.cfg.oscDisplay == 0) {
+					osc.cfg.oscDisplay |= 0b100;
+				}
+				osc.setTriggerChannel();
+			} else {						// Tuner, FFT, waterfall
+				fft.cfg.channel = channelC;
+			}
+			DrawUI();
+		}
+
+	}
 }
 
 
