@@ -99,13 +99,6 @@ void UI::EncoderAction(encoderType type, const int8_t& val)
 		osc.cfg.voltScale -= val;
 		osc.cfg.voltScale = std::clamp(static_cast<int>(osc.cfg.voltScale), 1, 12);
 		break;
-	case ChannelSelect :
-		osc.cfg.oscDisplay += val;
-		osc.cfg.oscDisplay = osc.cfg.oscDisplay == 0 ? 7 : osc.cfg.oscDisplay == 8 ? 1 : osc.cfg.oscDisplay;
-		osc.setTriggerChannel();
-
-		DrawUI();
-		break;
 
 	case TriggerChannel :
 		if ((osc.cfg.triggerChannel == channelNone && val > 0) || (osc.cfg.triggerChannel == channelB && val < 0))
@@ -140,13 +133,6 @@ void UI::EncoderAction(encoderType type, const int8_t& val)
 				tuner.ClearOverlay();
 			}
 		}
-		DrawUI();
-		break;
-	case ActiveChannel :
-		if (val > 0)
-			fft.cfg.channel = (fft.cfg.channel == channelA) ? channelB : (fft.cfg.channel == channelB) ? channelC : channelA;
-		else
-			fft.cfg.channel = (fft.cfg.channel == channelA) ? channelC : (fft.cfg.channel == channelB) ? channelA : channelB;
 		DrawUI();
 		break;
 	case MultiLane :
@@ -263,44 +249,25 @@ void UI::handleEncoders()
 
 	// Channel select buttons
 	if (cfg.displayMode != DispMode::MIDI) {
-		if (channelSelect.btnChA.Pressed()) {
-			if (cfg.displayMode == DispMode::Oscilloscope) {
-				bool currentState = (osc.cfg.oscDisplay & 1);
-				osc.cfg.oscDisplay &= 0b110;
-				if (!currentState || osc.cfg.oscDisplay == 0) {
-					osc.cfg.oscDisplay |= 0b001;
+		uint32_t btnPressed = channelSelect.btnChA.Pressed() |
+							 (channelSelect.btnChB.Pressed() << 1) |
+							 (channelSelect.btnChC.Pressed() << 2);		// Bit representation of pressed buttons
+		for (uint32_t i = 0; i < 3; ++i) {
+			uint32_t bit = (1 << i);
+			if (btnPressed & bit) {
+				if (cfg.displayMode == DispMode::Oscilloscope) {
+
+					bool currentState = (osc.cfg.oscDisplay & bit);		// Is button currently pressed
+					osc.cfg.oscDisplay &= (0b111 ^ bit);				// Clear display bit
+					if (!currentState || osc.cfg.oscDisplay == 0) {
+						osc.cfg.oscDisplay |= bit;						// Set display bit if currently off or no channel selected
+					}
+					osc.setTriggerChannel();
+				} else {						// Tuner, FFT, waterfall
+					fft.cfg.channel = (oscChannel)i;
 				}
-				osc.setTriggerChannel();
-			} else {						// Tuner, FFT, waterfall
-				fft.cfg.channel = channelA;
+				DrawUI();
 			}
-			DrawUI();
-		}
-		if (channelSelect.btnChB.Pressed()) {
-			if (cfg.displayMode == DispMode::Oscilloscope) {
-				bool currentState = (osc.cfg.oscDisplay & 0b010);
-				osc.cfg.oscDisplay &= 0b101;
-				if (!currentState || osc.cfg.oscDisplay == 0) {
-					osc.cfg.oscDisplay |= 0b010;
-				}
-				osc.setTriggerChannel();
-			} else {						// Tuner, FFT, waterfall
-				fft.cfg.channel = channelB;
-			}
-			DrawUI();
-		}
-		if (channelSelect.btnChC.Pressed()) {
-			if (cfg.displayMode == DispMode::Oscilloscope) {
-				bool currentState = (osc.cfg.oscDisplay & 0b100);
-				osc.cfg.oscDisplay &= 0b011;
-				if (!currentState || osc.cfg.oscDisplay == 0) {
-					osc.cfg.oscDisplay |= 0b100;
-				}
-				osc.setTriggerChannel();
-			} else {						// Tuner, FFT, waterfall
-				fft.cfg.channel = channelC;
-			}
-			DrawUI();
 		}
 
 	}
@@ -359,8 +326,6 @@ std::string UI::EncoderLabel(encoderType type)
 		return "Zoom Horiz";
 	case HorizScaleFine :
 		return "Zoom Horiz";
-	case ChannelSelect :
-		return "Ch:" + std::string(osc.cfg.oscDisplay & 1 ? "A" : "") + std::string(osc.cfg.oscDisplay & 2 ? "B" : "") + std::string(osc.cfg.oscDisplay & 4 ? "C  " : "  ");
 	case CalibVertScale :
 		return "Calib Scale";
 	case CalibVertOffset :
@@ -377,8 +342,6 @@ std::string UI::EncoderLabel(encoderType type)
 		return "Tune: " + std::string(fft.cfg.autoTune ? "auto" : "off ");
 	case TraceOverlay :
 		return "Trace: " + std::string((cfg.displayMode == DispMode::Fourier ? fft.cfg.traceOverlay : tuner.cfg.traceOverlay) ? "on " : "off ");
-	case ActiveChannel :
-		return "Channel " + std::string(fft.cfg.channel == channelA ? "A" : fft.cfg.channel == channelB ? "B" : "C");
 	case MultiLane :
 		return "Lanes: " + std::string(osc.cfg.multiLane ? "Yes" : "No ");
 	case TunerMode :

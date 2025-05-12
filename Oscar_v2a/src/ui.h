@@ -44,26 +44,23 @@ private:
 	const std::vector<MenuItem> oscMenu{
 		{ 0, "Horiz scale", HorizScale },
 		{ 1, "Vert scale", VoltScale },
-		{ 2, "Channel Sel", ChannelSelect },
-		{ 3, "Multi-Lane", MultiLane },
-		{ 4, "Trigger Y", Trigger_Y },
-		{ 5, "Trigger X", Trigger_X },
-		{ 6, "Trigger Ch", TriggerChannel },
-		{ 7, "Calib Scale", CalibVertScale },
-		{ 8, "Calib Offset", CalibVertOffset } };
+		{ 2, "Multi-Lane", MultiLane },
+		{ 3, "Trigger Y", Trigger_Y },
+		{ 4, "Trigger X", Trigger_X },
+		{ 5, "Trigger Ch", TriggerChannel },
+		{ 6, "Calib Scale", CalibVertScale },
+		{ 7, "Calib Offset", CalibVertOffset } };
 
 	const std::vector<MenuItem> fftMenu{
 		{ 0, "Horiz scale", HorizScale },
 		{ 1, "Vert scale", VoltScale },
-		{ 2, "Channel", ActiveChannel },
-		{ 3, "AutoTune", FFTAutoTune },
-		{ 4, "Trace overlay", TraceOverlay } };
+		{ 2, "AutoTune", FFTAutoTune },
+		{ 3, "Trace overlay", TraceOverlay } };
 
 	const std::vector<MenuItem> tunerMenu{
-		{ 0, "Channel", ActiveChannel },
-		{ 1, "Vert scale", VoltScale },
-		{ 2, "Tuner Mode", TunerMode },
-		{ 3, "Trace overlay", TraceOverlay } };
+		{ 0, "Vert scale", VoltScale },
+		{ 1, "Tuner Mode", TunerMode },
+		{ 2, "Trace overlay", TraceOverlay } };
 
 	char charBuff[100];
 

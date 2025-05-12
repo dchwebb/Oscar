@@ -18,7 +18,7 @@ enum encoderType { HorizScale, HorizScaleFine, CalibVertScale, CalibVertOffset, 
 	FFTAutoTune, ActiveChannel, ChannelSelect, MultiLane, TraceOverlay, TunerMode };
 
 enum class DispMode { Oscilloscope, Tuner, Fourier, Waterfall, MIDI };
-enum oscChannel {channelA, channelB, channelC, channelNone};
+enum oscChannel {channelA = 0, channelB = 1, channelC = 2, channelNone = 3};
 
 struct ADCValues {
 	uint16_t ChA_1;
