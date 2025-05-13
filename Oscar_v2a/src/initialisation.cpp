@@ -68,13 +68,13 @@ void InitHardware()
 }
 
 
-
 void InitBackupRAM()
 {
 	RCC->APB1ENR |= RCC_APB1ENR_PWREN;				// Enable the power interface clock
 	PWR->CR |= PWR_CR_DBP;							// Enable access to the	backup domain
 	RCC->AHB1ENR |= RCC_AHB1ENR_BKPSRAMEN;			// Enable the backup SRAM clock
 }
+
 
 void InitSysTick()
 {
@@ -99,18 +99,19 @@ void ResetWatchdog()
 
 void InitLCDHardware()
 {
-	RCC->APB1ENR |= RCC_APB1ENR_SPI3EN;			//	Enable SPI clocks
+	RCC->APB1ENR |= RCC_APB1ENR_SPI3EN;				//	Enable SPI clocks
 
 	GpioPin::Init(GPIOB, 5, GpioPin::Type::AlternateFunction, 6, GpioPin::DriveStrength::VeryHigh);		// SPI_MOSI AF6
-	GpioPin::Init(GPIOB, 3, GpioPin::Type::AlternateFunction, 6, GpioPin::DriveStrength::VeryHigh);		// SPI_SCK AF6]
+	GpioPin::Init(GPIOB, 3, GpioPin::Type::AlternateFunction, 6, GpioPin::DriveStrength::VeryHigh);		// SPI_SCK AF6
 
-	// Configure SPI
-	SPI3->CR1 |= SPI_CR1_SSM;						// Software slave management: When SSM bit is set, NSS pin input is replaced with the value from the SSI bit
-	SPI3->CR1 |= SPI_CR1_SSI;						// Internal slave select
-	SPI3->CR1 |= SPI_CR1_BR_0;						// Baud rate control prescaler: 0b001: fPCLK/4; 0b100: fPCLK/32
-	SPI3->CR1 |= SPI_CR1_MSTR;						// Master selection
-
-	SPI3->CR1 |= SPI_CR1_SPE;						// Enable SPI
+	// Clock is APB1 at 45MHz divided by prescaler
+	// ILI9341 data sheet specifies maximum frequency of 10MHz but it seems to work fine up to 40MHz+
+	// Works at 22MHz (/4), but uses around 7mA additional current
+	SPI3->CR1 |= (SPI_CR1_SSM |						// Software slave management: When SSM bit is set, NSS pin input is replaced with the value from the SSI bit
+				  SPI_CR1_SSI |						// Internal slave select
+				  SPI_CR1_BR_0 |					// Baud rate control prescaler: 0b001: fPCLK/4; 0b000: fPCLK/2
+				  SPI_CR1_MSTR |					// Master selection
+				  SPI_CR1_SPE);						// Enable SPI
 
 	RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;				// Configure DMA
 

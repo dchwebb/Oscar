@@ -22,7 +22,7 @@ public:
 	// Oscilloscope working variables
 	uint16_t adcA, adcB, adcC, oldAdc;
 	uint16_t OscBufferA[2][lcd.drawWidth], OscBufferB[2][lcd.drawWidth], OscBufferC[2][lcd.drawWidth];
-	uint8_t oscBufferNumber = 0;
+	uint8_t oscBufferNumber = 0;					// Sample buffer being used to draw from
 	uint16_t noTriggerDraw = 0;						// set to true if no trigger signal but a draw buffer is available
 	uint8_t laneCount = 1;							// holds current number of lanes to display based on number of visible channels and multi lane setting
 
@@ -33,6 +33,7 @@ public:
 	uint16_t capturePos = 0;						// Position in capture buffer
 
 	bool drawing = false;
+	bool uiRefresh = false;							// Set in UI class if screen has been redrawn
 	int16_t drawOffset[2] {0, 0};
 	uint16_t prevPixelA = 0, prevPixelB = 0, prevPixelC = 0, drawPos = 0;
 
@@ -61,6 +62,7 @@ private:
 	void CircRun();
 
 	uint8_t drawBufferNumber = 0;
+	int8_t oldVoltScale = 0;						// To limit redraws of voltage information
 
 	float freq;										// Holds frequency of current capture based on zero crossings
 	bool freqBelowZero;

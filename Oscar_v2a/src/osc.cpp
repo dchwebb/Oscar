@@ -28,7 +28,7 @@ void Osc::Capture()
 		}
 	}
 
-	// if capturing check if write buffer is full and switch to next buffer if so; if not full store current reading
+	// if capturing check if write buffer is full and switch to next buffer if so; next buffer will only be filled if not being drawn from
 	if (capturing && capturedSamples[captureBufferNumber] == lcd.drawWidth - 1) {
 		captureBufferNumber = captureBufferNumber == 1 ? 0 : 1;		// switch the capture buffer
 		bufferSamples = 0;			// stores number of samples captured since switching buffers to ensure triggered mode works correctly
@@ -71,10 +71,12 @@ void Osc::OscRun()
 
 	// check if we should start drawing
 	if (!drawing && (capturing || noTriggerDraw)) {
+		debugPin.SetHigh();
+
 		oscBufferNumber = noTriggerDraw ? !(bool)captureBufferNumber : captureBufferNumber;
 		drawing = true;
 		drawPos = 0;
-	debugPin.SetHigh();
+
 		//	If in multi-lane mode get lane count from number of displayed channels and calculate vertical offset of channels B and C
 		laneCount = (cfg.multiLane && cfg.oscDisplay == 0b111 ? 3 : cfg.multiLane && cfg.oscDisplay > 2 && cfg.oscDisplay != 4 ? 2 : 1);
 		calculatedOffsetYB = (laneCount > 1 && cfg.oscDisplay & 0b001 ? lcd.drawHeight / laneCount : 0);
@@ -179,8 +181,12 @@ void Osc::OscRun()
 
 		if (drawPos == 1) {
 			// Write voltage
-			lcd.DrawString(0, 1, " " + ui.IntToString(cfg.voltScale) + "v ", &lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
-			lcd.DrawString(0, lcd.drawHeight - 10, "-" + ui.IntToString(cfg.voltScale) + "v ", &lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
+			if (oldVoltScale != cfg.voltScale || uiRefresh) {
+				lcd.DrawString(0, 1, " " + ui.IntToString(cfg.voltScale) + "v ", &lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
+				lcd.DrawString(0, lcd.drawHeight - 10, "-" + ui.IntToString(cfg.voltScale) + "v ", &lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
+				oldVoltScale = cfg.voltScale;
+				uiRefresh = false;
+			}
 
 			// Write frequency
 			if (noTriggerDraw) {

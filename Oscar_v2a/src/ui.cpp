@@ -25,6 +25,7 @@ void UI::DrawUI()
 	if (cfg.displayMode == DispMode::Oscilloscope) {
 		std::string s = FloatToString(640000.0f * (TIM3->PSC + 1) * (TIM3->ARR + 1) / SystemCoreClock, false) + "ms    ";
 		lcd.DrawString(140, lcd.drawHeight + 8, s, &lcd.Font_Small, RGBColour::White, RGBColour::Black);
+		osc.uiRefresh = true;
 	}
 
 	// Channel button leds
