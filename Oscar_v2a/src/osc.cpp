@@ -86,36 +86,38 @@ void Osc::OscRun()
 	// Check if drawing and that the sample capture is at or ahead of the draw position
 	if (drawing && (oscBufferNumber != captureBufferNumber || capturedSamples[captureBufferNumber] >= drawPos || noTriggerDraw)) {
 		// Calculate offset between capture and drawing positions to display correct sample
-		const uint16_t calculatedOffsetX = (drawOffset[oscBufferNumber] + drawPos) % lcd.drawWidth;
+		const uint16_t offsetX = (drawOffset[oscBufferNumber] + drawPos) % lcd.drawWidth;
 
-		const uint16_t pixelA = CalcVertOffset(OscBufferA[oscBufferNumber][calculatedOffsetX]);
-		const uint16_t pixelB = CalcVertOffset(OscBufferB[oscBufferNumber][calculatedOffsetX]) + calculatedOffsetYB;
-		const uint16_t pixelC = CalcVertOffset(OscBufferC[oscBufferNumber][calculatedOffsetX]) + calculatedOffsetYC;
+		SamplePos currentPos = VertOffsets(offsetX);
+
+		const uint16_t pixelA = CalcVertOffset(OscBufferA[oscBufferNumber][offsetX]);
+		const uint16_t pixelB = CalcVertOffset(OscBufferB[oscBufferNumber][offsetX]) + calculatedOffsetYB;
+		const uint16_t pixelC = CalcVertOffset(OscBufferC[oscBufferNumber][offsetX]) + calculatedOffsetYC;
 
 		// Starting a new screen: Set previous pixel to current pixel and clear frequency calculations
 		if (drawPos == 0) {
-			prevPixelA = pixelA;
-			prevPixelB = pixelB;
-			prevPixelC = pixelC;
+			prevPixel = currentPos;			// Store previous sample so next sample can be drawn as a line from old to new
 			freqBelowZero = false;
 			freqCrossZero = 0;
 		}
 
 		//	frequency calculation - detect upwards zero crossings
-		const uint16_t currentChannelY = (cfg.oscDisplay & 1) ? OscBufferA[oscBufferNumber][calculatedOffsetX] :
-										 (cfg.oscDisplay & 2) ? OscBufferB[oscBufferNumber][calculatedOffsetX] :
-										  OscBufferC[oscBufferNumber][calculatedOffsetX];
+		const uint16_t currentY = (cfg.oscDisplay & 1) ? OscBufferA[oscBufferNumber][offsetX] :
+										 (cfg.oscDisplay & 2) ? OscBufferB[oscBufferNumber][offsetX] :
+										  OscBufferC[oscBufferNumber][offsetX];
+		freqSmoothY = (drawPos == 0) ? currentY : (currentY + 15 * freqSmoothY) / 16;
 
-		if (!freqBelowZero && currentChannelY < calibZeroPos) {		// first time reading goes below zero
+		if (!freqBelowZero && freqSmoothY < calibZeroPos) {		// first time reading goes below zero
 			freqBelowZero = true;
 		}
-		if (freqBelowZero && currentChannelY >= calibZeroPos) {		// zero crossing
+		if (freqBelowZero && freqSmoothY >= calibZeroPos) {		// zero crossing
 			//	second zero crossing - calculate frequency averaged over a number passes to smooth
 			if (freqCrossZero > 0 && drawPos - freqCrossZero > 3) {
-				if (freq > 0) {
-					freq = (3 * freq + FreqFromPos(drawPos - freqCrossZero)) / 4;
+				float newFreq = FreqFromPos(drawPos - freqCrossZero);
+				if (std::abs(freq - newFreq) / freq < .05f) {
+					freq = 0.8f * freq + 0.2f * newFreq;
 				} else {
-					freq = FreqFromPos(drawPos - freqCrossZero);
+					freq = newFreq;
 				}
 			}
 			freqCrossZero = drawPos;
@@ -123,9 +125,9 @@ void Osc::OscRun()
 		}
 
 		// create draw buffer
-		const std::pair<uint16_t, uint16_t> AY = std::minmax(pixelA, prevPixelA);
-		const std::pair<uint16_t, uint16_t> BY = std::minmax(pixelB, prevPixelB);
-		const std::pair<uint16_t, uint16_t> CY = std::minmax(pixelC, prevPixelC);
+		const std::pair<uint16_t, uint16_t> AY = std::minmax(currentPos.pos[Channel::A], prevPixel.pos[Channel::A]);
+		const std::pair<uint16_t, uint16_t> BY = std::minmax(currentPos.pos[Channel::B], prevPixel.pos[Channel::B]);
+		const std::pair<uint16_t, uint16_t> CY = std::minmax(currentPos.pos[Channel::C], prevPixel.pos[Channel::C]);
 
 		const uint8_t vOffset = (drawPos < 27 || drawPos > 250) ? 11 : 0;		// offset draw area so as not to overwrite voltage and freq labels
 		for (uint8_t h = 0; h <= lcd.drawHeight - (drawPos < 27 ? 12 : 0); ++h) {
@@ -158,10 +160,7 @@ void Osc::OscRun()
 		lcd.PatternFill(drawPos, vOffset, drawPos, lcd.drawHeight - (drawPos < 27 ? 12 : 0), lcd.drawBuffer[drawBufferNumber]);
 		drawBufferNumber = drawBufferNumber == 0 ? 1 : 0;
 
-		// Store previous sample so next sample can be drawn as a line from old to new
-		prevPixelA = pixelA;
-		prevPixelB = pixelB;
-		prevPixelC = pixelC;
+		prevPixel = currentPos;			// Store previous sample so next sample can be drawn as a line from old to new
 
 		++drawPos;
 		if (drawPos == lcd.drawWidth){
@@ -193,11 +192,21 @@ void Osc::OscRun()
 				lcd.DrawString(250, 1, "No Trigger " , &lcd.Font_Small, RGBColour::White, RGBColour::Black);
 			} else {
 				lcd.DrawString(250, 1, freq != 0 ? ui.FloatToString(freq, false) + "Hz    " : "          ", &lcd.Font_Small, RGBColour::White, RGBColour::Black);
-				freq = 0;
 			}
 		}
 
 	}
+}
+
+
+Osc::SamplePos Osc::VertOffsets(uint16_t offsetX)
+{
+	return SamplePos {
+		CalcVertOffset(OscBufferA[oscBufferNumber][offsetX]),
+		(uint16_t)(CalcVertOffset(OscBufferB[oscBufferNumber][offsetX]) + calculatedOffsetYB),
+		(uint16_t)(CalcVertOffset(OscBufferC[oscBufferNumber][offsetX]) + calculatedOffsetYC)
+
+	};
 }
 
 
@@ -213,7 +222,7 @@ uint16_t Osc::CalcVertOffset(const uint16_t& vPos)
 float Osc::FreqFromPos(const uint16_t pos)
 {
 	// returns frequency of signal based on number of samples wide the signal is versus the sampling rate
-	return static_cast<float>(SystemCoreClock) / (2.0f * pos * (TIM3->PSC + 1) * (TIM3->ARR + 1));
+	return samplingFrequency / pos;
 }
 
 

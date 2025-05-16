@@ -11913,6 +11913,16 @@
 		)
 		(uuid "2adca740-b2f6-4f1c-a2dc-cd65efaec232")
 	)
+	(text "Also suitable: \nToshiba DF3D6.8MS,LF\n"
+		(exclude_from_sim no)
+		(at 286.258 74.676 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "2fc38ae4-20d9-4386-8efc-520e4630f135")
+	)
 	(text "Encoders"
 		(exclude_from_sim no)
 		(at 226.822 222.25 0)
@@ -19769,10 +19779,9 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "50df250b-b911-4dc8-9a34-1a1dbf469575")
 		(property "Reference" "D4"
-			(at 278.13 71.0564 90)
+			(at 278.13 68.072 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19781,7 +19790,7 @@
 			)
 		)
 		(property "Value" "RCLAMP0502B"
-			(at 278.13 73.5964 90)
+			(at 278.13 70.612 90)
 			(effects
 				(font
 					(size 1.27 1.27)

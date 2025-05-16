@@ -23,7 +23,7 @@ void UI::DrawUI()
 	lcd.DrawString(240, lcd.drawHeight + 8, EncoderLabel(encoderModeR), &lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
 
 	if (cfg.displayMode == DispMode::Oscilloscope) {
-		std::string s = FloatToString(640000.0f * (TIM3->PSC + 1) * (TIM3->ARR + 1) / SystemCoreClock, false) + "ms    ";
+		std::string s = FloatToString(640000.0f * (TIM3->ARR + 1) / SystemCoreClock, false) + "ms    ";
 		lcd.DrawString(140, lcd.drawHeight + 8, s, &lcd.Font_Small, RGBColour::White, RGBColour::Black);
 		osc.uiRefresh = true;
 	}
@@ -79,7 +79,7 @@ void UI::EncoderAction(encoderType type, const int8_t& val)
 	case HorizScale :
 		adj = TIM3->ARR + (TIM3->ARR < 5000 ? 200 : TIM3->ARR < 20000 ? 400 : TIM3->ARR < 50000 ? 4000 : 8000) * -val;
 		if (adj > MINSAMPLETIMER && adj < 560000) {
-			TIM3->ARR = adj;
+			SetSampleTimer(adj);
 			if (cfg.displayMode == DispMode::Oscilloscope) {
 				osc.cfg.sampleTimer = adj;
 			}
@@ -87,7 +87,7 @@ void UI::EncoderAction(encoderType type, const int8_t& val)
 		}
 		break;
 	case HorizScaleFine :
-		TIM3->ARR += val;
+		SetSampleTimer(TIM3->ARR + val);
 		DrawUI();
 		break;
 	case CalibVertOffset :
@@ -262,6 +262,7 @@ void UI::handleEncoders()
 					osc.cfg.oscDisplay &= (0b111 ^ bit);				// Clear display bit
 					if (!currentState || osc.cfg.oscDisplay == 0) {
 						osc.cfg.oscDisplay |= bit;						// Set display bit if currently off or no channel selected
+						config.ScheduleSave();
 					}
 					osc.setTriggerChannel();
 				} else {						// Tuner, FFT, waterfall
@@ -285,7 +286,7 @@ void UI::ResetMode()
 	case DispMode::Oscilloscope :
 		encoderModeL = osc.cfg.encModeL;
 		encoderModeR = osc.cfg.encModeR;
-		TIM3->ARR = std::max(osc.cfg.sampleTimer, (uint16_t)MINSAMPLETIMER);
+		SetSampleTimer(std::max(osc.cfg.sampleTimer, (uint16_t)MINSAMPLETIMER));
 		break;
 	case DispMode::Tuner :
 		tuner.Activate(false);

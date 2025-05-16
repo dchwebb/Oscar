@@ -2,7 +2,6 @@
 #include "osc.h"
 
 
-
 // Create sine look up table as constexpr so will be stored in flash
 constexpr std::array<float, FFT::sinLUTSize> sineLUT = fft.CreateSinLUT();
 
@@ -20,7 +19,7 @@ FFT::FFT()
 
 void FFT::Activate()
 {
-	TIM3->ARR = timerDefault;
+	SetSampleTimer(timerDefault);
 	capturing = false;
 	dataAvailable[0] = false;
 	dataAvailable[1] = false;
@@ -34,6 +33,7 @@ void FFT::Run()
 	readyCapture(false);									// checks if ready to start new capture
 
 	if (dataAvailable[0] || dataAvailable[1]) {
+		debugPin.SetHigh();
 		fftBufferNumber = dataAvailable[0] ? 0 : 1;			// select correct draw buffer based on whether buffer 0 or 1 contains data
 
 		if (ui.cfg.displayMode == DispMode::Fourier && cfg.traceOverlay) {
@@ -50,6 +50,7 @@ void FFT::Run()
 		} else {
 			DisplayWaterfall(fftBuffer[fftBufferNumber]);
 		}
+		debugPin.SetLow();
 	}
 }
 
@@ -195,7 +196,7 @@ void FFT::PopulateOverlayBuffer(const float* sampleBuffer)
 		const uint32_t vPos = 4 * (2047 - sampleBuffer[start + p]);
 		osc.OscBufferA[0][p] = osc.CalcVertOffset(vPos) + (lcd.drawHeight / 4);
 	}
-	osc.prevPixelA = osc.OscBufferA[0][0];
+	osc.prevPixel.pos[0] = osc.OscBufferA[0][0];
 }
 
 
@@ -239,7 +240,7 @@ void FFT::DisplayFFT(const float* sinBuffer)
 		for (uint32_t h = 0; h <= lcd.drawHeight; ++h) {
 			uint16_t buffPos = h * lcd.drawBufferWidth + ((i - 1) % lcd.drawBufferWidth);
 
-			const std::pair<uint16_t, uint16_t> AY = std::minmax(osc.OscBufferA[0][i - 1], osc.prevPixelA);		// Index i is offset by 1 from start of buffer
+			const std::pair<uint16_t, uint16_t> AY = std::minmax(osc.OscBufferA[0][i - 1], osc.prevPixel.pos[0]);		// Index i is offset by 1 from start of buffer
 
 			// depending on harmonic height draw either harmonic or black, using different colours to indicate main harmonics
 			if (h >= top) {
@@ -259,7 +260,7 @@ void FFT::DisplayFFT(const float* sinBuffer)
 			}
 		}
 
-		osc.prevPixelA = osc.OscBufferA[0][i - 1];
+		osc.prevPixel.pos[0] = osc.OscBufferA[0][i - 1];
 
 		// check if ready to draw next buffer
 		if (i % lcd.drawBufferWidth == 0) {
@@ -316,7 +317,7 @@ void FFT::DisplayFFT(const float* sinBuffer)
 		}
 
 		if (newARR > 0.0f) {
-			TIM3->ARR = std::round(newARR);
+			SetSampleTimer(std::round(newARR));
 		}
 	}
 }
@@ -324,7 +325,8 @@ void FFT::DisplayFFT(const float* sinBuffer)
 
 float FFT::HarmonicFreq(const float harmonicNumber)
 {
-	return static_cast<float>(SystemCoreClock) * harmonicNumber / (2.0f * fftSamples * (TIM3->PSC + 1) * (TIM3->ARR + 1));
+	return samplingFrequency * harmonicNumber / fftSamples;
+	//return static_cast<float>(SystemCoreClock) * harmonicNumber / (2.0f * fftSamples * (TIM3->ARR + 1));
 }
 
 

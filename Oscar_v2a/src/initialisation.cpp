@@ -2,6 +2,7 @@
 
 GpioPin debugPin(GPIOC, 10, GpioPin::Type::Output);
 volatile ADCValues adc;
+float samplingFrequency;
 
 struct PLLDividers {
 	uint32_t M;
@@ -205,7 +206,7 @@ void InitSampleAcquisition()
 	//	Setup Timer 3 on an interrupt to trigger sample acquisition
 	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;				// Enable Timer 3
 	TIM3->PSC = 0;									// Set prescaler: 90MHz (APB1 Timer Clock) / 1 (PSC + 1) = 90 MHz
-	TIM3->ARR = 7000; 								// Set auto reload register (90 MHz / 7000 = 12 kHz)
+	SetSampleTimer(7000);							// Set auto reload register (90 MHz / 7000 = 12 kHz)
 
 	TIM3->DIER |= TIM_DIER_UIE;						// DMA/interrupt enable register
 	NVIC_EnableIRQ(TIM3_IRQn);
@@ -213,6 +214,13 @@ void InitSampleAcquisition()
 
 	TIM3->CR1 |= TIM_CR1_CEN;
 	TIM3->EGR |= TIM_EGR_UG;						// Re-initializes counter and generates update of registers
+}
+
+
+void SetSampleTimer(uint32_t val)
+{
+	TIM3->ARR = val;
+	samplingFrequency = static_cast<float>(SystemCoreClock) / (2.0f * (val + 1));
 }
 
 

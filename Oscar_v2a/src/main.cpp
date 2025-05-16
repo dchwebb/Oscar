@@ -22,17 +22,14 @@ Tuner tuner;
 
 Config config{&ui.configSaver, &osc.configSaver, &fft.configSaver, &tuner.configSaver};		// Construct config handler with list of configSavers
 
-// FIXME
-#include "GpioPin.h"
-
 
 int main(void)
 {
 	InitHardware();
 	lcd.Init();								// Initialize ILI9341 LCD
 
-	// check if resetting config by holding left encoder button while resetting
-	if (GPIOA->IDR & GPIO_IDR_IDR_10) {		// If button is NOT pressed reload config
+	// check if resetting config by holding menu button while resetting
+	if (ui.btnMenu.pin.IsHigh()) {			// If button is NOT pressed reload config
 		config.RestoreConfig();				// Restore calibration settings from flash memory
 	}
 
@@ -41,11 +38,6 @@ int main(void)
 	osc.CalcZeroSize();
 	usb.Init(false);
 	//InitWatchdog();
-
-//	GpioPin dm (GPIOA, 11, GpioPin::Type::Output);		// PA11: USB_OTG_HS_DM
-//	GpioPin dp (GPIOA, 12, GpioPin::Type::Output);		// PA12: USB_OTG_HS_DP
-
-//	dm.SetHigh();
 
 	while (1) {
 		//ResetWatchdog();					// Reloads watchdog counter to prevent hardware reset

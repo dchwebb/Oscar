@@ -26,6 +26,10 @@ public:
 
 	bool menuMode = false;
 
+	Btn btnEncL {{GPIOB, 1, GpioPin::Type::InputPullup}};
+	Btn btnEncR {{GPIOC, 13, GpioPin::Type::InputPullup}};
+	Btn btnMenu {{GPIOA, 2, GpioPin::Type::InputPullup}};
+
 private:
 	void DrawMenu();
 	void MenuAction(encoderType* et, volatile const int8_t& val);
@@ -63,10 +67,6 @@ private:
 		{ 2, "Trace overlay", TraceOverlay } };
 
 	char charBuff[100];
-
-	Btn btnEncL {{GPIOB, 1, GpioPin::Type::InputPullup}};
-	Btn btnEncR {{GPIOC, 13, GpioPin::Type::InputPullup}};
-	Btn btnMenu {{GPIOA, 2, GpioPin::Type::InputPullup}};
 
 	struct {
 		Btn btnChA {{GPIOB, 14, GpioPin::Type::InputPullup}};

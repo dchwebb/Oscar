@@ -15,6 +15,8 @@ public:
 	uint32_t StoreConfig(uint8_t* buff);
 	void CalcZeroSize();							// returns ADC size that corresponds to 0v
 
+	enum Channel {A = 0, B = 1, C = 2};
+
 	// Oscilloscope settings
 	uint16_t calibZeroPos = 9985;
 	uint16_t* triggerTest = &adcA;					// store the currently active trigger channel as a reference for faster interrupt performance
@@ -35,7 +37,13 @@ public:
 	bool drawing = false;
 	bool uiRefresh = false;							// Set in UI class if screen has been redrawn
 	int16_t drawOffset[2] {0, 0};
-	uint16_t prevPixelA = 0, prevPixelB = 0, prevPixelC = 0, drawPos = 0;
+	uint16_t drawPos = 0;
+	//uint16_t prevPixelA = 0, prevPixelB = 0, prevPixelC = 0;
+
+	struct SamplePos {
+		uint16_t pos[3];
+	};
+	SamplePos prevPixel;
 
 	struct Config {
 		int16_t vCalibOffset = -3590;				// Dev board with 14k resistors: -3940, 1.499999
@@ -60,6 +68,7 @@ public:
 private:
 	void SetDrawBuffer(uint16_t* buff1, uint16_t* buff2);
 	void CircRun();
+	SamplePos VertOffsets(uint16_t offsetX);
 
 	uint8_t drawBufferNumber = 0;
 	int8_t oldVoltScale = 0;						// To limit redraws of voltage information
@@ -67,6 +76,7 @@ private:
 	float freq;										// Holds frequency of current capture based on zero crossings
 	bool freqBelowZero;
 	uint16_t freqCrossZero;
+	uint16_t freqSmoothY;							// Used in basic filter to remove high frequency noise
 
 	uint16_t calculatedOffsetYB = 0, calculatedOffsetYC = 0;	// Pre-Calculated offsets when in multi-lane mode
 
