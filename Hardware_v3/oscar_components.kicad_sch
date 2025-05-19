@@ -19645,7 +19645,7 @@
 				)
 			)
 		)
-		(property "Value" "560"
+		(property "Value" "1.5k"
 			(at 171.45 69.85 90)
 			(effects
 				(font
@@ -20258,7 +20258,7 @@
 				)
 			)
 		)
-		(property "Value" "560"
+		(property "Value" "1.5k"
 			(at 171.45 88.9 90)
 			(effects
 				(font
@@ -22271,7 +22271,7 @@
 				)
 			)
 		)
-		(property "Value" "560"
+		(property "Value" "1.5k"
 			(at 171.45 109.22 90)
 			(effects
 				(font

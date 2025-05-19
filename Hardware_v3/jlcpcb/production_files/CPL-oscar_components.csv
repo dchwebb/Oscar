@@ -51,9 +51,9 @@ R14,100,R_0805_2012Metric,114.9,-87.6,180.0,bottom
 R15,100,R_0805_2012Metric,114.9,-92.7,180.0,bottom
 R16,220,R_0805_2012Metric,147.0,-112.0,270.0,bottom
 R17,470,R_0805_2012Metric,136.6,-85.6,90.0,bottom
-R18,560,R_0805_2012Metric,105.1,-88.9,0.0,bottom
-R19,560,R_0805_2012Metric,105.1,-91.5,0.0,bottom
-R20,560,R_0805_2012Metric,149.5,-112.0,270.0,bottom
+R18,1.5k,R_0805_2012Metric,105.1,-88.9,0.0,bottom
+R19,1.5k,R_0805_2012Metric,105.1,-91.5,0.0,bottom
+R20,1.5k,R_0805_2012Metric,149.5,-112.0,270.0,bottom
 SW1,Reset_Button,SW_PUSH_6mm_aligned,164.0,-131.2,-90.0,top
 SW2,Menu_Button,SW_PUSH_6mm_aligned,135.5,-101.0,90.0,top
 SW3,Left_Encoder,Encoder,111.2,-104.25,0.0,top

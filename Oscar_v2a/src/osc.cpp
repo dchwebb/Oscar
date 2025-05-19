@@ -90,13 +90,9 @@ void Osc::OscRun()
 
 		SamplePos currentPos = VertOffsets(offsetX);
 
-		const uint16_t pixelA = CalcVertOffset(OscBufferA[oscBufferNumber][offsetX]);
-		const uint16_t pixelB = CalcVertOffset(OscBufferB[oscBufferNumber][offsetX]) + calculatedOffsetYB;
-		const uint16_t pixelC = CalcVertOffset(OscBufferC[oscBufferNumber][offsetX]) + calculatedOffsetYC;
-
 		// Starting a new screen: Set previous pixel to current pixel and clear frequency calculations
 		if (drawPos == 0) {
-			prevPixel = currentPos;			// Store previous sample so next sample can be drawn as a line from old to new
+			prevPixel = currentPos;
 			freqBelowZero = false;
 			freqCrossZero = 0;
 		}
@@ -130,11 +126,9 @@ void Osc::OscRun()
 		const std::pair<uint16_t, uint16_t> CY = std::minmax(currentPos.pos[Channel::C], prevPixel.pos[Channel::C]);
 
 		const uint8_t vOffset = (drawPos < 27 || drawPos > 250) ? 11 : 0;		// offset draw area so as not to overwrite voltage and freq labels
-		for (uint8_t h = 0; h <= lcd.drawHeight - (drawPos < 27 ? 12 : 0); ++h) {
+		for (uint8_t h = vOffset; h <= lcd.drawHeight - (drawPos < 27 ? 12 : 0); ++h) {
 
-			if (h < vOffset) {
-				// do not draw
-			} else if (cfg.oscDisplay & 1 && h >= AY.first && h <= AY.second) {
+			if (cfg.oscDisplay & 1 && h >= AY.first && h <= AY.second) {
 				lcd.drawBuffer[drawBufferNumber][h - vOffset] = RGBColour::Green;
 			} else if (cfg.oscDisplay & 2 && h >= BY.first && h <= BY.second) {
 				lcd.drawBuffer[drawBufferNumber][h - vOffset] = RGBColour::LightBlue;
