@@ -13,6 +13,7 @@ CPP_SRCS += \
 ../src/midi.cpp \
 ../src/osc.cpp \
 ../src/tuner.cpp \
+../src/uartHandler.cpp \
 ../src/ui.cpp 
 
 S_SRCS += \
@@ -44,6 +45,7 @@ OBJS += \
 ./src/sysmem.o \
 ./src/system_stm32f4xx.o \
 ./src/tuner.o \
+./src/uartHandler.o \
 ./src/ui.o 
 
 CPP_DEPS += \
@@ -55,6 +57,7 @@ CPP_DEPS += \
 ./src/midi.d \
 ./src/osc.d \
 ./src/tuner.d \
+./src/uartHandler.d \
 ./src/ui.d 
 
 
@@ -69,7 +72,7 @@ src/%.o src/%.su src/%.cyclo: ../src/%.c src/subdir.mk
 clean: clean-src
 
 clean-src:
-	-$(RM) ./src/configManager.cyclo ./src/configManager.d ./src/configManager.o ./src/configManager.su ./src/fft.cyclo ./src/fft.d ./src/fft.o ./src/fft.su ./src/initialisation.cyclo ./src/initialisation.d ./src/initialisation.o ./src/initialisation.su ./src/lcd.cyclo ./src/lcd.d ./src/lcd.o ./src/lcd.su ./src/main.cyclo ./src/main.d ./src/main.o ./src/main.su ./src/midi.cyclo ./src/midi.d ./src/midi.o ./src/midi.su ./src/osc.cyclo ./src/osc.d ./src/osc.o ./src/osc.su ./src/startup_stm32f446retx.d ./src/startup_stm32f446retx.o ./src/syscalls.cyclo ./src/syscalls.d ./src/syscalls.o ./src/syscalls.su ./src/sysmem.cyclo ./src/sysmem.d ./src/sysmem.o ./src/sysmem.su ./src/system_stm32f4xx.cyclo ./src/system_stm32f4xx.d ./src/system_stm32f4xx.o ./src/system_stm32f4xx.su ./src/tuner.cyclo ./src/tuner.d ./src/tuner.o ./src/tuner.su ./src/ui.cyclo ./src/ui.d ./src/ui.o ./src/ui.su
+	-$(RM) ./src/configManager.cyclo ./src/configManager.d ./src/configManager.o ./src/configManager.su ./src/fft.cyclo ./src/fft.d ./src/fft.o ./src/fft.su ./src/initialisation.cyclo ./src/initialisation.d ./src/initialisation.o ./src/initialisation.su ./src/lcd.cyclo ./src/lcd.d ./src/lcd.o ./src/lcd.su ./src/main.cyclo ./src/main.d ./src/main.o ./src/main.su ./src/midi.cyclo ./src/midi.d ./src/midi.o ./src/midi.su ./src/osc.cyclo ./src/osc.d ./src/osc.o ./src/osc.su ./src/startup_stm32f446retx.d ./src/startup_stm32f446retx.o ./src/syscalls.cyclo ./src/syscalls.d ./src/syscalls.o ./src/syscalls.su ./src/sysmem.cyclo ./src/sysmem.d ./src/sysmem.o ./src/sysmem.su ./src/system_stm32f4xx.cyclo ./src/system_stm32f4xx.d ./src/system_stm32f4xx.o ./src/system_stm32f4xx.su ./src/tuner.cyclo ./src/tuner.d ./src/tuner.o ./src/tuner.su ./src/uartHandler.cyclo ./src/uartHandler.d ./src/uartHandler.o ./src/uartHandler.su ./src/ui.cyclo ./src/ui.d ./src/ui.o ./src/ui.su
 
 .PHONY: clean-src
 

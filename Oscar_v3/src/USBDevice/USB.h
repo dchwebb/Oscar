@@ -10,8 +10,8 @@
 // Enables capturing of debug data for output over STLink UART on dev boards
 #define USB_DEBUG false
 #if (USB_DEBUG)
-#include "uartHandler.h"
-#define USB_DEBUG_COUNT 400
+//#include "uartHandler.h"
+#define USB_DEBUG_COUNT 200
 #endif
 
 
@@ -22,9 +22,14 @@
 #define USBx_OUTEP(i)	((USB_OTG_OUTEndpointTypeDef *)(USB_OTG_FS_PERIPH_BASE + USB_OTG_OUT_ENDPOINT_BASE + ((i) * USB_OTG_EP_REG_SIZE)))
 #define USBx_DFIFO(i)	*(uint32_t*)(USB_OTG_FS_PERIPH_BASE + USB_OTG_FIFO_BASE + ((i) * USB_OTG_FIFO_SIZE))
 
-#define LOBYTE(x)  ((uint8_t)(x & 0x00FF))
-#define HIBYTE(x)  ((uint8_t)((x & 0xFF00) >> 8))
-
+//#define LOBYTE(x)  ((uint8_t)(x & 0x00FF))
+//#define HIBYTE(x)  ((uint8_t)((x & 0xFF00) >> 8))
+static constexpr uint8_t LOBYTE(uint32_t x) {
+	return (uint8_t)(x & 0x00FF);
+}
+static constexpr uint8_t HIBYTE(uint32_t x) {
+	return (uint8_t)((x & 0xFF00) >> 8);
+}
 
 struct USB {
 	friend class USBHandler;

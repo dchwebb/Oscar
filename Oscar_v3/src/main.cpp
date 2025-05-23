@@ -6,7 +6,7 @@
 #include "midi.h"
 #include "osc.h"
 #include "tuner.h"
-
+#include "USB.h"
 
 volatile uint32_t SysTickVal = 0;
 
@@ -28,22 +28,22 @@ int main(void)
 	InitHardware();
 	lcd.Init();								// Initialize ILI9341 LCD
 
-	// check if resetting config by holding left encoder button while resetting
-	if (GPIOA->IDR & GPIO_IDR_IDR_10) {		// If button is NOT pressed reload config
+	// check if resetting config by holding menu button while resetting
+	if (ui.btnMenu.pin.IsHigh()) {			// If button is NOT pressed reload config
 		config.RestoreConfig();				// Restore calibration settings from flash memory
 	}
 
 	InitSampleAcquisition();
 	ui.ResetMode();
 	osc.CalcZeroSize();
-	//usb.Init(false);
-	InitWatchdog();
+	usb.Init(false);
+	//InitWatchdog();
 
 	while (1) {
-		ResetWatchdog();					// Reloads watchdog counter to prevent hardware reset
+		//ResetWatchdog();					// Reloads watchdog counter to prevent hardware reset
 		ui.handleEncoders();
 		config.SaveConfig();				// Save any scheduled changes
-//		usb.cdc.ProcessCommand();			// Check for incoming CDC commands
+		usb.cdc.ProcessCommand();			// Check for incoming CDC commands
 
 
 		if (ui.menuMode) {

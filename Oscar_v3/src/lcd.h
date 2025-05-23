@@ -147,8 +147,8 @@ private:
 	void SPISetDataSize(const SPIDataSize_t& Mode);
 	void SPI_DMA_SendHalfWord(const uint16_t& value, const uint16_t& count);
 
-	GpioPin lcdDCPin {GPIOC, 13, GpioPin::Type::Output, 0, GpioPin::DriveStrength::Medium};			// LCD DC (Data/Command) pin
-	GpioPin lcdReset {GPIOC, 14, GpioPin::Type::Output};											// LCD Reset pin
+	GpioPin lcdDCPin {GPIOA, 8, GpioPin::Type::Output, 0, GpioPin::DriveStrength::Medium};			// LCD DC (Data/Command) pin
+	GpioPin lcdReset {GPIOA, 10, GpioPin::Type::Output};											// LCD Reset pin
 
 };
 

@@ -13,12 +13,13 @@ static constexpr uint32_t sysTickInterval = 1000;
 
 #define ADC_BUFFER_LENGTH 12
 #define MINSAMPLETIMER 200
+extern float samplingFrequency;
 
 enum encoderType { HorizScale, HorizScaleFine, CalibVertScale, CalibVertOffset, VoltScale, TriggerChannel, Trigger_X, Trigger_Y,
 	FFTAutoTune, ActiveChannel, ChannelSelect, MultiLane, TraceOverlay, TunerMode };
 
 enum class DispMode { Oscilloscope, Tuner, Fourier, Waterfall, MIDI };
-enum oscChannel {channelA, channelB, channelC, channelNone};
+enum oscChannel {channelA = 0, channelB = 1, channelC = 2, channelNone = 3};
 
 struct ADCValues {
 	uint16_t ChA_1;
@@ -48,7 +49,8 @@ void ResetWatchdog();
 void InitLCDHardware(void);
 void InitADC(void);
 void InitSampleAcquisition();
+void SetSampleTimer(uint32_t val);
 void InitEncoders();
-void InitUART();
+void InitMIDIUART();
 void DelayMS(uint32_t ms);
 void JumpToBootloader();

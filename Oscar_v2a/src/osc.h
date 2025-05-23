@@ -69,6 +69,7 @@ private:
 	void SetDrawBuffer(uint16_t* buff1, uint16_t* buff2);
 	void CircRun();
 	SamplePos VertOffsets(uint16_t offsetX);
+	void FreqCalc(const uint16_t offsetX);
 
 	uint8_t drawBufferNumber = 0;
 	int8_t oldVoltScale = 0;						// To limit redraws of voltage information

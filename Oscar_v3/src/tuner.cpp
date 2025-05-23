@@ -11,7 +11,6 @@ void Tuner::Capture()
 															  adc.ChC_1 + adc.ChC_2 + adc.ChC_3 + adc.ChC_4;
 
 	if (cfg.mode == FFT) {
-
 		float* floatBuffer = (float*)&(fft.fftBuffer);
 		floatBuffer[bufferPos] = 2047.0f - (static_cast<float>(adcSummed) / 4.0f);
 
@@ -53,18 +52,18 @@ void Tuner::Activate(bool startTimer)
 {
 	if (cfg.mode == FFT) {
 		if (currFreq > 800.0f) {
-			TIM3->ARR = (FFT::timerDefault / 2) + sampleRateAdj;
+			SetSampleTimer((FFT::timerDefault / 2) + sampleRateAdj);
 		} else if (currFreq < 50.0f) {
-			TIM3->ARR = (FFT::timerDefault * 2) + sampleRateAdj;
+			SetSampleTimer((FFT::timerDefault * 2) + sampleRateAdj);
 		} else {
-			TIM3->ARR = FFT::timerDefault + sampleRateAdj;
+			SetSampleTimer(FFT::timerDefault + sampleRateAdj);
 		}
 	} else {
 		// Get current value of ADC (assume channel A for now)
 		const uint32_t currVal = adc.ChA_1 + adc.ChA_2 + adc.ChA_3 + adc.ChA_4;
 		overZero = currVal > osc.calibZeroPos;
 		timer = 0;
-		TIM3->ARR = zeroCrossRate;
+		SetSampleTimer(zeroCrossRate);
 	}
 
 	bufferPos = 0;
@@ -143,6 +142,8 @@ void Tuner::ClearOverlay()
 void Tuner::Run()
 {
 	if (samplesReady) {
+
+
 		float frequency = 0.0f;
 		const uint32_t start = SysTickVal;
 
@@ -309,6 +310,7 @@ void Tuner::Run()
 		}
 
 		Activate(true);
+
 	}
 }
 

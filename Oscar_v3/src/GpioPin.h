@@ -106,6 +106,14 @@ public:
 		port->ODR &= ~(1 << pin);
 	}
 
+	void Set(bool high) {
+		if (high) {
+			port->ODR |= (1 << pin);
+		} else {
+			port->ODR &= ~(1 << pin);
+		}
+	}
+
 private:
 	GPIO_TypeDef* port;
 	uint32_t pin;

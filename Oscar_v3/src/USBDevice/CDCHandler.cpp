@@ -27,18 +27,10 @@ void CDCHandler::ProcessCommand()
 		state = serialState::dfuConfirm;
 
 	} else if (cmd.compare("help") == 0) {
-		usb->SendString("Mountjoy DisPhaze Poly - supported commands:\n\n"
+		usb->SendString("Mountjoy Oscar - supported commands:\n\n"
 				"help           -  Shows this information\n"
 				"info           -  Display current settings\n"
 				"dfu            -  USB firmware upgrade\n"
-				"poly           -  Switches between polyphonic and monophonic mode\n"
-				"attack:x.xx    -  Set polyphonic attack time in ms\n"
-				"decay:x.xx     -  Set decay time in ms\n"
-				"sustain:x.xx   -  Set sustain 0.0 - 1.0\n"
-				"release:x.xx   -  Set envelope release time in ms\n"
-				"comphold:x.xx  -  Set compressor hold time in ms\n"
-				"comprel:x.xx   -  Set compressor release rate\n"
-				"compthresh:x.xx-  Set compressor threshold\n"
 		);
 
 	} else if (cmd.compare("info") == 0) {
@@ -118,7 +110,6 @@ void CDCHandler::ClassSetupData(usbRequest& req, const uint8_t* data)
 		lineCoding = *(LineCoding*)data;
 	}
 }
-
 
 
 

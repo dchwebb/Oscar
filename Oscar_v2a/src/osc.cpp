@@ -68,7 +68,6 @@ void Osc::Capture()
 // Main loop to display oscilloscope trace
 void Osc::OscRun()
 {
-
 	// check if we should start drawing
 	if (!drawing && (capturing || noTriggerDraw)) {
 		debugPin.SetHigh();
@@ -97,28 +96,7 @@ void Osc::OscRun()
 			freqCrossZero = 0;
 		}
 
-		//	frequency calculation - detect upwards zero crossings
-		const uint16_t currentY = (cfg.oscDisplay & 1) ? OscBufferA[oscBufferNumber][offsetX] :
-										 (cfg.oscDisplay & 2) ? OscBufferB[oscBufferNumber][offsetX] :
-										  OscBufferC[oscBufferNumber][offsetX];
-		freqSmoothY = (drawPos == 0) ? currentY : (currentY + 15 * freqSmoothY) / 16;
-
-		if (!freqBelowZero && freqSmoothY < calibZeroPos) {		// first time reading goes below zero
-			freqBelowZero = true;
-		}
-		if (freqBelowZero && freqSmoothY >= calibZeroPos) {		// zero crossing
-			//	second zero crossing - calculate frequency averaged over a number passes to smooth
-			if (freqCrossZero > 0 && drawPos - freqCrossZero > 3) {
-				float newFreq = FreqFromPos(drawPos - freqCrossZero);
-				if (std::abs(freq - newFreq) / freq < .05f) {
-					freq = 0.8f * freq + 0.2f * newFreq;
-				} else {
-					freq = newFreq;
-				}
-			}
-			freqCrossZero = drawPos;
-			freqBelowZero = false;
-		}
+		FreqCalc(offsetX);
 
 		// create draw buffer
 		const std::pair<uint16_t, uint16_t> AY = std::minmax(currentPos.pos[Channel::A], prevPixel.pos[Channel::A]);
@@ -219,6 +197,31 @@ float Osc::FreqFromPos(const uint16_t pos)
 	return samplingFrequency / pos;
 }
 
+
+void Osc::FreqCalc(const uint16_t offsetX) {
+	//	frequency calculation - detect upwards zero crossings
+	const uint16_t currentY = (cfg.oscDisplay & 1) ? OscBufferA[oscBufferNumber][offsetX] :
+							  (cfg.oscDisplay & 2) ? OscBufferB[oscBufferNumber][offsetX] :
+							   OscBufferC[oscBufferNumber][offsetX];
+	freqSmoothY = (drawPos == 0) ? currentY : (currentY + 15 * freqSmoothY) / 16;
+
+	if (!freqBelowZero && freqSmoothY < calibZeroPos) {		// first time reading goes below zero
+		freqBelowZero = true;
+	}
+	if (freqBelowZero && freqSmoothY >= calibZeroPos) {		// zero crossing
+		//	second zero crossing - calculate frequency averaged over a number passes to smooth
+		if (freqCrossZero > 0 && drawPos - freqCrossZero > 3) {
+			const float newFreq = FreqFromPos(drawPos - freqCrossZero);
+			if (std::abs(freq - newFreq) / freq < .05f) {
+				freq = 0.8f * freq + 0.2f * newFreq;
+			} else {
+				freq = newFreq;
+			}
+		}
+		freqCrossZero = drawPos;
+		freqBelowZero = false;
+	}
+}
 
 void Osc::setTriggerChannel()
 {

@@ -24,6 +24,11 @@ void UART4_IRQHandler()
 }
 
 
+void OTG_FS_IRQHandler(void)
+{
+	usb.InterruptHandler();
+}
+
 void SysTick_Handler(void)
 {
 	++SysTickVal;

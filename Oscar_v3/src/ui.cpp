@@ -23,9 +23,23 @@ void UI::DrawUI()
 	lcd.DrawString(240, lcd.drawHeight + 8, EncoderLabel(encoderModeR), &lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
 
 	if (cfg.displayMode == DispMode::Oscilloscope) {
-		std::string s = FloatToString(640000.0f * (TIM3->PSC + 1) * (TIM3->ARR + 1) / SystemCoreClock, false) + "ms    ";
+		std::string s = FloatToString(640000.0f * (TIM3->ARR + 1) / SystemCoreClock, false) + "ms    ";
 		lcd.DrawString(140, lcd.drawHeight + 8, s, &lcd.Font_Small, RGBColour::White, RGBColour::Black);
+		osc.uiRefresh = true;
 	}
+
+	// Channel button leds
+	const bool fftMode = (cfg.displayMode == DispMode::Fourier || cfg.displayMode == DispMode::Tuner || cfg.displayMode == DispMode::Waterfall);
+	channelSelect.ledChA.Set(
+			(osc.cfg.oscDisplay & 1 && cfg.displayMode == DispMode::Oscilloscope) ||
+			(fft.cfg.channel == channelA && fftMode));
+	channelSelect.ledChB.Set(
+			(osc.cfg.oscDisplay & 2 && cfg.displayMode == DispMode::Oscilloscope) ||
+			(fft.cfg.channel == channelB && fftMode));
+	channelSelect.ledChC.Set(
+			(osc.cfg.oscDisplay & 4 && cfg.displayMode == DispMode::Oscilloscope) ||
+			(fft.cfg.channel == channelC && fftMode));
+
 }
 
 
@@ -65,7 +79,7 @@ void UI::EncoderAction(encoderType type, const int8_t& val)
 	case HorizScale :
 		adj = TIM3->ARR + (TIM3->ARR < 5000 ? 200 : TIM3->ARR < 20000 ? 400 : TIM3->ARR < 50000 ? 4000 : 8000) * -val;
 		if (adj > MINSAMPLETIMER && adj < 560000) {
-			TIM3->ARR = adj;
+			SetSampleTimer(adj);
 			if (cfg.displayMode == DispMode::Oscilloscope) {
 				osc.cfg.sampleTimer = adj;
 			}
@@ -73,7 +87,7 @@ void UI::EncoderAction(encoderType type, const int8_t& val)
 		}
 		break;
 	case HorizScaleFine :
-		TIM3->ARR += val;
+		SetSampleTimer(TIM3->ARR + val);
 		DrawUI();
 		break;
 	case CalibVertOffset :
@@ -85,13 +99,6 @@ void UI::EncoderAction(encoderType type, const int8_t& val)
 	case VoltScale :
 		osc.cfg.voltScale -= val;
 		osc.cfg.voltScale = std::clamp(static_cast<int>(osc.cfg.voltScale), 1, 12);
-		break;
-	case ChannelSelect :
-		osc.cfg.oscDisplay += val;
-		osc.cfg.oscDisplay = osc.cfg.oscDisplay == 0 ? 7 : osc.cfg.oscDisplay == 8 ? 1 : osc.cfg.oscDisplay;
-		osc.setTriggerChannel();
-
-		DrawUI();
 		break;
 
 	case TriggerChannel :
@@ -127,13 +134,6 @@ void UI::EncoderAction(encoderType type, const int8_t& val)
 				tuner.ClearOverlay();
 			}
 		}
-		DrawUI();
-		break;
-	case ActiveChannel :
-		if (val > 0)
-			fft.cfg.channel = (fft.cfg.channel == channelA) ? channelB : (fft.cfg.channel == channelB) ? channelC : channelA;
-		else
-			fft.cfg.channel = (fft.cfg.channel == channelA) ? channelC : (fft.cfg.channel == channelB) ? channelA : channelB;
 		DrawUI();
 		break;
 	case MultiLane :
@@ -183,88 +183,96 @@ void UI::handleEncoders()
 #else
 		int8_t v = TIM4->CNT > 32000 ? 1 : -1;
 #endif
-		if (menuMode)	MenuAction(&encoderModeL, v);
-		else			EncoderAction(encoderModeL, v);
+		if (menuMode)	MenuAction(&encoderModeR, v);
+		else			EncoderAction(encoderModeR, v);
 
 		TIM4->CNT -= TIM4->CNT > 32000 ? 4 : -4;
 		config.ScheduleSave();
 	}
 
-	if (std::abs((int16_t)32000 - (int16_t)TIM8->CNT) > 3) {
+	if (std::abs((int16_t)32000 - (int16_t)TIM2->CNT) > 3) {
 #ifdef REVERSEENCODERS
-		int8_t v = TIM8->CNT > 32000 ? -1 : 1;
+		int8_t v = TIM2->CNT > 32000 ? -1 : 1;
 #else
-		int8_t v = TIM8->CNT > 32000 ? 1 : -1;
+		int8_t v = TIM2->CNT > 32000 ? 1 : -1;
 #endif
-		if (menuMode)	MenuAction(&encoderModeR, v);
-		else			EncoderAction(encoderModeR, v);
+		if (menuMode)	MenuAction(&encoderModeL, v);
+		else			EncoderAction(encoderModeL, v);
 
-		TIM8->CNT -= TIM8->CNT > 32000 ? 4 : -4;
+		TIM2->CNT -= TIM2->CNT > 32000 ? 4 : -4;
 		config.ScheduleSave();
 	}
 
+	bool encoderBtnL = btnEncL.Pressed();
+	bool encoderBtnR = btnEncR.Pressed();
+	bool menuButton = btnMenu.Pressed();
 
-
-	// Check if encoder buttons are pressed with debounce (L: PA10; R: PB13) 0 = pressed
-	if (GPIOA->IDR & GPIO_IDR_IDR_10 && leftBtnReleased == 0) {
-		leftBtnReleased = SysTickVal;
-	}
-	if ((GPIOA->IDR & GPIO_IDR_IDR_10) == 0) {
-		if (leftBtnReleased > 0 && leftBtnReleased < SysTickVal - 100) {
-			encoderBtnL = true;
-		}
-		leftBtnReleased = 0;
-	}
-	if (GPIOB->IDR & GPIO_IDR_IDR_13 && rightBtnReleased == 0) {
-		rightBtnReleased = SysTickVal;
-	}
-	if ((GPIOB->IDR & GPIO_IDR_IDR_13) == 0) {
-		if (rightBtnReleased > 0 && rightBtnReleased < SysTickVal - 100) {
-			encoderBtnR = true;
-		}
-		rightBtnReleased = 0;
-	}
-
-
-	if ((encoderBtnL || encoderBtnR) && menuMode) {
-		encoderBtnL = encoderBtnR = menuMode = false;
+	if (menuMode && (encoderBtnL || encoderBtnR || menuButton)) {
+		menuMode = false;
 		lcd.ScreenFill(RGBColour::Black);
 		DrawUI();
 		return;
 	}
 
-	// Menu mode
-	if (encoderBtnR) {
-		encoderBtnR = false;
-
-		if (cfg.displayMode == DispMode::Oscilloscope || cfg.displayMode == DispMode::Tuner || cfg.displayMode == DispMode::Fourier) {
-			menuMode = true;
-			lcd.ScreenFill(RGBColour::Black);
-			DrawMenu();
-			return;
-		}
+	if (menuButton && (cfg.displayMode == DispMode::Oscilloscope || cfg.displayMode == DispMode::Tuner || cfg.displayMode == DispMode::Fourier)) {
+		menuMode = true;
+		lcd.ScreenFill(RGBColour::Black);
+		DrawMenu();
+		return;
 	}
 
-	// Change display mode (note recheck menuMode as interrupts can alter this mid-routine)
-	if (encoderBtnL && !menuMode) {
-		encoderBtnL = false;
-
+	// Change display mode
+	if (encoderBtnL || encoderBtnR) {
 		if (cfg.displayMode == DispMode::Oscilloscope) {
 			osc.cfg.sampleTimer = TIM3->ARR;
 		}
-
-		switch (cfg.displayMode) {
-			case DispMode::Oscilloscope:	cfg.displayMode = DispMode::Tuner;			break;
-			case DispMode::Tuner:			cfg.displayMode = DispMode::Fourier;		break;
-			case DispMode::Fourier:			cfg.displayMode = DispMode::Waterfall;		break;
-			case DispMode::Waterfall:		cfg.displayMode = DispMode::MIDI;			break;
-			case DispMode::MIDI:			cfg.displayMode = DispMode::Oscilloscope;	break;
+		if (encoderBtnL) {
+			switch (cfg.displayMode) {
+				case DispMode::Oscilloscope:	cfg.displayMode = DispMode::MIDI;			break;
+				case DispMode::Tuner:			cfg.displayMode = DispMode::Oscilloscope;	break;
+				case DispMode::Fourier:			cfg.displayMode = DispMode::Tuner;			break;
+				case DispMode::Waterfall:		cfg.displayMode = DispMode::Fourier;		break;
+				case DispMode::MIDI:			cfg.displayMode = DispMode::Waterfall;		break;
+			}
+		} else {
+			switch (cfg.displayMode) {
+				case DispMode::Oscilloscope:	cfg.displayMode = DispMode::Tuner;			break;
+				case DispMode::Tuner:			cfg.displayMode = DispMode::Fourier;		break;
+				case DispMode::Fourier:			cfg.displayMode = DispMode::Waterfall;		break;
+				case DispMode::Waterfall:		cfg.displayMode = DispMode::MIDI;			break;
+				case DispMode::MIDI:			cfg.displayMode = DispMode::Oscilloscope;	break;
+			}
 		}
 		config.ScheduleSave();
 		ResetMode();
 		return;
 	}
 
+	// Channel select buttons
+	if (cfg.displayMode != DispMode::MIDI) {
+		uint32_t btnPressed = channelSelect.btnChA.Pressed() |
+							 (channelSelect.btnChB.Pressed() << 1) |
+							 (channelSelect.btnChC.Pressed() << 2);		// Bit representation of pressed buttons
+		for (uint32_t i = 0; i < 3; ++i) {
+			uint32_t bit = (1 << i);
+			if (btnPressed & bit) {
+				if (cfg.displayMode == DispMode::Oscilloscope) {
+
+					bool currentState = (osc.cfg.oscDisplay & bit);		// Is button currently pressed
+					osc.cfg.oscDisplay &= (0b111 ^ bit);				// Clear display bit
+					if (!currentState || osc.cfg.oscDisplay == 0) {
+						osc.cfg.oscDisplay |= bit;						// Set display bit if currently off or no channel selected
+						config.ScheduleSave();
+					}
+					osc.setTriggerChannel();
+				} else {						// Tuner, FFT, waterfall
+					fft.cfg.channel = (oscChannel)i;
+				}
+				DrawUI();
+			}
+		}
+
+	}
 }
 
 
@@ -278,7 +286,7 @@ void UI::ResetMode()
 	case DispMode::Oscilloscope :
 		encoderModeL = osc.cfg.encModeL;
 		encoderModeR = osc.cfg.encModeR;
-		TIM3->ARR = std::max(osc.cfg.sampleTimer, (uint16_t)MINSAMPLETIMER);
+		SetSampleTimer(std::max(osc.cfg.sampleTimer, (uint16_t)MINSAMPLETIMER));
 		break;
 	case DispMode::Tuner :
 		tuner.Activate(false);
@@ -320,8 +328,6 @@ std::string UI::EncoderLabel(encoderType type)
 		return "Zoom Horiz";
 	case HorizScaleFine :
 		return "Zoom Horiz";
-	case ChannelSelect :
-		return "Ch:" + std::string(osc.cfg.oscDisplay & 1 ? "A" : "") + std::string(osc.cfg.oscDisplay & 2 ? "B" : "") + std::string(osc.cfg.oscDisplay & 4 ? "C  " : "  ");
 	case CalibVertScale :
 		return "Calib Scale";
 	case CalibVertOffset :
@@ -338,8 +344,6 @@ std::string UI::EncoderLabel(encoderType type)
 		return "Tune: " + std::string(fft.cfg.autoTune ? "auto" : "off ");
 	case TraceOverlay :
 		return "Trace: " + std::string((cfg.displayMode == DispMode::Fourier ? fft.cfg.traceOverlay : tuner.cfg.traceOverlay) ? "on " : "off ");
-	case ActiveChannel :
-		return "Channel " + std::string(fft.cfg.channel == channelA ? "A" : fft.cfg.channel == channelB ? "B" : "C");
 	case MultiLane :
 		return "Lanes: " + std::string(osc.cfg.multiLane ? "Yes" : "No ");
 	case TunerMode :
