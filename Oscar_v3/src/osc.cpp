@@ -28,6 +28,10 @@ void Osc::Capture()
 		}
 	}
 
+	if (capturing && capturedSamples[captureBufferNumber] >= lcd.drawWidth) {
+		volatile int susp [[maybe_unused]] = 1;
+	}
+
 	// if capturing check if write buffer is full and switch to next buffer if so; next buffer will only be filled if not being drawn from
 	if (capturing && capturedSamples[captureBufferNumber] == lcd.drawWidth - 1) {
 		captureBufferNumber = captureBufferNumber == 1 ? 0 : 1;		// switch the capture buffer
@@ -92,15 +96,16 @@ void Osc::OscRun()
 		if (drawPos < textOffsetLeft) {
 			colsToDraw = std::min(capturedSamples[oscBufferNumber], (uint16_t)textOffsetLeft) - drawPos;
 		} else if (drawPos > textOffsetRight) {
-			colsToDraw = std::min(capturedSamples[oscBufferNumber] - drawPos, lcd.drawWidth - drawPos + 1);
+			colsToDraw = std::min(capturedSamples[oscBufferNumber] - drawPos, lcd.drawWidth - drawPos);
 		} else {
 			colsToDraw = std::min((uint16_t)(std::min(capturedSamples[oscBufferNumber], (uint16_t)(textOffsetRight + 1)) - drawPos), lcd.drawBufferWidth);
 
 
 		}
 
-		if (colsToDraw > 106) {
+		if (colsToDraw > 106 || colsToDraw == 0) {
 			volatile int susp [[maybe_unused]] = 1;
+			return;
 		}
 
 		const uint8_t vOffset = (drawPos < textOffsetLeft || drawPos > textOffsetRight) ? textOffsetTop : 0;		// offset draw area so as not to overwrite voltage and freq labels
@@ -129,11 +134,15 @@ void Osc::OscRun()
 			const std::pair<uint16_t, uint16_t> BY = std::minmax(currentPos.pos[Channel::B], prevPixel.pos[Channel::B]);
 			const std::pair<uint16_t, uint16_t> CY = std::minmax(currentPos.pos[Channel::C], prevPixel.pos[Channel::C]);
 
+			const uint16_t TY = CalcVertOffset(cfg.triggerY) + (triggerTest == &adcB ? calculatedOffsetYB : triggerTest == &adcC ? calculatedOffsetYC : 0);
 
 
 			for (uint8_t h = vOffset; h <= drawHeight; ++h) {
 
-				if (cfg.oscDisplay & 1 && h >= AY.first && h <= AY.second) {
+				if ((drawPos > cfg.triggerX - 4 && drawPos < cfg.triggerX + 4 && TY == h) ||
+				   (drawPos == cfg.triggerX && TY > h - 4 && TY < h + 4)) {
+					lcd.drawBuffer[drawBufferNumber][pos] =  RGBColour::Yellow;			// Draw trigger
+				} else if (cfg.oscDisplay & 1 && h >= AY.first && h <= AY.second) {
 					lcd.drawBuffer[drawBufferNumber][pos] = RGBColour::Green;
 				} else if (cfg.oscDisplay & 2 && h >= BY.first && h <= BY.second) {
 					lcd.drawBuffer[drawBufferNumber][pos] = RGBColour::LightBlue;
@@ -171,16 +180,7 @@ void Osc::OscRun()
 			lcd.DrawString(0, 1, " " + ui.IntToString(cfg.voltScale) + "v ", &lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
 			lcd.DrawString(0, lcd.drawHeight - 10, "-" + ui.IntToString(cfg.voltScale) + "v ", &lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
 		}
-/*
-		if (drawPos >= cfg.triggerX + 4){
-			// Draw trigger as a yellow cross
-			const uint16_t vo = CalcVertOffset(cfg.triggerY) + (triggerTest == &adcB ? calculatedOffsetYB : triggerTest == &adcC ? calculatedOffsetYC : 0);
-			if (vo > 4 && vo < lcd.drawHeight - 4) {
-				lcd.DrawLine(cfg.triggerX, vo - 4, cfg.triggerX, vo + 4, RGBColour::Yellow);
-				lcd.DrawLine(std::max(cfg.triggerX - 4, 0), vo, cfg.triggerX + 4, vo, RGBColour::Yellow);
-			}
-		}
-*/
+
 		if (drawPos >= lcd.drawWidth - 1){
 			drawing = false;
 			noTriggerDraw = false;
