@@ -92,7 +92,7 @@ void Osc::OscRun()
 	// Check if drawing and that the sample capture is at or ahead of the draw position
 	if (drawing && (oscBufferNumber != captureBufferNumber || capturedSamples[captureBufferNumber] >= drawPos || noTriggerDraw)) {
 		// Calculate how many vertical strips can be drawn
-		volatile uint32_t colsToDraw = 1;
+		uint32_t colsToDraw = 1;
 		if (drawPos < textOffsetLeft) {
 			colsToDraw = std::min(capturedSamples[oscBufferNumber], (uint16_t)textOffsetLeft) - drawPos;
 		} else if (drawPos > textOffsetRight) {
@@ -162,7 +162,7 @@ void Osc::OscRun()
 				for (int m = 1; m < (laneCount == 1 ? cfg.voltScale * 2 : (laneCount * 2)); ++m) {
 					int vPos = m * lcd.drawHeight / (laneCount == 1 ? cfg.voltScale * 2 : (laneCount * 2)) - textOffsetTop;
 					if (vPos > 0) {
-						lcd.drawBuffer[drawBufferNumber][vPos] = RGBColour::Grey;
+						lcd.drawBuffer[drawBufferNumber][drawPos + vPos * colsToDraw] = RGBColour::Grey;
 					}
 				}
 			}
@@ -174,24 +174,22 @@ void Osc::OscRun()
 		lcd.PatternFill(drawPos - colsToDraw, vOffset, drawPos - 1, drawHeight, lcd.drawBuffer[drawBufferNumber]);
 		drawBufferNumber = drawBufferNumber == 0 ? 1 : 0;
 
-
-		if (drawPos >= textOffsetLeft && !drawnVoltage && (oldVoltScale != cfg.voltScale || uiRefresh)) {// Write voltage
-			drawnVoltage = true;
-			lcd.DrawString(0, 1, " " + ui.IntToString(cfg.voltScale) + "v ", &lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
-			lcd.DrawString(0, lcd.drawHeight - 10, "-" + ui.IntToString(cfg.voltScale) + "v ", &lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
-		}
-
 		if (drawPos >= lcd.drawWidth - 1){
-			drawing = false;
-			noTriggerDraw = false;
-			debugPin.SetLow();
-
 			// Write frequency
 			if (noTriggerDraw) {
 				lcd.DrawString(textOffsetRight, 1, "No Trigger " , &lcd.Font_Small, RGBColour::White, RGBColour::Black);
 			} else {
 				lcd.DrawString(textOffsetRight, 1, freq != 0 ? ui.FloatToString(freq, false) + "Hz    " : "          ", &lcd.Font_Small, RGBColour::White, RGBColour::Black);
 			}
+
+			if (oldVoltScale != cfg.voltScale || uiRefresh) {			// Write voltage
+				lcd.DrawString(0, 1, " " + ui.IntToString(cfg.voltScale) + "v ", &lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
+				lcd.DrawString(0, lcd.drawHeight - 10, "-" + ui.IntToString(cfg.voltScale) + "v ", &lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
+			}
+
+			drawing = false;
+			noTriggerDraw = false;
+			debugPin.SetLow();
 		}
 	}
 }
