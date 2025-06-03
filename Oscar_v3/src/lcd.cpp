@@ -130,7 +130,7 @@ void LCD::ScreenFill(const uint16_t colour)
 
 void LCD::ColourFill(const uint16_t x0, const uint16_t y0, const uint16_t x1, const uint16_t y1, const RGBColour colour)
 {
-	uint32_t pixelCount = (x1 - x0 + 1) * (y1 - y0 + 1);
+	const uint32_t pixelCount = (x1 - x0 + 1) * (y1 - y0 + 1);
 
 	SetCursorPosition(x0, y0, x1, y1);
 	dmaInt16 = colour.colour;								// data to transfer - set early to avoid problem where F722 doesn't update buffer until midway through send
@@ -249,19 +249,19 @@ void LCD::DrawRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const RGB
 }
 
 
-void LCD::DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const RGBColour& foreground, const RGBColour background)
+void LCD::DrawChar(uint16_t x, uint16_t y, char c, const FontData& font, const RGBColour& foreground, const RGBColour background)
 {
 	// If at the end of a line of display, go to new line and set x to 0 position
-	if ((x + font->Width) > width) {
-		y += font->Height;
+	if ((x + font.Width) > width) {
+		y += font.Height;
 		x = 0;
 	}
 
 	// Write character colour data to array
 	uint16_t px, py, i = 0;
-	for (py = 0; py < font->Height; ++py) {
-		const uint16_t fontRow = font->data[(c - 32) * font->Height + py];
-		for (px = 0; px < font->Width; ++px) {
+	for (py = 0; py < font.Height; ++py) {
+		const uint16_t fontRow = font.data[(c - 32) * font.Height + py];
+		for (px = 0; px < font.Width; ++px) {
 			if ((fontRow << (px)) & 0x8000) {			// for one byte characters use if ((fontRow << px) & 0x200) {
 				charBuffer[currentCharBuffer][i] = foreground.colour;
 			} else {
@@ -273,7 +273,7 @@ void LCD::DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const R
 
 	// Send array of data to SPI/DMA to draw
 	while (SPI_DMA_Working);
-	PatternFill(x, y, x + font->Width - 1, y + font->Height - 1, charBuffer[currentCharBuffer]);
+	PatternFill(x, y, x + font.Width - 1, y + font.Height - 1, charBuffer[currentCharBuffer]);
 
 	// alternate between the two character buffers so that the next character can be prepared whilst the last one is being copied to the LCD
 	currentCharBuffer = currentCharBuffer == 1 ? 0 : 1;
@@ -281,16 +281,16 @@ void LCD::DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const R
 
 
 // writes a character to an existing display array
-void LCD::DrawCharMem(const uint16_t x, const uint16_t y, const uint16_t memWidth, uint16_t* memBuffer, char c, const FontData *font, const RGBColour foreground, const RGBColour background)
+void LCD::DrawCharMem(const uint16_t x, const uint16_t y, const uint16_t memWidth, uint16_t* memBuffer, char c, const FontData& font, const RGBColour foreground, const RGBColour background)
 {
 	// Write character colour data to array
 	uint16_t px, py, i;
 
-	for (py = 0; py < font->Height; py++) {
+	for (py = 0; py < font.Height; py++) {
 		i = (memWidth * (y + py)) + x;
 
-		const uint16_t fontRow = font->data[(c - 32) * font->Height + py];
-		for (px = 0; px < font->Width; ++px) {
+		const uint16_t fontRow = font.data[(c - 32) * font.Height + py];
+		for (px = 0; px < font.Width; ++px) {
 			if ((fontRow << px) & 0x8000) {
 				memBuffer[i] = foreground.colour;
 			} else {
@@ -302,40 +302,72 @@ void LCD::DrawCharMem(const uint16_t x, const uint16_t y, const uint16_t memWidt
 }
 
 
-void LCD::DrawString(uint16_t x0, const uint16_t y0, const std::string_view s, const FontData *font, const RGBColour foreground, const RGBColour background)
+void LCD::DrawString(uint16_t x0, const uint16_t y0, const std::string_view s, const FontData& font, const RGBColour foreground, const RGBColour background)
 {
 	for (const char& c : s) {
 		DrawChar(x0, y0, c, font, foreground, background);
-		x0 += font->Width;
+		x0 += font.Width;
 	}
 }
 
 
-void LCD::DrawStringMem(uint16_t x0, const uint16_t y0, uint16_t const memWidth, uint16_t* memBuffer, std::string_view s, const FontData *font, const uint16_t foreground, const uint16_t background) {
+void LCD::DrawStringCenter(uint32_t xCenter, const uint16_t y0, const size_t maxWidth, std::string_view s, const FontData& font, const uint16_t foreground, const uint16_t background)
+{
+	// If string width is less than width of draw buffer move x0 so that text will be centered
+	const uint32_t strWidth = std::min(font.Width * s.length(), maxWidth);
+
+	uint32_t x0 = std::max(xCenter - (strWidth / 2), 0UL);
+
+	// Blank region before and after text if text width less than maximum space
+	if (x0 > xCenter - (maxWidth / 2)) {
+		ColourFill(xCenter - (maxWidth / 2), y0, x0, y0 + font.Height, background);
+		ColourFill(xCenter + (strWidth / 2), y0, xCenter + (maxWidth / 2), y0 + font.Height, background);
+	}
+
+	for (const char& c : s) {
+		DrawChar(x0, y0, c, font, foreground, background);
+		x0 += font.Width;
+		if (x0 > xCenter + (strWidth / 2) - font.Width) {
+			break;
+		}
+	}
+}
+
+
+void LCD::DrawStringMem(uint16_t x0, const uint16_t y0, uint16_t const memWidth, uint16_t* memBuffer, std::string_view s, const FontData& font, const uint16_t foreground, const uint16_t background)
+{
 	for (const char& c : s) {
 		DrawCharMem(x0, y0, memWidth, memBuffer, c, font, foreground, background);
-		x0 += font->Width;
+		x0 += font.Width;
+	}
+}
+
+
+void LCD::DrawStringMemCenter(uint16_t x0, const uint16_t y0, const size_t width, uint16_t* memBuffer, std::string_view s, const FontData& font, const uint16_t foreground, const uint16_t background)
+{
+	// If string width is less than width of draw buffer move x0 so that text will be centered
+	const uint32_t strWidth = std::min(font.Width * s.length(), width);
+	if (strWidth < width) {
+		x0 = (width - strWidth) / 2;
+	}
+
+	for (const char& c : s) {
+		DrawCharMem(x0, y0, width, memBuffer, c, font, foreground, background);
+		x0 += font.Width;
+		if (x0 > width - font.Width) {
+			break;
+		}
 	}
 }
 
 
 void LCD::SPISetDataSize(const SPIDataSize_t& Mode)
 {
-#ifndef STM32F722xx
 	if (Mode == SPIDataSize_16b) {
 		LCD_SPI->CR1 |= SPI_CR1_DFF;				// Data frame format: 0: 8-bit data frame format; 1: 16-bit data frame format
 	} else {
 		LCD_SPI->CR1 &= ~SPI_CR1_DFF;
 	}
-#else
-	//0111: 8-bit; 1111: 16-bit
-	if (Mode == SPIDataSize_16b) {
-		LCD_SPI->CR2 |= SPI_CR2_DS;					// Data frame format: 0: 8-bit data frame format; 1: 16-bit data frame format
-	} else {
-		LCD_SPI->CR2 &= ~SPI_CR2_DS_3;
-	}
-#endif
-
 }
 
 
@@ -344,13 +376,9 @@ inline void LCD::SPISendByte(const uint8_t data)
 	while (SPI_DMA_Working);
 
 	// check if in 16 bit mode. Data frame format: 0: 8-bit data frame format; 1: 16-bit data frame format
-#ifndef STM32F722xx
-	if (LCD_SPI->CR1 & SPI_CR1_DFF)
+	if (LCD_SPI->CR1 & SPI_CR1_DFF) {
 		SPISetDataSize(SPIDataSize_8b);
-#else
-	if (LCD_SPI->CR2 & SPI_CR2_DS_3)
-		SPISetDataSize(SPIDataSize_8b);
-#endif
+	}
 
 	uint8_t* SPI_DR = (uint8_t*)&(LCD_SPI->DR);		// cast the data register address as an 8 bit pointer - otherwise data gets packed wtih an extra byte of zeros
 	*SPI_DR = data;

@@ -8,7 +8,7 @@
 void UI::DrawUI()
 {
 	if (cfg.displayMode == DispMode::MIDI) {
-		lcd.DrawString(120, lcd.drawHeight + 8, "MIDI Events", &lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
+		lcd.DrawString(120, lcd.drawHeight + 8, "MIDI Events", lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
 		return;
 	}
 
@@ -19,12 +19,12 @@ void UI::DrawUI()
 
 	lcd.ColourFill(91, lcd.drawHeight + 2, 229, 238, RGBColour::Black);
 
-	lcd.DrawString(10, lcd.drawHeight + 8, EncoderLabel(encoderModeL), &lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
-	lcd.DrawString(240, lcd.drawHeight + 8, EncoderLabel(encoderModeR), &lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
+	lcd.DrawString(10, lcd.drawHeight + 8, EncoderLabel(encoderModeL), lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
+	lcd.DrawString(240, lcd.drawHeight + 8, EncoderLabel(encoderModeR), lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
 
 	if (cfg.displayMode == DispMode::Oscilloscope) {
 		std::string s = FloatToString(640000.0f * (TIM3->ARR + 1) / SystemCoreClock, false) + "ms    ";
-		lcd.DrawString(140, lcd.drawHeight + 8, s, &lcd.Font_Small, RGBColour::White, RGBColour::Black);
+		lcd.DrawString(140, lcd.drawHeight + 8, s, lcd.Font_Small, RGBColour::White, RGBColour::Black);
 		osc.uiRefresh = true;
 	}
 
@@ -152,9 +152,9 @@ void UI::EncoderAction(encoderType type, const int8_t& val)
 
 void UI::DrawMenu()
 {
-	lcd.DrawString(10, 6, "L", &lcd.Font_Large, RGBColour::White, RGBColour::Black);
-	lcd.DrawString(80, 6, "Encoder Action", &lcd.Font_Large, RGBColour::Orange, RGBColour::Black);
-	lcd.DrawString(303, 6, "R", &lcd.Font_Large, RGBColour::White, RGBColour::Black);
+	lcd.DrawString(10, 6, "L", lcd.Font_Large, RGBColour::White, RGBColour::Black);
+	lcd.DrawString(80, 6, "Encoder Action", lcd.Font_Large, RGBColour::Orange, RGBColour::Black);
+	lcd.DrawString(303, 6, "R", lcd.Font_Large, RGBColour::White, RGBColour::Black);
 	lcd.DrawRect(0, 1, 319, 239, RGBColour::White);
 	lcd.DrawLine(0, 27, 319, 27, RGBColour::White);
 	lcd.DrawLine(26, 1, 26, 27, RGBColour::White);
@@ -168,8 +168,8 @@ void UI::DrawMenu()
 
 	uint8_t pos = 0;
 	for (auto m = currentMenu->cbegin(); m != currentMenu->cend(); m++, pos++) {
-		lcd.DrawString(10, 32 + pos * 20, m->name, &lcd.Font_Large, (m->selected == encoderModeL) ? RGBColour::Black : RGBColour::White, (m->selected == encoderModeL) ? RGBColour::White : RGBColour::Black);
-		lcd.DrawString(170, 32 + pos * 20, m->name, &lcd.Font_Large, (m->selected == encoderModeR) ? RGBColour::Black : RGBColour::White, (m->selected == encoderModeR) ? RGBColour::White : RGBColour::Black);
+		lcd.DrawString(10, 32 + pos * 20, m->name, lcd.Font_Large, (m->selected == encoderModeL) ? RGBColour::Black : RGBColour::White, (m->selected == encoderModeL) ? RGBColour::White : RGBColour::Black);
+		lcd.DrawString(170, 32 + pos * 20, m->name, lcd.Font_Large, (m->selected == encoderModeR) ? RGBColour::Black : RGBColour::White, (m->selected == encoderModeR) ? RGBColour::White : RGBColour::Black);
 	}
 }
 

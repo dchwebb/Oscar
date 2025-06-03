@@ -43,7 +43,7 @@ void FFT::Run()
 
 		// Display frequency spread
 		lcd.DrawString(115, lcd.drawHeight + 8, ui.FloatToString(HarmonicFreq(1), true) + " - " + ui.FloatToString(HarmonicFreq(319), true) + "Hz  ",
-				&lcd.Font_Small, RGBColour::White, RGBColour::Black);
+				lcd.Font_Small, RGBColour::White, RGBColour::Black);
 
 		if (ui.cfg.displayMode == DispMode::Fourier) {
 			DisplayFFT(fftBuffer[fftBufferNumber]);
@@ -76,11 +76,7 @@ void FFT::Capture()
 	// Called from interrupt routine for each sample capture
 	if (capturing) {
 		// For FFT Mode we want a value between +- 2047
-		const uint32_t adcSummed =  cfg.channel == channelA ? adc.ChA_1 + adc.ChA_2 + adc.ChA_3 + adc.ChA_4 :
-									cfg.channel == channelB ? adc.ChB_1 + adc.ChB_2 + adc.ChB_3 + adc.ChB_4 :
-															  adc.ChC_1 + adc.ChC_2 + adc.ChC_3 + adc.ChC_4;
-
-		fftBuffer[captureBufferIndex][capturePos] = 2047.0f - (static_cast<float>(adcSummed) / 4.0f);
+		fftBuffer[captureBufferIndex][capturePos] = 2047.0f - (static_cast<float>(adc.ChannelSummed(cfg.channel)) / 4.0f);
 
 		if (++capturePos == samples) {
 			dataAvailable[captureBufferIndex] = true;
@@ -279,11 +275,11 @@ void FFT::DisplayFFT(const float* sinBuffer)
 					if (h == 0) {
 						// Draw first harmonic in larger font
 						std::string harmonicInfo = ui.FloatToString(freq, false) + "Hz";
-						lcd.DrawStringMem(0, 20, lcd.drawBufferWidth, lcd.drawBuffer[fftDrawBufferNumber], harmonicInfo, &lcd.Font_Large, RGBColour::White, RGBColour::Black);
+						lcd.DrawStringMem(0, 20, lcd.drawBufferWidth, lcd.drawBuffer[fftDrawBufferNumber], harmonicInfo, lcd.Font_Large, RGBColour::White, RGBColour::Black);
 					} else {
 						const uint16_t harmonicNumber = round(static_cast<float>(harmonic[h]) / harmonic[0]);
 						std::string harmonicInfo = ui.IntToString(harmonicNumber) + " " + ui.FloatToString(freq, false) + "Hz";
-						lcd.DrawStringMem(0, 30 + 20 * h, lcd.drawBufferWidth, lcd.drawBuffer[fftDrawBufferNumber], harmonicInfo, &lcd.Font_Small, harmColours[h], RGBColour::Black);
+						lcd.DrawStringMem(0, 30 + 20 * h, lcd.drawBufferWidth, lcd.drawBuffer[fftDrawBufferNumber], harmonicInfo, lcd.Font_Small, harmColours[h], RGBColour::Black);
 					}
 				}
 			}

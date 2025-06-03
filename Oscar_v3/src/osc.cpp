@@ -5,9 +5,9 @@
 void Osc::Capture()
 {
 	// Average the last four ADC readings to smooth noise
-	adcA = adc.ChA_1 + adc.ChA_2 + adc.ChA_3 + adc.ChA_4;
-	adcB = adc.ChB_1 + adc.ChB_2 + adc.ChB_3 + adc.ChB_4;
-	adcC = adc.ChC_1 + adc.ChC_2 + adc.ChC_3 + adc.ChC_4;
+	adcA = adc.ChannelSummed(channelA);
+	adcB = adc.ChannelSummed(channelB);
+	adcC = adc.ChannelSummed(channelC);
 
 	// check if we should start capturing - ie not drawing from the capture buffer and crossed over the trigger threshold (or in free mode)
 	if (!capturing && (!drawing || captureBufferNumber != oscBufferNumber) &&
@@ -153,17 +153,17 @@ void Osc::OscRun()
 		if (drawPos == 1) {
 			// Write voltage
 			if (oldVoltScale != cfg.voltScale || uiRefresh) {
-				lcd.DrawString(0, 1, " " + ui.IntToString(cfg.voltScale) + "v ", &lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
-				lcd.DrawString(0, lcd.drawHeight - 10, "-" + ui.IntToString(cfg.voltScale) + "v ", &lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
+				lcd.DrawString(0, 1, " " + ui.IntToString(cfg.voltScale) + "v ", lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
+				lcd.DrawString(0, lcd.drawHeight - 10, "-" + ui.IntToString(cfg.voltScale) + "v ", lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
 				oldVoltScale = cfg.voltScale;
 				uiRefresh = false;
 			}
 
 			// Write frequency
 			if (noTriggerDraw) {
-				lcd.DrawString(textOffsetRight, 1, "No Trigger " , &lcd.Font_Small, RGBColour::White, RGBColour::Black);
+				lcd.DrawString(textOffsetRight, 1, "No Trigger " , lcd.Font_Small, RGBColour::White, RGBColour::Black);
 			} else {
-				lcd.DrawString(textOffsetRight, 1, freq != 0 ? ui.FloatToString(freq, false) + "Hz    " : "          ", &lcd.Font_Small, RGBColour::White, RGBColour::Black);
+				lcd.DrawString(textOffsetRight, 1, freq != 0 ? ui.FloatToString(freq, false) + "Hz    " : "          ", lcd.Font_Small, RGBColour::White, RGBColour::Black);
 			}
 		}
 

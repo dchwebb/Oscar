@@ -37,6 +37,7 @@ private:
 	float currFreq = 0.0f;
 	uint32_t lastValid = 0;							// Store time we last saw a good signal to show 'No signal' as appropriate
 	bool convBlink = false;							// Show a flashing cursor each time a conversion has finished
+	bool noSignal = false;							// Set once no signal has been drawn (to enable efficient redraws)
 
 	// Phase Adjusted FFT settings
 	int8_t sampleRateAdj = 0;						// Used to make small adjustments to fft sample rate to avoid phase errors

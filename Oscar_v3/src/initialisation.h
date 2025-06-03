@@ -34,6 +34,11 @@ struct ADCValues {
 	uint16_t ChA_4;
 	uint16_t ChB_4;
 	uint16_t ChC_4;
+
+	uint32_t ChannelSummed(const oscChannel ch) volatile {
+		// return sum of last four readings for smoothing
+		return *(&ChA_1 + ch) + *(&ChA_2 + ch) + *(&ChA_3 + ch) + *(&ChA_4 + ch);
+	}
 };
 extern volatile ADCValues adc;
 

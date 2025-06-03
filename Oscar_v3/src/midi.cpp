@@ -125,7 +125,7 @@ void MIDIHandler::DrawEvent(const MIDIEvent& event)
 
 	const uint8_t top = drawHeight * drawIndex;
 
-	lcd.DrawString(10, top, ui.IntToString(event.channel + 1) + " ", &lcd.Font_Large, colour, RGBColour::Black);		// Print channel number
+	lcd.DrawString(10, top, ui.IntToString(event.channel + 1) + " ", lcd.Font_Large, colour, RGBColour::Black);		// Print channel number
 
 	if (event.type == NoteOn || event.type == NoteOff) {
 		// Draw rectangle - filled if note is still sounding
@@ -136,21 +136,21 @@ void MIDIHandler::DrawEvent(const MIDIEvent& event)
 			lcd.DrawRect(40, top + 1, 70, top + drawHeight - 2, colour);
 		}
 
-		lcd.DrawString(71, top, " " + NoteName(event.val1) + " ", &lcd.Font_Large, colour, RGBColour::Black);
-		lcd.DrawString(115, top, " vel ", &lcd.Font_Large, colour, RGBColour::Black);
-		lcd.DrawString(170, top, ui.IntToString(event.val2) + "   ", &lcd.Font_Large, colour, RGBColour::Black);
+		lcd.DrawString(71, top, " " + NoteName(event.val1) + " ", lcd.Font_Large, colour, RGBColour::Black);
+		lcd.DrawString(115, top, " vel ", lcd.Font_Large, colour, RGBColour::Black);
+		lcd.DrawString(170, top, ui.IntToString(event.val2) + "   ", lcd.Font_Large, colour, RGBColour::Black);
 
 	} else if (event.type == ChannelPressure) {
-		lcd.DrawString(40, top, "Aftertouch ", &lcd.Font_Large, colour, RGBColour::Black);
-		lcd.DrawString(170, top, ui.IntToString(event.val1) + "  ", &lcd.Font_Large, colour, RGBColour::Black);
+		lcd.DrawString(40, top, "Aftertouch ", lcd.Font_Large, colour, RGBColour::Black);
+		lcd.DrawString(170, top, ui.IntToString(event.val1) + "  ", lcd.Font_Large, colour, RGBColour::Black);
 
 	} else if (event.type == PitchBend) {
-		lcd.DrawString(40, top, "Pitchbend  ", &lcd.Font_Large, colour, RGBColour::Black);
-		lcd.DrawString(170, top, ui.IntToString(event.val1 + (event.val2 << 7)) + "   ", &lcd.Font_Large, colour, RGBColour::Black);
+		lcd.DrawString(40, top, "Pitchbend  ", lcd.Font_Large, colour, RGBColour::Black);
+		lcd.DrawString(170, top, ui.IntToString(event.val1 + (event.val2 << 7)) + "   ", lcd.Font_Large, colour, RGBColour::Black);
 
 	} else if (event.type == ControlChange) {
-		lcd.DrawString(40, top, "Control " + ui.IntToString(event.val1) + "  ", &lcd.Font_Large, colour, RGBColour::Black);
-		lcd.DrawString(170, top, ui.IntToString(event.val2) + "    ", &lcd.Font_Large, colour, RGBColour::Black);
+		lcd.DrawString(40, top, "Control " + ui.IntToString(event.val1) + "  ", lcd.Font_Large, colour, RGBColour::Black);
+		lcd.DrawString(170, top, ui.IntToString(event.val2) + "    ", lcd.Font_Large, colour, RGBColour::Black);
 	}
 }
 

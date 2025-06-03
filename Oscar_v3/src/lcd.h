@@ -121,11 +121,12 @@ public:
 	void DrawPixel(const uint16_t x, const uint16_t y, const RGBColour colour);
 	void DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const RGBColour colour);
 	void DrawRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, const RGBColour colour);
-	void DrawChar(uint16_t x, uint16_t y, char c, const FontData *font, const RGBColour& foreground, const RGBColour background);
-	void DrawCharMem(uint16_t x, uint16_t y, uint16_t memWidth, uint16_t* memBuffer, char c, const FontData *font, const RGBColour foreground, const RGBColour background);
-	void DrawString(uint16_t x0, const uint16_t y0, std::string_view s, const FontData *font, const RGBColour foreground, const RGBColour background);
-	void DrawStringMem(uint16_t x0, const uint16_t y0, uint16_t memWidth, uint16_t* memBuffer, std::string_view s, const FontData *font, const uint16_t foreground, const uint16_t background);
-
+	void DrawChar(uint16_t x, uint16_t y, char c, const FontData& font, const RGBColour& foreground, const RGBColour background);
+	void DrawCharMem(uint16_t x, uint16_t y, uint16_t memWidth, uint16_t* memBuffer, char c, const FontData& font, const RGBColour foreground, const RGBColour background);
+	void DrawString(uint16_t x0, const uint16_t y0, std::string_view s, const FontData& font, const RGBColour foreground, const RGBColour background);
+	void DrawStringCenter(uint32_t xCenter, const uint16_t y0, const size_t maxWidth, std::string_view s, const FontData& font, const uint16_t foreground, const uint16_t background);
+	void DrawStringMem(uint16_t x0, const uint16_t y0, uint16_t memWidth, uint16_t* memBuffer, std::string_view s, const FontData& font, const uint16_t foreground, const uint16_t background);
+	void DrawStringMemCenter(uint16_t x0, const uint16_t y0, const size_t width, uint16_t* memBuffer, std::string_view s, const FontData& font, const uint16_t foreground, const uint16_t background);
 private:
 	enum LCD_Orientation_t { LCD_Portrait, LCD_Portrait_Flipped, LCD_Landscape, LCD_Landscape_Flipped } ;
 	enum SPIDataSize_t { SPIDataSize_8b, SPIDataSize_16b };			// SPI in 8-bits mode/16-bits mode

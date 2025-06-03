@@ -6,9 +6,7 @@ extern  std::array<float, FFT::sinLUTSize> sineLUT;
 
 void Tuner::Capture()
 {
-	const uint32_t adcSummed =  fft.cfg.channel == channelA ? adc.ChA_1 + adc.ChA_2 + adc.ChA_3 + adc.ChA_4  :
-								fft.cfg.channel == channelB ? adc.ChB_1 + adc.ChB_2 + adc.ChB_3 + adc.ChB_4 :
-															  adc.ChC_1 + adc.ChC_2 + adc.ChC_3 + adc.ChC_4;
+	const uint32_t adcSummed = adc.ChannelSummed(fft.cfg.channel);
 
 	if (cfg.mode == FFT) {
 		float* floatBuffer = (float*)&(fft.fftBuffer);
@@ -50,6 +48,8 @@ void Tuner::Capture()
 
 void Tuner::Activate(bool startTimer)
 {
+	debugPin.SetLow();
+
 	if (cfg.mode == FFT) {
 		if (currFreq > 800.0f) {
 			SetSampleTimer((FFT::timerDefault / 2) + sampleRateAdj);
@@ -59,8 +59,7 @@ void Tuner::Activate(bool startTimer)
 			SetSampleTimer(FFT::timerDefault + sampleRateAdj);
 		}
 	} else {
-		// Get current value of ADC (assume channel A for now)
-		const uint32_t currVal = adc.ChA_1 + adc.ChA_2 + adc.ChA_3 + adc.ChA_4;
+		const uint32_t currVal = adc.ChannelSummed(fft.cfg.channel);
 		overZero = currVal > osc.calibZeroPos;
 		timer = 0;
 		SetSampleTimer(zeroCrossRate);
@@ -142,7 +141,7 @@ void Tuner::ClearOverlay()
 void Tuner::Run()
 {
 	if (samplesReady) {
-
+		debugPin.SetHigh();
 
 		float frequency = 0.0f;
 		const uint32_t start = SysTickVal;
@@ -231,7 +230,7 @@ void Tuner::Run()
 
 		} else {
 			// Zero crossing mode
-			if (bufferPos == zeroCrossings.size()) {						// Check that a signal was found
+			if (bufferPos == zeroCrossings.size()) {					// Check that a signal was found
 
 				float diff = zeroCrossings[1] - zeroCrossings[0];		// Get first time difference between zero crossings
 				uint32_t stride = 1;									// Allow pitch detection where multiple zero crossings in cycle
@@ -264,6 +263,11 @@ void Tuner::Run()
 		}
 
 		if (frequency > 16.35f) {
+			if (noSignal) {
+				lcd.ColourFill(0, 35, lcd.drawWidth - 1, 35 + lcd.Font_XLarge.Height, RGBColour::Black);		// Clear no signal text
+				noSignal = false;
+			}
+
 			// if value is close apply some damping; otherwise just use new value
 			if (std::abs(frequency - currFreq) / frequency < 0.04f) {
 				currFreq = 0.7f * currFreq + 0.3f * frequency;
@@ -276,37 +280,38 @@ void Tuner::Run()
 			const std::string noteNames[12] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
 			constexpr float numRecip = 1.0f / log(pow(2.0f, 1.0f / 12.0f));		// Store reciprocal to avoid division
 			constexpr float logBase = log(16.35160f);
-			float note = (log(currFreq) - logBase) * numRecip;
+			const float note = (log(currFreq) - logBase) * numRecip;
 			const uint32_t pitch = std::lround(note) % 12;
 			const uint32_t octave = std::lround(note) / 12;
 			const int32_t centDiff = static_cast<int32_t>(100.0f * (note - std::round(note)));
 
 			// Draw note name and octave with cent error to the left (-) or right (+)
-			lcd.DrawString(30, 35, centDiff < 0 ? ui.IntToString(centDiff) + "   ": "     ", &lcd.Font_XLarge, RGBColour::White, RGBColour::Black);
-			lcd.DrawString(110, 35, noteNames[pitch] + ui.IntToString(octave) + "  ", &lcd.Font_XLarge, RGBColour::White, RGBColour::Black);
-			lcd.DrawString(170, 35, centDiff > 0 ? "+" + ui.IntToString(centDiff) + " ": "    ", &lcd.Font_XLarge, RGBColour::White, RGBColour::Black);
+			lcd.DrawStringCenter(60, 35, 48, centDiff < 0 ? ui.IntToString(centDiff): " ", lcd.Font_XLarge, RGBColour::White, RGBColour::Black);
+			lcd.DrawStringCenter(160, 35, 48, noteNames[pitch] + ui.IntToString(octave), lcd.Font_XLarge, RGBColour::White, RGBColour::Black);
+			lcd.DrawStringCenter(260, 35, 48, centDiff > 0 ? "+" + ui.IntToString(centDiff): " ", lcd.Font_XLarge, RGBColour::White, RGBColour::Black);
 
 			const uint16_t hertzColour = fft.cfg.channel == channelA ? RGBColour::Green : fft.cfg.channel == channelB ? RGBColour::LightBlue : RGBColour::Orange;
-			lcd.DrawString(80, 85, ui.FloatToString(currFreq, false) + "Hz    ", &lcd.Font_XLarge, hertzColour, RGBColour::Black);
+			lcd.DrawStringCenter(160, 85, 128, ui.FloatToString(currFreq, false) + "Hz", lcd.Font_XLarge, hertzColour, RGBColour::Black);
 
+			// Blink each time conversion finished
 			convBlink = !convBlink;
 			lcd.ColourFill(300, 5, 305, 10, convBlink ? hertzColour : RGBColour::Black);
 
 			// Debug timing
-			//lcd.DrawString(10, 180, ui.IntToString(SysTickVal - start) + "ms   ", &lcd.Font_Large, RGBColour::Grey, RGBColour::Black);
-			lcd.DrawString(140, lcd.drawHeight + 8, ui.IntToString(SysTickVal - start) + "ms   ", &lcd.Font_Small, RGBColour::White, RGBColour::Black);
+			lcd.DrawString(140, lcd.drawHeight + 8, ui.IntToString(SysTickVal - start) + "ms   ", lcd.Font_Small, RGBColour::White, RGBColour::Black);
 
 			lastValid = SysTickVal;
 
-		} else if (SysTickVal - lastValid > 4000) {
-			lcd.DrawString(30, 35, "  No Signal    ", &lcd.Font_XLarge, RGBColour::Grey, RGBColour::Black);
-			lcd.DrawString(80, 85, ui.FloatToString(currFreq, false) + "Hz    ", &lcd.Font_XLarge, RGBColour::Grey, RGBColour::Black);
+		} else if (!noSignal && SysTickVal - lastValid > 4000) {
+			lcd.DrawStringCenter(160, 35, 250, "No Signal", lcd.Font_XLarge, RGBColour::Grey, RGBColour::Black);
+			lcd.DrawStringCenter(160, 85, 128, ui.FloatToString(currFreq, false) + "Hz", lcd.Font_XLarge, RGBColour::Grey, RGBColour::Black);
+			noSignal = true;
 		}
 
 		// Draw overlay here whilst next data is being captured
 		if (cfg.traceOverlay) {
 			while (SPI_DMA_Working);
-			lcd.PatternFill(0, 108 + 1, lcd.drawWidth - 1, lcd.drawHeight, &lcd.drawBuffer[0][0]);
+			lcd.PatternFill(0, 108 + 1, lcd.drawWidth - 1, lcd.drawHeight, &lcd.drawBuffer[0][0]);		// draw size buffer is 34560
 		}
 
 		Activate(true);
