@@ -71,6 +71,10 @@ private:
 	SamplePos VertOffsets(uint16_t offsetX);
 	void FreqCalc(const uint16_t offsetX);
 
+	static constexpr uint32_t textOffsetTop = 11;			// 11 offset for voltage and frequency written at top of screen
+	static constexpr uint32_t textOffsetLeft = 27;			// 27 offset for voltage at left of screen
+	static constexpr uint32_t textOffsetRight = 250;		// offset for frequency at right of screen
+
 	uint8_t drawBufferNumber = 0;
 	int8_t oldVoltScale = 0;						// To limit redraws of voltage information
 

@@ -103,8 +103,8 @@ void Osc::OscRun()
 		const std::pair<uint16_t, uint16_t> BY = std::minmax(currentPos.pos[Channel::B], prevPixel.pos[Channel::B]);
 		const std::pair<uint16_t, uint16_t> CY = std::minmax(currentPos.pos[Channel::C], prevPixel.pos[Channel::C]);
 
-		const uint8_t vOffset = (drawPos < 27 || drawPos > 250) ? 11 : 0;		// offset draw area so as not to overwrite voltage and freq labels
-		for (uint8_t h = vOffset; h <= lcd.drawHeight - (drawPos < 27 ? 12 : 0); ++h) {
+		const uint8_t vOffset = (drawPos < textOffsetLeft || drawPos > textOffsetRight) ? textOffsetTop : 0;		// offset draw area so as not to overwrite voltage and freq labels
+		for (uint8_t h = vOffset; h <= lcd.drawHeight - (drawPos < textOffsetLeft ? textOffsetTop + 1 : 0); ++h) {
 
 			if (cfg.oscDisplay & 1 && h >= AY.first && h <= AY.second) {
 				lcd.drawBuffer[drawBufferNumber][h - vOffset] = RGBColour::Green;
@@ -122,14 +122,14 @@ void Osc::OscRun()
 		// Draw grey lines indicating voltage range for one channel or channel divisions for 2 or 3 channels
 		if (drawPos < 5) {
 			for (int m = 1; m < (laneCount == 1 ? cfg.voltScale * 2 : (laneCount * 2)); ++m) {
-				int vPos = m * lcd.drawHeight / (laneCount == 1 ? cfg.voltScale * 2 : (laneCount * 2)) - 11;
+				int vPos = m * lcd.drawHeight / (laneCount == 1 ? cfg.voltScale * 2 : (laneCount * 2)) - textOffsetTop;
 				if (vPos > 0) {
 					lcd.drawBuffer[drawBufferNumber][vPos] = RGBColour::Grey;
 				}
 			}
 		}
 
-		lcd.PatternFill(drawPos, vOffset, drawPos, lcd.drawHeight - (drawPos < 27 ? 12 : 0), lcd.drawBuffer[drawBufferNumber]);
+		lcd.PatternFill(drawPos, vOffset, drawPos, lcd.drawHeight - (drawPos < textOffsetLeft ? textOffsetTop + 1 : 0), lcd.drawBuffer[drawBufferNumber]);
 		drawBufferNumber = drawBufferNumber == 0 ? 1 : 0;
 
 		prevPixel = currentPos;			// Store previous sample so next sample can be drawn as a line from old to new
@@ -161,9 +161,9 @@ void Osc::OscRun()
 
 			// Write frequency
 			if (noTriggerDraw) {
-				lcd.DrawString(250, 1, "No Trigger " , &lcd.Font_Small, RGBColour::White, RGBColour::Black);
+				lcd.DrawString(textOffsetRight, 1, "No Trigger " , &lcd.Font_Small, RGBColour::White, RGBColour::Black);
 			} else {
-				lcd.DrawString(250, 1, freq != 0 ? ui.FloatToString(freq, false) + "Hz    " : "          ", &lcd.Font_Small, RGBColour::White, RGBColour::Black);
+				lcd.DrawString(textOffsetRight, 1, freq != 0 ? ui.FloatToString(freq, false) + "Hz    " : "          ", &lcd.Font_Small, RGBColour::White, RGBColour::Black);
 			}
 		}
 
