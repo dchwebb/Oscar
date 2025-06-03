@@ -77,6 +77,7 @@ private:
 
 	uint8_t drawBufferNumber = 0;
 	int8_t oldVoltScale = 0;						// To limit redraws of voltage information
+	bool drawnVoltage = false;
 
 	float freq;										// Holds frequency of current capture based on zero crossings
 	bool freqBelowZero;
