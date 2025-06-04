@@ -1,9 +1,9 @@
+#include <MidiEvents.h>
 #include "initialisation.h"
 #include "configManager.h"
 #include "ui.h"
 #include "lcd.h"
 #include "fft.h"
-#include "midi.h"
 #include "osc.h"
 #include "tuner.h"
 #include "USB.h"
@@ -55,7 +55,7 @@ int main(void)
 		} else if (ui.cfg.displayMode == DispMode::Fourier || ui.cfg.displayMode == DispMode::Waterfall) {
 			fft.Run();
 		} else if (ui.cfg.displayMode == DispMode::MIDI) {
-			midi.ProcessMidi();
+			midiEvents.ProcessMidi();
 		}
 
 	}

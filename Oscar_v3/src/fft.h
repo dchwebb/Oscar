@@ -8,7 +8,7 @@
 class Tuner;
 
 class FFT {
-	friend class Tuner;
+	friend class Tuner;									// Tuner uses FFT calculation functions and data buffer
 
 public:
 
@@ -74,7 +74,7 @@ private:
 	void DisplayFFT(const float* candSin);
 	void DisplayWaterfall(const float* sinBuffer);
 	float HarmonicFreq(const float harmonicNumber);
-	void readyCapture(bool clearBuffer);
+	void ReadyCapture(bool clearBuffer);				// Starts new fft sample capture when ready
 
 public:
 	constexpr auto CreateSinLUT()						// constexpr function to generate LUT in Flash

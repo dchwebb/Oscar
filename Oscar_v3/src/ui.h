@@ -34,7 +34,7 @@ private:
 	void DrawMenu();
 	void MenuAction(encoderType* et, volatile const int8_t& val);
 	void EncoderAction(encoderType type, const int8_t& val);
-	std::string EncoderLabel(encoderType type);
+	std::string_view EncoderLabel(encoderType type);
 
 	encoderType encoderModeL, encoderModeR;
 

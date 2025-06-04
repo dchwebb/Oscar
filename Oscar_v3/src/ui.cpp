@@ -321,7 +321,7 @@ void UI::ResetMode()
 }
 
 
-std::string UI::EncoderLabel(encoderType type)
+std::string_view UI::EncoderLabel(encoderType type)
 {
 	switch (type) {
 	case HorizScale :

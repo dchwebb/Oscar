@@ -30,7 +30,7 @@ void FFT::Activate()
 void FFT::Run()
 {
 	// Carry out Fast fourier transform
-	readyCapture(false);									// checks if ready to start new capture
+	ReadyCapture(false);									// checks if ready to start new capture
 
 	if (dataAvailable[0] || dataAvailable[1]) {
 		debugPin.SetHigh();
@@ -55,8 +55,7 @@ void FFT::Run()
 }
 
 
-
-void FFT::readyCapture(const bool clearBuffer)
+void FFT::ReadyCapture(const bool clearBuffer)
 {
 	// Starts new fft sample capture when ready
 	if (clearBuffer) {
@@ -263,7 +262,7 @@ void FFT::DisplayFFT(const float* sinBuffer)
 
 			// if drawing the last buffer display the harmonic frequencies at the top right
 			if (i > lcd.drawWidth - lcd.drawBufferWidth) {
-				readyCapture(true);			// Signal to Interrupt that new capture can start
+				ReadyCapture(true);			// Signal to Interrupt that new capture can start
 
 				for (uint8_t h = 0; h < fftHarmonicColours; ++h) {
 					if (harmonic[h] == 0) {
@@ -322,7 +321,6 @@ void FFT::DisplayFFT(const float* sinBuffer)
 float FFT::HarmonicFreq(const float harmonicNumber)
 {
 	return samplingFrequency * harmonicNumber / fftSamples;
-	//return static_cast<float>(SystemCoreClock) * harmonicNumber / (2.0f * fftSamples * (TIM3->ARR + 1));
 }
 
 
@@ -373,7 +371,7 @@ void FFT::DisplayWaterfall(const float* sinBuffer)
 
 	}
 
-	readyCapture(true);			// Signal to Interrupt that new capture can start
+	ReadyCapture(true);			// Signal to Interrupt that new capture can start
 
 	waterfallBuffer = (waterfallBuffer + 1) % waterfallBuffers;
 

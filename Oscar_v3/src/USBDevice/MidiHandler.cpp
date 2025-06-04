@@ -1,6 +1,6 @@
+#include <MidiEvents.h>
 #include "MidiHandler.h"
 #include "USB.h"
-#include "Midi.h"
 
 void MidiHandler::SendData(uint8_t* buffer, uint32_t size)
 {
@@ -16,8 +16,11 @@ void MidiHandler::DataOut()
 {
 	// Handle incoming midi command here
 	for (uint32_t i = 0; i < outBuffCount; ++i) {
-		midi.queue[midi.queueWrite++] = outBuff[i]; 			// accessing DR automatically resets the receive flag
-		midi.queueWrite = (midi.queueWrite + 1) % midi.queueSize;
+		uint8_t* buffBytes = (uint8_t*)outBuff;							// outBuff is uint32_t - need it as bytes
+		midiEvents.QueueAdd(buffBytes[i]);
+//		midiEvents.queue[midiEvents.queueWrite] = buffBytes[i];
+//		midiEvents.queueCount++;
+//		midiEvents.queueWrite = (midiEvents.queueWrite + 1) % midiEvents.queueSize;
 	}
 
 }

@@ -4,9 +4,10 @@
 #include <lcd.h>
 
 
-class MIDIHandler {
+class MidiEvents {
 public:
 	void ProcessMidi();
+	void QueueAdd(uint8_t data);	// Adds a b
 
 	//	Variables used by interrupt routine to insert raw MIDI events into processing queue
 	static constexpr uint8_t queueSize = 200;
@@ -44,4 +45,4 @@ private:
 	std::string NoteName(const uint8_t note);
 };
 
-extern MIDIHandler midi;
+extern MidiEvents midiEvents;

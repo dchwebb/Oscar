@@ -1,9 +1,9 @@
-#include <midi.h>
+#include <MidiEvents.h>
 #include <ui.h>
 
-MIDIHandler midi;
+MidiEvents midiEvents;
 
-void MIDIHandler::ProcessMidi()
+void MidiEvents::ProcessMidi()
 {
 	++timer;
 
@@ -111,14 +111,22 @@ void MIDIHandler::ProcessMidi()
 }
 
 
-inline void MIDIHandler::QueueInc()
+inline void MidiEvents::QueueInc()
 {
 	queueCount--;
 	queueRead = (queueRead + 1) % queueSize;
 }
 
 
-void MIDIHandler::DrawEvent(const MIDIEvent& event)
+void MidiEvents::QueueAdd(uint8_t data)
+{
+	// Adds a byte to the MIDI event queue
+	queue[queueWrite] = data;
+	queueCount++;
+	queueWrite = (queueWrite + 1) % queueSize;
+}
+
+void MidiEvents::DrawEvent(const MIDIEvent& event)
 {
 	// Darken colour based on age of event
 	const RGBColour colour = RGBColour(MIDIColours[event.channel]).DarkenColour((timer - event.time) >> 7);
@@ -155,7 +163,7 @@ void MIDIHandler::DrawEvent(const MIDIEvent& event)
 }
 
 
-std::string MIDIHandler::NoteName(const uint8_t n)
+std::string MidiEvents::NoteName(const uint8_t n)
 {
 	static const std::string pitches[] = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
 

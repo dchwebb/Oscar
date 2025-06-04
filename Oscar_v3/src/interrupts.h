@@ -17,9 +17,7 @@ void UART4_IRQHandler()
 {
 	// MIDI UART Decoder
 	if (UART4->SR | USART_SR_RXNE) {
-		midi.queue[midi.queueWrite] = UART4->DR; 			// accessing DR automatically resets the receive flag
-		midi.queueCount++;
-		midi.queueWrite = (midi.queueWrite + 1) % midi.queueSize;
+		midiEvents.QueueAdd(UART4->DR); 			// accessing DR automatically resets the receive flag
 	}
 }
 
