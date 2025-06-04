@@ -41,7 +41,7 @@ void Tuner::Capture()
 	}
 
 	if (samplesReady) {
-		TIM3->CR1 &= ~TIM_CR1_CEN;					// Disable the sample acquisiton timer
+		RunSampleTimer(false);					// Disable the sample acquisiton timer
 	}
 }
 
@@ -69,12 +69,12 @@ void Tuner::Activate(bool startTimer)
 	samplesReady = false;
 
 	if (startTimer) {
-		TIM3->CR1 |= TIM_CR1_CEN;
+		RunSampleTimer(true);					// Enable the sample acquisiton timer
 	}
 }
 
 
-std::pair<float, float> Tuner::FFTSingleBin(uint32_t bin)
+Tuner::polarPair Tuner::FFTSingleBin(uint32_t bin)
 {
 	// Note this works pretty well but (probably due to rounding) gives slightly different answers to a full FFT
 	float c = 0.0f;
@@ -84,14 +84,14 @@ std::pair<float, float> Tuner::FFTSingleBin(uint32_t bin)
 		s += fft.fftBuffer[1][i] * fft.sinLUTExt[(i * bin) % FFT::sinLUTSize];
 	}
 
-	return std::make_pair(c, s);
+	return {c, s};
 }
 
 
 void Tuner::DrawOverlay()
 {
 	// Draw oscilloscope trace at bottom of tuner display
-	const float trigger = 2047.0f - (static_cast<float>(osc.cfg.triggerY) / 4.0f);		// Normalise oscillator trigger to stored sample amplitude
+	const float trigger = 2047.0f - (static_cast<float>(osc.cfg.triggerY) / 4.0f);	// Normalise oscillator trigger to stored sample amplitude
 	uint16_t start = 0;																// First sample where tigger activated
 	float lastPoint = fft.fftBuffer[0][0];
 

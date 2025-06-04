@@ -55,6 +55,7 @@ void InitLCDHardware(void);
 void InitADC(void);
 void InitSampleAcquisition();
 void SetSampleTimer(uint32_t val);
+void RunSampleTimer(bool on);
 void InitEncoders();
 void InitMIDIUART();
 void DelayMS(uint32_t ms);

@@ -224,6 +224,12 @@ void SetSampleTimer(uint32_t val)
 }
 
 
+void RunSampleTimer(bool on)
+{
+	if (on) 	TIM3->CR1 |= TIM_CR1_CEN;
+	else		TIM3->CR1 &= ~TIM_CR1_CEN;
+}
+
 void InitEncoders()
 {
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;			// Enable system configuration clock: used to manage external interrupt line connection to GPIOs

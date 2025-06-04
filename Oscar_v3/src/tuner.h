@@ -13,10 +13,9 @@ public:
 	void Run();										// Processes samples once collected
 	void ClearOverlay();
 
-
 	struct Config {
 		encoderType encModeL = VoltScale;
-		encoderType encModeR = ActiveChannel;
+		encoderType encModeR = TunerMode;
 		tunerMode mode = FFT;
 		bool traceOverlay = true;					// Display trace overlaid on tuner display
 	} cfg;
@@ -28,7 +27,12 @@ public:
 	};
 
 private:
-	std::pair<float, float> FFTSingleBin(uint32_t bin);		// Calculates FFT of a single frequency bin
+	struct polarPair {
+		float sin;
+		float cos;
+	};
+
+	polarPair FFTSingleBin(uint32_t bin);			// Calculates FFT of a single frequency bin
 	void DrawOverlay();
 	uint32_t OverlayVPos(float sample);
 

@@ -278,7 +278,7 @@ void UI::handleEncoders()
 
 void UI::ResetMode()
 {
-	TIM3->CR1 &= ~TIM_CR1_CEN;				// Disable the sample acquisiton timer
+	RunSampleTimer(false);					// Disable the sample acquisiton timer
 	UART4->CR1 &= ~USART_CR1_UE;			// Disable MIDI capture on UART4
 
 	lcd.ScreenFill(RGBColour::Black);
@@ -316,7 +316,7 @@ void UI::ResetMode()
 	if (cfg.displayMode == DispMode::MIDI) {
 		UART4->CR1 |= USART_CR1_UE;			// Enable MIDI capture
 	} else {
-		TIM3->CR1 |= TIM_CR1_CEN;			// Reenable the sample acquisiton timer
+		RunSampleTimer(true);				// Reenable the sample acquisiton timer
 	}
 }
 
