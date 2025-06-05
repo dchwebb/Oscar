@@ -7,97 +7,110 @@ void MidiEvents::ProcessMidi()
 {
 	++timer;
 
-	if (queueCount > 0) {
-		bool edited = false;
-		uint8_t val1, val2;
+	for (uint32_t source = 0; source < 2; ++source) {
+		if (queueCount[source] > 0) {
+			bool edited = false;
+			uint8_t val1, val2;
 
-		MIDIType type = static_cast<MIDIType>(queue[queueRead] >> 4);
-		uint8_t channel = queue[queueRead] & 0x0F;
+			MIDIType type = static_cast<MIDIType>(queue[source][queueRead[source]] >> 4);
+			uint8_t channel = queue[source][queueRead[source]] & 0x0F;
 
-		//NoteOn = 0x9, NoteOff = 0x8, PolyPressure = 0xA, ControlChange = 0xB, ProgramChange = 0xC, ChannelPressure = 0xD, PitchBend = 0xE, System = 0xF
-		while ((queueCount > 2 && (type == NoteOn || type == NoteOff || type == PolyPressure ||  type == ControlChange ||  type == PitchBend)) ||
-				(queueCount > 1 && (type == ProgramChange || type == ChannelPressure))) {
+			//NoteOn = 0x9, NoteOff = 0x8, PolyPressure = 0xA, ControlChange = 0xB, ProgramChange = 0xC, ChannelPressure = 0xD, PitchBend = 0xE, System = 0xF
+			while ((queueCount[source] > 2 && (type == NoteOn || type == NoteOff || type == PolyPressure || type == ControlChange || type == PitchBend)) ||
+					(queueCount[source] > 1 && (type == ProgramChange || type == ChannelPressure))) {
 
-			QueueInc();
-			val1 = queue[queueRead];
-			QueueInc();
-			if (type == ProgramChange || type == ChannelPressure) {
-				val2 = 0;
-			} else {
-				val2 = queue[queueRead];
-				QueueInc();
-			}
+				QueueInc(source);
+				val1 = queue[source][queueRead[source]];
+				QueueInc(source);
+				if (type == ProgramChange || type == ChannelPressure) {
+					val2 = 0;
+				} else {
+					val2 = queue[source][queueRead[source]];
+					QueueInc(source);
+				}
 
 
-			//	For more efficient display overwrite last event if the type is the same but the value (or note off) has changed
-			if (eventCount > 0) {
+				//	For more efficient display overwrite last event if the type is the same but the value (or note off) has changed
+				if (eventCount > 0) {
+					// Handle note off
+					if (type == NoteOff) {
+						for (auto& event : midiEvents) {
+							if (event.type == NoteOn && event.val1 == val1 && event.channel == channel && event.source == source) {
+								event.type = NoteOff;
+								event.time = timer;
+								edited = true;
+							}
+						}
 
-				// Handle note off
-				if (type == NoteOff) {
-					for (auto& me : midiEvents) {
-						if (me.type == NoteOn && me.val1 == val1 && me.channel == channel) {
-							me.type = NoteOff;
-							me.time = timer;
+					} else {
+						// Overwrite latest event in case of repeated control, pitchbend or aftertouch messages
+
+						// If event from different source go to next in list in case events are interleaved from different sources
+						uint32_t eventIndex = eventTail;
+						if (midiEvents[eventTail].source != source) {
+							--eventIndex;
+							if (eventIndex > eventSize)	eventIndex = eventSize;		// uint will wrap to max int value
+						}
+
+						auto& event = midiEvents[eventIndex];
+
+						if (event.channel == channel && event.source == source && type == event.type &&
+								((type == ControlChange && event.val1 == val1) || type == PitchBend || type == ChannelPressure)) {
+							event.type = type;
+							event.time = timer;
+							event.val1 = val1;
+							event.val2 = val2;
 							edited = true;
+
+
 						}
 					}
+				}
 
-				} else {
-					auto& event = midiEvents[eventTail];
-
-					if (event.channel == channel && (type == event.type) &&
-							( (type == ControlChange && event.val1 == val1) || type == PitchBend || type == ChannelPressure)) {
-						event.type = type;
-						event.time = timer;
-						event.val1 = val1;
-						event.val2 = val2;
-						edited = true;
+				// MIDI event has not been used to update existing entry - add to circular buffer
+				if (!edited) {
+					if (++eventTail > eventSize - 1) {
+						eventTail = 0;
 					}
+					if (eventCount < eventSize) {		// Once the circular buffer is full each new event will overwrite the oldest
+						++eventCount;
+					}
+					midiEvents[eventTail] = {timer, type, channel, val1, val2, (QueueType)source};
 				}
+
+				type = static_cast<MIDIType>(queue[source][queueRead[source]] >> 4);
+				channel = queue[source][queueRead[source]] & 0x0F;
 			}
 
-			// MIDI event has not been used to update existing entry - add to circular buffer
-			if (!edited) {
-				if (++eventTail > eventSize - 1) {
-					eventTail = 0;
+			// Clock
+			while (queueCount[source] > 0 && queue[source][queueRead[source]] == 0xF8) {
+				clockCount[source]++;
+				// MIDI clock triggers at 24 pulses per quarter note
+				if (clockCount[source] == 6) {
+					clock[source] = SysTickVal;
+					clockCount[source] = 0;
 				}
-				if (eventCount < eventSize) {		// Once the circular buffer is full each new event will overwrite the oldest
-					++eventCount;
-				}
-				midiEvents[eventTail] = {timer, type, channel, val1, val2};
+				QueueInc(source);
+				type = static_cast<MIDIType>(queue[source][queueRead[source]] >> 4);
 			}
 
-			type = static_cast<MIDIType>(queue[queueRead] >> 4);
-			channel = queue[queueRead] & 0x0F;
-		}
-
-		// Clock
-		while (queueCount > 0 && queue[queueRead] == 0xF8) {
-			clockCount++;
-			// MIDI clock triggers at 24 pulses per quarter note
-			if (clockCount == 6) {
-				clock = SysTickVal;
-				clockCount = 0;
+			//	handle unknown data in queue
+			if (queueCount[source] > 2 && type != 0x9 && type != 0x8 && type != 0xD && type != 0xE) {
+				QueueInc(source);
 			}
-			QueueInc();
-			type = static_cast<MIDIType>(queue[queueRead] >> 4);
 		}
 
-		//	handle unknown data in queue
-		if (queueCount > 2 && type != 0x9 && type != 0x8 && type != 0xD && type != 0xE) {
-			QueueInc();
+		// Draw clock
+		const uint32_t offset = (source == QueueType::Serial) ? 300 : 20;
+		if (clock[source] > 0 && SysTickVal - clock[source] < 50) {
+			lcd.ColourFill(offset, 230, 5 + offset, 235, RGBColour::White);
+		} else {
+			lcd.ColourFill(offset, 230, 5 + offset, 235, RGBColour::Black);
 		}
+
 	}
-
-	// Draw clock
-	if (clock > 0 && SysTickVal - clock < 200) {
-		lcd.ColourFill(300, 230, 305, 235, RGBColour::White);
-	} else {
-		lcd.ColourFill(300, 230, 305, 235, RGBColour::Black);
-	}
-
 	// Draw midi events one at a time, each time queue is processed
-	if (queueCount < 10 && eventCount > 0) {
+	if (queueCount[QueueType::Serial] + queueCount[QueueType::USB] < 10 && eventCount > 0) {
 		if (drawIndex >= eventCount) {
 			drawIndex = 0;
 		}
@@ -111,29 +124,31 @@ void MidiEvents::ProcessMidi()
 }
 
 
-inline void MidiEvents::QueueInc()
+inline void MidiEvents::QueueInc(uint32_t type)
 {
-	queueCount--;
-	queueRead = (queueRead + 1) % queueSize;
+	queueCount[type]--;
+	if (++queueRead[type] == queueSize) queueRead[type] = 0;
 }
 
 
-void MidiEvents::QueueAdd(uint8_t data)
+void MidiEvents::QueueAdd(QueueType source, uint8_t data)
 {
 	// Adds a byte to the MIDI event queue
-	queue[queueWrite] = data;
-	queueCount++;
-	queueWrite = (queueWrite + 1) % queueSize;
+	queue[source][queueWrite[source]] = data;
+	queueCount[source]++;
+	if (++queueWrite[source] == queueSize) queueWrite[source] = 0;
 }
+
 
 void MidiEvents::DrawEvent(const MIDIEvent& event)
 {
 	// Darken colour based on age of event
 	const RGBColour colour = RGBColour(MIDIColours[event.channel]).DarkenColour((timer - event.time) >> 7);
 
-	const uint8_t top = drawHeight * drawIndex;
+	const uint8_t top = 5 + drawHeight * drawIndex;
 
 	lcd.DrawString(10, top, ui.IntToString(event.channel + 1) + " ", lcd.Font_Large, colour, RGBColour::Black);		// Print channel number
+	lcd.DrawString(260, top, event.source == QueueType::USB ? "USB" : "   ", lcd.Font_Large, colour, RGBColour::Black);		// Print event source
 
 	if (event.type == NoteOn || event.type == NoteOff) {
 		// Draw rectangle - filled if note is still sounding

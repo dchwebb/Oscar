@@ -17,7 +17,7 @@ void UART4_IRQHandler()
 {
 	// MIDI UART Decoder
 	if (UART4->SR | USART_SR_RXNE) {
-		midiEvents.QueueAdd(UART4->DR); 			// accessing DR automatically resets the receive flag
+		midiEvents.QueueAdd(MidiEvents::QueueType::Serial, UART4->DR); 			// accessing DR automatically resets the receive flag
 	}
 }
 

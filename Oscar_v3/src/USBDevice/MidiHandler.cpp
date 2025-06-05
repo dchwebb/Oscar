@@ -17,10 +17,7 @@ void MidiHandler::DataOut()
 	// Handle incoming midi command here
 	for (uint32_t i = 0; i < outBuffCount; ++i) {
 		uint8_t* buffBytes = (uint8_t*)outBuff;							// outBuff is uint32_t - need it as bytes
-		midiEvents.QueueAdd(buffBytes[i]);
-//		midiEvents.queue[midiEvents.queueWrite] = buffBytes[i];
-//		midiEvents.queueCount++;
-//		midiEvents.queueWrite = (midiEvents.queueWrite + 1) % midiEvents.queueSize;
+		midiEvents.QueueAdd(MidiEvents::QueueType::USB, buffBytes[i]);
 	}
 
 }
