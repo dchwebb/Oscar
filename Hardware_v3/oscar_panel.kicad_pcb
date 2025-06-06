@@ -3584,7 +3584,7 @@
 	)
 	(gr_poly
 		(pts
-			(xy 160 90) (xy 163 93) (xy 160 96)
+			(xy 160 89) (xy 163 92) (xy 160 95)
 		)
 		(stroke
 			(width 0.1)
@@ -3814,7 +3814,7 @@
 		(layer "Edge.Cuts")
 		(uuid "b265edaf-1b65-467b-bf4b-1b855d280893")
 	)
-	(gr_text "OSCAR Panel v3"
+	(gr_text "OSCAR Panel v3.1"
 		(at 135 38.3 0)
 		(layer "B.SilkS")
 		(uuid "00000000-0000-0000-0000-00005d7a498f")

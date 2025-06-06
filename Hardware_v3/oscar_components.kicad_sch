@@ -7,6 +7,7 @@
 	(title_block
 		(title "Oscar")
 		(date "2025-04-03")
+		(rev "v3")
 		(company "Mountjoy Modular")
 	)
 	(lib_symbols
