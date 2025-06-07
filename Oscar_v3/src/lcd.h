@@ -101,8 +101,8 @@ struct FontData {
 
 class LCD {
 public:
-	uint16_t width = 240;
-	uint16_t height = 320;
+	uint16_t width = 320;
+	uint16_t height = 240;
 
 	static constexpr uint16_t drawWidth = 320;
 	static constexpr uint16_t drawHeight = 216;

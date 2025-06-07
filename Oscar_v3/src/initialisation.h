@@ -15,9 +15,6 @@ static constexpr uint32_t sysTickInterval = 1000;
 #define MINSAMPLETIMER 200
 extern float samplingFrequency;
 
-enum encoderType { HorizScale, HorizScaleFine, CalibVertScale, CalibVertOffset, VertScale, TriggerChannel, Trigger_X, Trigger_Y,
-	FFTAutoTune, ActiveChannel, MultiLane, TraceOverlay, TunerMode };
-
 enum class DispMode { Oscilloscope, Tuner, Fourier, Waterfall, MIDI };
 enum oscChannel {channelA = 0, channelB = 1, channelC = 2, channelNone = 3};
 

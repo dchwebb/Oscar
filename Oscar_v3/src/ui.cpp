@@ -43,7 +43,7 @@ void UI::DrawUI()
 }
 
 
-void UI::MenuAction(encoderType* et, volatile const int8_t& val)
+void UI::MenuAction(EncoderType* et, volatile const int8_t& val)
 {
 	const std::vector<MenuItem>* currentMenu =
 			cfg.displayMode == DispMode::Tuner ? &tunerMenu :
@@ -72,7 +72,17 @@ void UI::MenuAction(encoderType* et, volatile const int8_t& val)
 }
 
 
-void UI::EncoderAction(encoderType type, const int8_t& val)
+void UI::SysMenuAction(int8_t v, bool setPosition)
+{
+	if (setPosition && sysMenuPos + v >= 0 && sysMenuPos + v < systemMenu.size()) {
+		sysMenuPos += v;
+	}
+	DrawSystemMenu();
+
+}
+
+
+void UI::EncoderAction(EncoderType type, const int8_t& val)
 {
 	int16_t adj;
 	switch (type) {
@@ -161,15 +171,29 @@ void UI::DrawMenu()
 	lcd.DrawLine(294, 1, 294, 27, RGBColour::White);
 	lcd.DrawLine(159, 27, 159, 239, RGBColour::White);
 
-	const std::vector<MenuItem>* currentMenu =
-			cfg.displayMode == DispMode::Oscilloscope ? &oscMenu :
-			cfg.displayMode == DispMode::Tuner ? &tunerMenu :
-			cfg.displayMode == DispMode::Fourier || cfg.displayMode == DispMode::Waterfall ? &fftMenu : nullptr;
+	const std::vector<MenuItem>& currentMenu =
+			cfg.displayMode == DispMode::Oscilloscope ? oscMenu :
+			cfg.displayMode == DispMode::Tuner ? tunerMenu : fftMenu;
 
-	uint8_t pos = 0;
-	for (auto m = currentMenu->cbegin(); m != currentMenu->cend(); m++, pos++) {
-		lcd.DrawString(10, 32 + pos * 20, m->name, lcd.Font_Large, (m->selected == encoderModeL) ? RGBColour::Black : RGBColour::White, (m->selected == encoderModeL) ? RGBColour::White : RGBColour::Black);
-		lcd.DrawString(170, 32 + pos * 20, m->name, lcd.Font_Large, (m->selected == encoderModeR) ? RGBColour::Black : RGBColour::White, (m->selected == encoderModeR) ? RGBColour::White : RGBColour::Black);
+	uint8_t pos = 33;
+	for (auto& m : currentMenu) {
+		lcd.DrawString(10, pos, m.name, lcd.Font_Large, (m.selected == encoderModeL) ? RGBColour::Black : RGBColour::White, (m.selected == encoderModeL) ? RGBColour::White : RGBColour::Black);
+		lcd.DrawString(170, pos, m.name, lcd.Font_Large, (m.selected == encoderModeR) ? RGBColour::Black : RGBColour::White, (m.selected == encoderModeR) ? RGBColour::White : RGBColour::Black);
+		pos += 20;
+	}
+}
+
+
+void UI::DrawSystemMenu()
+{
+	lcd.DrawString(80, 6, "System Menu", lcd.Font_Large, RGBColour::Orange, RGBColour::Black);
+	lcd.DrawRect(0, 1, lcd.width - 1, lcd.height - 1, RGBColour::White);
+	lcd.DrawLine(0, 27, lcd.width - 1, 27, RGBColour::White);
+
+	uint8_t pos = 33;
+	for (auto& m : systemMenu) {
+		lcd.DrawString(10, pos, m.name, lcd.Font_Large, (m.pos == sysMenuPos) ? RGBColour::Black : RGBColour::White, (m.pos == sysMenuPos) ? RGBColour::White : RGBColour::Black);
+		pos += 20;
 	}
 }
 
@@ -180,8 +204,9 @@ void UI::handleEncoders()
 	if (std::abs((int16_t)32000 - (int16_t)TIM4->CNT) > 3) {
 		int8_t v = (TIM4->CNT > 32000 ? 1 : -1) * (cfg.reverseEncoders ? -1 : 1);
 
-		if (menuMode)	MenuAction(&encoderModeR, v);
-		else			EncoderAction(encoderModeR, v);
+		if (menuMode == MenuMode::encoder)		MenuAction(&encoderModeR, v);
+		else if (menuMode == MenuMode::system)	SysMenuAction(v, true);
+		else									EncoderAction(encoderModeR, v);
 
 		TIM4->CNT -= TIM4->CNT > 32000 ? 4 : -4;
 		config.ScheduleSave();
@@ -190,8 +215,9 @@ void UI::handleEncoders()
 	if (std::abs((int16_t)32000 - (int16_t)TIM2->CNT) > 3) {
 		int8_t v = (TIM2->CNT > 32000 ? 1 : -1) * (cfg.reverseEncoders ? -1 : 1);
 
-		if (menuMode)	MenuAction(&encoderModeL, v);
-		else			EncoderAction(encoderModeL, v);
+		if (menuMode == MenuMode::encoder)		MenuAction(&encoderModeL, v);
+		else if (menuMode == MenuMode::system)	SysMenuAction(v, false);
+		else									EncoderAction(encoderModeL, v);
 
 		TIM2->CNT -= TIM2->CNT > 32000 ? 4 : -4;
 		config.ScheduleSave();
@@ -199,17 +225,26 @@ void UI::handleEncoders()
 
 	bool encoderBtnL = btnEncL.Pressed();
 	bool encoderBtnR = btnEncR.Pressed();
+	bool sysMenu = btnMenu.LongPress();
 	bool menuButton = btnMenu.Pressed();
 
-	if (menuMode && (encoderBtnL || encoderBtnR || menuButton)) {
-		menuMode = false;
+	if (menuMode != MenuMode::off && (encoderBtnL || encoderBtnR || menuButton)) {
+		menuMode = MenuMode::off;
 		lcd.ScreenFill(RGBColour::Black);
 		DrawUI();
 		return;
 	}
 
+	if (sysMenu) {
+		menuMode = MenuMode::system;
+		sysMenuPos = 0;
+		lcd.ScreenFill(RGBColour::Black);
+		DrawSystemMenu();
+		return;
+	}
+
 	if (menuButton && (cfg.displayMode == DispMode::Oscilloscope || cfg.displayMode == DispMode::Tuner || cfg.displayMode == DispMode::Fourier)) {
-		menuMode = true;
+		menuMode = MenuMode::encoder;
 		lcd.ScreenFill(RGBColour::Black);
 		DrawMenu();
 		return;
@@ -315,7 +350,7 @@ void UI::ResetMode()
 }
 
 
-std::string_view UI::EncoderLabel(encoderType type)
+std::string_view UI::EncoderLabel(EncoderType type)
 {
 	switch (type) {
 	case HorizScale :

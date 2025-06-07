@@ -24,8 +24,8 @@ public:
 	static constexpr uint32_t timerDefault = 10000;		// Default speed of sample capture (start fairly slow) sample rate is 90Mhz / clockDivider
 
 	// FFT and Waterfall Settings
-	encoderType wfallEncModeL = HorizScale;
-	encoderType wfallEncModeR = VertScale;
+	EncoderType wfallEncModeL = HorizScale;
+	EncoderType wfallEncModeR = VertScale;
 
 	// FFT working variables
 	float fftBuffer[2][fftSamples];						// holds raw samples captured in interrupt for FFT analysis
@@ -42,8 +42,8 @@ public:
 		bool autoTune = true;							// if true will attempt to adjust sample capture time to get sample capture to align to multiple of cycle period
 		bool traceOverlay = true;						// Display trace overlaid on FFT display
 		oscChannel channel = channelA;
-		encoderType encModeL = VertScale;
-		encoderType encModeR = FFTAutoTune;
+		EncoderType encModeL = VertScale;
+		EncoderType encModeR = FFTAutoTune;
 	} cfg;
 
 	ConfigSaver configSaver = {

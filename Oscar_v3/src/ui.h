@@ -4,12 +4,15 @@
 #include "configManager.h"
 #include <vector>
 
+enum EncoderType { HorizScale, HorizScaleFine, CalibVertScale, CalibVertOffset, VertScale, TriggerChannel, Trigger_X, Trigger_Y,
+	FFTAutoTune, ActiveChannel, MultiLane, TraceOverlay, TunerMode, ReverseEncoders, DummyItem };
+
+
 class UI {
 public:
 	void DrawUI();
 	void handleEncoders();
 	void ResetMode();
-
 
 	struct Config {
 		DispMode displayMode = DispMode::Oscilloscope;
@@ -25,7 +28,7 @@ public:
 	std::string FloatToString(float f, bool smartFormat);
 	std::string IntToString(const int32_t v);
 
-	bool menuMode = false;
+	enum class MenuMode { off, encoder, system } menuMode;
 
 	Btn btnEncL {{GPIOB, 1, GpioPin::Type::InputPullup}};
 	Btn btnEncR {{GPIOC, 13, GpioPin::Type::InputPullup}};
@@ -33,16 +36,19 @@ public:
 
 private:
 	void DrawMenu();
-	void MenuAction(encoderType* et, volatile const int8_t& val);
-	void EncoderAction(encoderType type, const int8_t& val);
-	std::string_view EncoderLabel(encoderType type);
+	void DrawSystemMenu();
+	void MenuAction(EncoderType* et, volatile const int8_t& val);
+	void SysMenuAction(int8_t v, bool position);
+	void EncoderAction(EncoderType type, const int8_t& val);
+	std::string_view EncoderLabel(EncoderType type);
 
-	encoderType encoderModeL, encoderModeR;
+	EncoderType encoderModeL, encoderModeR;
+	int8_t sysMenuPos = 0;
 
 	struct MenuItem {
 		int8_t pos;
 		std::string name;
-		encoderType selected;
+		EncoderType selected;
 		std::string val;
 	};
 
@@ -66,6 +72,10 @@ private:
 		{ 0, "Vert scale", VertScale },
 		{ 1, "Tuner Mode", TunerMode },
 		{ 2, "Trace overlay", TraceOverlay } };
+
+	const std::vector<MenuItem> systemMenu {
+		{ 0, "Reverse Encoders", ReverseEncoders },
+		{ 1, "Dummy Item", DummyItem } };
 
 	char charBuff[100];
 

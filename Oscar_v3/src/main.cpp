@@ -46,7 +46,7 @@ int main(void)
 		usb.cdc.ProcessCommand();			// Check for incoming CDC commands
 
 
-		if (ui.menuMode) {
+		if (ui.menuMode != UI::MenuMode::off) {
 
 		} else if (ui.cfg.displayMode == DispMode::Oscilloscope) {
 			osc.OscRun();

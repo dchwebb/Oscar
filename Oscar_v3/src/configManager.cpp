@@ -7,7 +7,7 @@
 bool Config::SaveConfig(const bool forceSave)
 {
 	bool result = true;
-	if (forceSave || (scheduleSave && SysTickVal > saveBooked + 10000)) {			// 30 seconds between saves FIXME
+	if (forceSave || (scheduleSave && SysTickVal > saveBooked + 30000)) {			// 30 seconds between saves FIXME
 
 		scheduleSave = false;
 
