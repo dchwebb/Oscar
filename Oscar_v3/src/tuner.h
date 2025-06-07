@@ -14,7 +14,7 @@ public:
 	void ClearOverlay();
 
 	struct Config {
-		encoderType encModeL = VoltScale;
+		encoderType encModeL = VertScale;
 		encoderType encModeR = TunerMode;
 		tunerMode mode = FFT;
 		bool traceOverlay = true;					// Display trace overlaid on tuner display

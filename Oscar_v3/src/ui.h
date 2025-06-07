@@ -13,6 +13,7 @@ public:
 
 	struct Config {
 		DispMode displayMode = DispMode::Oscilloscope;
+		bool reverseEncoders = false;
 	} cfg;
 
 	ConfigSaver configSaver = {
@@ -45,9 +46,9 @@ private:
 		std::string val;
 	};
 
-	const std::vector<MenuItem> oscMenu{
+	const std::vector<MenuItem> oscMenu {
 		{ 0, "Horiz scale", HorizScale },
-		{ 1, "Vert scale", VoltScale },
+		{ 1, "Vert scale", VertScale },
 		{ 2, "Multi-Lane", MultiLane },
 		{ 3, "Trigger Y", Trigger_Y },
 		{ 4, "Trigger X", Trigger_X },
@@ -55,14 +56,14 @@ private:
 		{ 6, "Calib Scale", CalibVertScale },
 		{ 7, "Calib Offset", CalibVertOffset } };
 
-	const std::vector<MenuItem> fftMenu{
+	const std::vector<MenuItem> fftMenu {
 		{ 0, "Horiz scale", HorizScale },
-		{ 1, "Vert scale", VoltScale },
+		{ 1, "Vert scale", VertScale },
 		{ 2, "AutoTune", FFTAutoTune },
 		{ 3, "Trace overlay", TraceOverlay } };
 
-	const std::vector<MenuItem> tunerMenu{
-		{ 0, "Vert scale", VoltScale },
+	const std::vector<MenuItem> tunerMenu {
+		{ 0, "Vert scale", VertScale },
 		{ 1, "Tuner Mode", TunerMode },
 		{ 2, "Trace overlay", TraceOverlay } };
 

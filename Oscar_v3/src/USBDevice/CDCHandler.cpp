@@ -1,6 +1,7 @@
 #include "USB.h"
 #include "CDCHandler.h"
 #include "configManager.h"
+#include "UI.h"
 
 void CDCHandler::ProcessCommand()
 {
@@ -31,6 +32,7 @@ void CDCHandler::ProcessCommand()
 				"help           -  Shows this information\n"
 				"info           -  Display current settings\n"
 				"dfu            -  USB firmware upgrade\n"
+				"revenc         -  Reverse encoder direction\n"
 		);
 
 	} else if (cmd.compare("info") == 0) {
@@ -43,6 +45,10 @@ void CDCHandler::ProcessCommand()
 				config.flashConfigAddr + config.currentSettingsOffset / 4
 
 		 );
+
+	} else if (cmd.compare("revenc") == 0) {
+		ui.cfg.reverseEncoders = !ui.cfg.reverseEncoders;
+		printf("Encoders reversed\r\n");
 
 	} else {
 		usb->SendString("Unrecognised command. Type 'help' for supported commands\n");

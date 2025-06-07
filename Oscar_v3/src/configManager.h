@@ -16,7 +16,7 @@ class Config {
 	friend class CDCHandler;					// Allow the serial handler access to private data for printing
 
 public:
-	static constexpr uint8_t configVersion = 2;
+	static constexpr uint8_t configVersion = 4;
 	
 	// STM32F446 has up to 8 sectors of flash organized as: 16K (sector 0-3), 64k (sector 4), 128k (sector 5-7)
 	static constexpr uint32_t flashConfigSector = 6;

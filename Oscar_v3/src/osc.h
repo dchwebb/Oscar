@@ -52,7 +52,7 @@ public:
 		uint16_t triggerY = 7000;
 		oscChannel triggerChannel = channelA;		// holds preferred trigger channel for when that channel is not displayed
 		encoderType encModeL = HorizScale;
-		encoderType encModeR = ChannelSelect;
+		encoderType encModeR = VertScale;
 		uint16_t sampleTimer = 10;					// Preserves oscilloscope sample timer when switching to other modes
 		int8_t oscDisplay = 0b111;					// Bit set for each channel displayed
 		bool multiLane = true;

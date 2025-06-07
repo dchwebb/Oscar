@@ -96,7 +96,7 @@ void UI::EncoderAction(encoderType type, const int8_t& val)
 	case CalibVertScale :
 		osc.cfg.vCalibScale += val * .01;
 		break;
-	case VoltScale :
+	case VertScale :
 		osc.cfg.voltScale -= val;
 		osc.cfg.voltScale = std::clamp(static_cast<int>(osc.cfg.voltScale), 1, 12);
 		break;
@@ -178,11 +178,8 @@ void UI::handleEncoders()
 {
 	// encoders count in fours with the zero point set to 100
 	if (std::abs((int16_t)32000 - (int16_t)TIM4->CNT) > 3) {
-#ifdef REVERSEENCODERS
-		int8_t v = TIM4->CNT > 32000 ? -1 : 1;
-#else
-		int8_t v = TIM4->CNT > 32000 ? 1 : -1;
-#endif
+		int8_t v = (TIM4->CNT > 32000 ? 1 : -1) * (cfg.reverseEncoders ? -1 : 1);
+
 		if (menuMode)	MenuAction(&encoderModeR, v);
 		else			EncoderAction(encoderModeR, v);
 
@@ -191,11 +188,8 @@ void UI::handleEncoders()
 	}
 
 	if (std::abs((int16_t)32000 - (int16_t)TIM2->CNT) > 3) {
-#ifdef REVERSEENCODERS
-		int8_t v = TIM2->CNT > 32000 ? -1 : 1;
-#else
-		int8_t v = TIM2->CNT > 32000 ? 1 : -1;
-#endif
+		int8_t v = (TIM2->CNT > 32000 ? 1 : -1) * (cfg.reverseEncoders ? -1 : 1);
+
 		if (menuMode)	MenuAction(&encoderModeL, v);
 		else			EncoderAction(encoderModeL, v);
 
@@ -332,24 +326,25 @@ std::string_view UI::EncoderLabel(encoderType type)
 		return "Calib Scale";
 	case CalibVertOffset :
 		return "Calib Offs";
-	case VoltScale :
+	case VertScale :
 		return "Zoom Vert";
 	case Trigger_X :
 		return "Trigger X";
 	case Trigger_Y :
 		return "Trigger Y";
 	case TriggerChannel :
-		return std::string(osc.cfg.triggerChannel == channelA ? "Trigger A " : osc.cfg.triggerChannel == channelB ? "Trigger B " : osc.cfg.triggerChannel == channelC ? "Trigger C " : "No Trigger");
+		return osc.cfg.triggerChannel == channelA ? "Trigger A " : osc.cfg.triggerChannel == channelB ? "Trigger B " :
+				osc.cfg.triggerChannel == channelC ? "Trigger C " : "No Trigger";
 	case FFTAutoTune :
-		return "Tune: " + std::string(fft.cfg.autoTune ? "auto" : "off ");
+		return fft.cfg.autoTune ? "Tune: auto" : "Tune: off ";
 	case TraceOverlay :
-		return "Trace: " + std::string((cfg.displayMode == DispMode::Fourier ? fft.cfg.traceOverlay : tuner.cfg.traceOverlay) ? "on " : "off ");
+		return (cfg.displayMode == DispMode::Fourier ? fft.cfg.traceOverlay : tuner.cfg.traceOverlay) ? "Trace: on " : "Trace: off ";
 	case MultiLane :
-		return "Lanes: " + std::string(osc.cfg.multiLane ? "Yes" : "No ");
+		return osc.cfg.multiLane ? "Lanes: Yes" : "Lanes: No ";
 	case TunerMode :
 		return tuner.cfg.mode == Tuner::ZeroCrossing ? "Zero Cross" : "FFT       ";
 	default:
-	  return "";
+		return "";
 	}
 }
 
