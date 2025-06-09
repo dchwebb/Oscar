@@ -74,8 +74,7 @@ private:
 		{ 2, "Trace overlay", TraceOverlay } };
 
 	const std::vector<MenuItem> systemMenu {
-		{ 0, "Reverse Encoders", ReverseEncoders },
-		{ 1, "Dummy Item", DummyItem } };
+		{ 0, "Reverse Encoders", ReverseEncoders } };
 
 	char charBuff[100];
 

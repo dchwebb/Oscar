@@ -43,45 +43,6 @@ void UI::DrawUI()
 }
 
 
-void UI::MenuAction(EncoderType* et, volatile const int8_t& val)
-{
-	const std::vector<MenuItem>* currentMenu =
-			cfg.displayMode == DispMode::Tuner ? &tunerMenu :
-			cfg.displayMode == DispMode::Oscilloscope ? &oscMenu :
-			cfg.displayMode == DispMode::Fourier || cfg.displayMode == DispMode::Waterfall ? &fftMenu : nullptr;
-
-	//	Move the selected menu item one forwards or one back based on value of encoder
-	auto mi = std::find_if(currentMenu->cbegin(), currentMenu->cend(), [=] (MenuItem m) { return m.selected == *et; } );
-	if ((mi != currentMenu->cbegin() && val < 0) || (mi != currentMenu->cend() - 1 && val > 0)) {
-		mi += val;
-		*et = mi->selected;
-	}
-
-	if (cfg.displayMode == DispMode::Oscilloscope) {
-		osc.cfg.encModeL = encoderModeL;
-		osc.cfg.encModeR = encoderModeR;
-	} else if (cfg.displayMode == DispMode::Tuner) {
-		tuner.cfg.encModeL = encoderModeL;
-		tuner.cfg.encModeR = encoderModeR;
-	} else if (cfg.displayMode == DispMode::Fourier) {
-		fft.cfg.encModeL = encoderModeL;
-		fft.cfg.encModeR = encoderModeR;
-	}
-
-	DrawMenu();
-}
-
-
-void UI::SysMenuAction(int8_t v, bool setPosition)
-{
-	if (setPosition && sysMenuPos + v >= 0 && sysMenuPos + v < systemMenu.size()) {
-		sysMenuPos += v;
-	}
-	DrawSystemMenu();
-
-}
-
-
 void UI::EncoderAction(EncoderType type, const int8_t& val)
 {
 	int16_t adj;
@@ -184,6 +145,35 @@ void UI::DrawMenu()
 }
 
 
+void UI::MenuAction(EncoderType* et, volatile const int8_t& val)
+{
+	const std::vector<MenuItem>* currentMenu =
+			cfg.displayMode == DispMode::Tuner ? &tunerMenu :
+			cfg.displayMode == DispMode::Oscilloscope ? &oscMenu :
+			cfg.displayMode == DispMode::Fourier || cfg.displayMode == DispMode::Waterfall ? &fftMenu : nullptr;
+
+	//	Move the selected menu item one forwards or one back based on value of encoder
+	auto mi = std::find_if(currentMenu->cbegin(), currentMenu->cend(), [=] (MenuItem m) { return m.selected == *et; } );
+	if ((mi != currentMenu->cbegin() && val < 0) || (mi != currentMenu->cend() - 1 && val > 0)) {
+		mi += val;
+		*et = mi->selected;
+	}
+
+	if (cfg.displayMode == DispMode::Oscilloscope) {
+		osc.cfg.encModeL = encoderModeL;
+		osc.cfg.encModeR = encoderModeR;
+	} else if (cfg.displayMode == DispMode::Tuner) {
+		tuner.cfg.encModeL = encoderModeL;
+		tuner.cfg.encModeR = encoderModeR;
+	} else if (cfg.displayMode == DispMode::Fourier) {
+		fft.cfg.encModeL = encoderModeL;
+		fft.cfg.encModeR = encoderModeR;
+	}
+
+	DrawMenu();
+}
+
+
 void UI::DrawSystemMenu()
 {
 	lcd.DrawString(80, 6, "System Menu", lcd.Font_Large, RGBColour::Orange, RGBColour::Black);
@@ -192,26 +182,38 @@ void UI::DrawSystemMenu()
 
 	uint8_t pos = 33;
 	for (auto& m : systemMenu) {
-		lcd.DrawString(10, pos, m.name, lcd.Font_Large, (m.pos == sysMenuPos) ? RGBColour::Black : RGBColour::White, (m.pos == sysMenuPos) ? RGBColour::White : RGBColour::Black);
+		// Caption
+		lcd.DrawString(10, pos, m.name, lcd.Font_Large, RGBColour::White, RGBColour::Black);
+
+		// Value
+		const char* val = " ";
+		if (m.selected == ReverseEncoders) {
+			val = cfg.reverseEncoders ? "Yes" : "No ";
+		}
+		lcd.DrawString(200, pos, val, lcd.Font_Large, (m.pos == sysMenuPos) ? RGBColour::Black : RGBColour::White, (m.pos == sysMenuPos) ? RGBColour::White : RGBColour::Black);
 		pos += 20;
 	}
+}
+
+
+void UI::SysMenuAction(int8_t inc, bool setVal)
+{
+	if (setVal) {
+		if (systemMenu[sysMenuPos].selected == ReverseEncoders) {
+			cfg.reverseEncoders = !cfg.reverseEncoders;
+			config.ScheduleSave();
+		}
+	} else if (sysMenuPos + inc >= 0 && sysMenuPos + inc < (int)systemMenu.size()) {
+		sysMenuPos += inc;
+	}
+	DrawSystemMenu();
+
 }
 
 
 void UI::handleEncoders()
 {
 	// encoders count in fours with the zero point set to 100
-	if (std::abs((int16_t)32000 - (int16_t)TIM4->CNT) > 3) {
-		int8_t v = (TIM4->CNT > 32000 ? 1 : -1) * (cfg.reverseEncoders ? -1 : 1);
-
-		if (menuMode == MenuMode::encoder)		MenuAction(&encoderModeR, v);
-		else if (menuMode == MenuMode::system)	SysMenuAction(v, true);
-		else									EncoderAction(encoderModeR, v);
-
-		TIM4->CNT -= TIM4->CNT > 32000 ? 4 : -4;
-		config.ScheduleSave();
-	}
-
 	if (std::abs((int16_t)32000 - (int16_t)TIM2->CNT) > 3) {
 		int8_t v = (TIM2->CNT > 32000 ? 1 : -1) * (cfg.reverseEncoders ? -1 : 1);
 
@@ -220,6 +222,17 @@ void UI::handleEncoders()
 		else									EncoderAction(encoderModeL, v);
 
 		TIM2->CNT -= TIM2->CNT > 32000 ? 4 : -4;
+		config.ScheduleSave();
+	}
+
+	if (std::abs((int16_t)32000 - (int16_t)TIM4->CNT) > 3) {
+		int8_t v = (TIM4->CNT > 32000 ? 1 : -1) * (cfg.reverseEncoders ? -1 : 1);
+
+		if (menuMode == MenuMode::encoder)		MenuAction(&encoderModeR, v);
+		else if (menuMode == MenuMode::system)	SysMenuAction(v, true);
+		else									EncoderAction(encoderModeR, v);
+
+		TIM4->CNT -= TIM4->CNT > 32000 ? 4 : -4;
 		config.ScheduleSave();
 	}
 
