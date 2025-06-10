@@ -11,30 +11,15 @@ class FFT {
 	friend class Tuner;									// Tuner uses FFT calculation functions and data buffer
 
 public:
-
 	FFT();
 	void Run();
 	void Capture();
 	void Activate();
 
-
-	static constexpr uint32_t fftSamples = 1024;
-	static constexpr uint32_t  waterfallSamples = 512;
 	static constexpr uint32_t sinLUTSize = 1024;
-	static constexpr uint32_t timerDefault = 10000;		// Default speed of sample capture (start fairly slow) sample rate is 90Mhz / clockDivider
 
-	// FFT and Waterfall Settings
-	EncoderType wfallEncModeL = HorizScale;
+	EncoderType wfallEncModeL = HorizScale;				// Waterfall encoders - no other options
 	EncoderType wfallEncModeR = VertScale;
-
-	// FFT working variables
-	float fftBuffer[2][fftSamples];						// holds raw samples captured in interrupt for FFT analysis
-	uint32_t samples = fftSamples;						// specifies number of samples depending on whether in FFT or Waterfall mode
-	bool dataAvailable[2] {false, false};				// stores which sample buffers contain data
-	uint8_t captureBufferIndex = 0;						// Index of sample buffer being captured
-	uint16_t capturePos = 0;							// Position in capture buffer
-
-	bool capturing;
 
 	const float* sinLUTExt = nullptr;					// As LUT is created constexpr store a pointer to allow access from outside FFT class
 
@@ -53,11 +38,23 @@ public:
 	};
 
 private:
+	static constexpr uint32_t fftSamples = 1024;
+	static constexpr uint32_t timerDefault = 10000;		// Default speed of sample capture (start fairly slow) sample rate is 90Mhz / clockDivider
 	static constexpr uint8_t  fftHarmonicColours = 5;
+
 	static constexpr uint16_t waterfallDrawHeight = 80;
 	static constexpr uint16_t waterfallSize = 256;
+	static constexpr uint32_t waterfallSamples = 512;
 	static constexpr uint16_t waterfallBuffers = 26;
 	static constexpr uint16_t waterfallSmooth = 4;
+
+	// FFT working variables
+	float fftBuffer[2][fftSamples];						// holds raw samples captured in interrupt for FFT analysis
+	uint32_t samples = fftSamples;						// specifies number of samples depending on whether in FFT or Waterfall mode
+	bool dataAvailable[2] {false, false};				// stores which sample buffers contain data
+	uint8_t captureBufferIndex = 0;						// Index of sample buffer being captured
+	uint16_t capturePos = 0;							// Position in capture buffer
+	bool capturing;
 
 	float cosBuffer[fftSamples];						// Stores working cosine part of FFT calculation
 	uint8_t fftBufferNumber = 0;						// Index of sample buffer used for calculations

@@ -2,6 +2,19 @@
 #include "ui.h"
 
 
+void Osc::Activate()
+{
+
+	osc.capturing = false;
+	osc.drawing = false;
+	osc.bufferSamples = 0;
+	osc.capturePos = 0;
+	osc.oldAdc = 0;
+	osc.setTriggerChannel();
+	SetSampleTimer(std::max(osc.cfg.sampleTimer, minSampleTimer));
+}
+
+
 void Osc::Capture()
 {
 	// Average the last four ADC readings to smooth noise
@@ -54,7 +67,9 @@ void Osc::Capture()
 			++bufferSamples;
 
 			// if trigger point not activating generate a temporary draw buffer
-			if (bufferSamples > 1000 && capturePos == 0) {
+			// for slow sample rates, number of buffer samples needed for no trigger draw should be reduced
+			uint32_t tiggerLevel = 100000000 / cfg.sampleTimer;
+			if (bufferSamples > tiggerLevel && capturePos == 0) {
 				captureBufferNumber = captureBufferNumber == 1 ? 0 : 1;		// switch the capture buffer
 				bufferSamples = 0;
 				drawOffset[captureBufferNumber] = 0;

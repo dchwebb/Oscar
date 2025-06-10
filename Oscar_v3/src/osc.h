@@ -7,6 +7,7 @@
 
 class Osc {
 public:
+	void Activate();
 	void OscRun();
 	uint16_t CalcVertOffset(const uint16_t& vPos);
 	void setTriggerChannel();
@@ -31,7 +32,7 @@ public:
 
 	bool capturing;
 	uint16_t capturedSamples[2] {0, 0};
-	uint16_t bufferSamples;							// Stores number of samples captured since switching buffers to ensure triggered mode works correctly
+	uint32_t bufferSamples;							// Stores number of samples captured since switching buffers to ensure triggered mode works correctly
 	uint8_t captureBufferNumber = 0;				// Index of capture buffer
 	uint16_t capturePos = 0;						// Position in capture buffer
 
@@ -39,7 +40,6 @@ public:
 	bool uiRefresh = false;							// Set in UI class if screen has been redrawn
 	int16_t drawOffset[2] {0, 0};
 	uint16_t drawPos = 0;
-	//uint16_t prevPixelA = 0, prevPixelB = 0, prevPixelC = 0;
 
 	struct SamplePos {
 		uint16_t pos[3];
@@ -47,14 +47,14 @@ public:
 	SamplePos prevPixel;
 
 	struct Config {
-		int16_t vCalibOffset = -3590;				// Dev board with 14k resistors: -3940, 1.499999
+		int16_t vCalibOffset = -4540;
 		float vCalibScale = 1.46f;
-		int16_t triggerX = 10;
+		uint16_t triggerX = 10;
 		uint16_t triggerY = 7000;
 		oscChannel triggerChannel = channelA;		// holds preferred trigger channel for when that channel is not displayed
 		EncoderType encModeL = HorizScale;
 		EncoderType encModeR = VertScale;
-		uint16_t sampleTimer = 10;					// Preserves oscilloscope sample timer when switching to other modes
+		uint32_t sampleTimer = 10;					// Preserves oscilloscope sample timer when switching to other modes
 		int8_t oscDisplay = 0b111;					// Bit set for each channel displayed
 		bool multiLane = true;
 		int8_t voltScale = 8;
@@ -85,7 +85,6 @@ private:
 	uint16_t freqSmoothY;							// Used in basic filter to remove high frequency noise
 
 	uint16_t calculatedOffsetYB = 0, calculatedOffsetYC = 0;	// Pre-Calculated offsets when in multi-lane mode
-
 };
 
 

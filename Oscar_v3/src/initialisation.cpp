@@ -12,6 +12,7 @@ struct PLLDividers {
 };
 const PLLDividers mainPLL {4, 180, 2, 7};		// Clock: 8MHz / 4(M) * 180(N) / 2(P) = 180MHz
 const PLLDividers saiPLL {6, 144, 4, 0};		// USB:   8MHz / 6(M) * 144(N) / 4(P) = 48MHz
+
 void InitClocks()
 {
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;		// enable system configuration clock
@@ -217,10 +218,31 @@ void InitSampleAcquisition()
 }
 
 
+uint32_t GetSampleTimer()
+{
+	return TIM3->ARR * (TIM3->PSC + 1);
+}
+
+
 void SetSampleTimer(uint32_t val)
 {
-	TIM3->ARR = val;
-	samplingFrequency = static_cast<float>(SystemCoreClock) / (2.0f * (val + 1));
+	float div;
+
+	if (val < 65536) {
+		TIM3->PSC = 0;
+		TIM3->ARR = val;
+		div = 2.0f;
+	} else if (val < 131072) {
+		TIM3->PSC = 1;
+		TIM3->ARR = val / 2;
+		div = 4.0f;
+	} else {
+		val = std::min(val, 196607UL);
+		TIM3->PSC = 2;
+		TIM3->ARR = val / 3;
+		div = 6.0f;
+	}
+	samplingFrequency = static_cast<float>(SystemCoreClock) / (div * (val + 1));
 }
 
 
@@ -277,6 +299,13 @@ void InitMIDIUART()
 	NVIC_EnableIRQ(UART4_IRQn);
 
 	UART4->CR1 |= USART_CR1_UE;						// USART Enable
+}
+
+
+void EnableMidiUart(bool on)
+{
+	if (on) 	UART4->CR1 |= USART_CR1_UE;
+	else		UART4->CR1 &= ~USART_CR1_UE;
 }
 
 

@@ -12,7 +12,7 @@ static constexpr uint32_t sysTickInterval = 1000;
 
 
 #define ADC_BUFFER_LENGTH 12
-#define MINSAMPLETIMER 200
+static constexpr uint32_t minSampleTimer = 200;
 extern float samplingFrequency;
 
 enum class DispMode { Oscilloscope, Tuner, Fourier, Waterfall, MIDI };
@@ -51,9 +51,11 @@ void ResetWatchdog();
 void InitLCDHardware(void);
 void InitADC(void);
 void InitSampleAcquisition();
+uint32_t GetSampleTimer();
 void SetSampleTimer(uint32_t val);
 void RunSampleTimer(bool on);
 void InitEncoders();
 void InitMIDIUART();
+void EnableMidiUart(bool on);
 void DelayMS(uint32_t ms);
 void JumpToBootloader();

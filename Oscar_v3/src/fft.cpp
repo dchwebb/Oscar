@@ -1,6 +1,5 @@
-#include <fft.h>
+#include "fft.h"
 #include "osc.h"
-
 
 // Create sine look up table as constexpr so will be stored in flash
 constexpr std::array<float, FFT::sinLUTSize> sineLUT = fft.CreateSinLUT();
@@ -292,27 +291,27 @@ void FFT::DisplayFFT(const float* sinBuffer)
 
 		// work out which harmonic we want the fundamental to be - to adjust the sampling rate so a change in ARR affects the tuning of the FFT proportionally
 		const float targFund = std::max(freqFund / 10, 8.0f);
-		float newARR;
+		float newSampleTimer;
 
-		// take the timer ARR, divide by fundamental to get new ARR setting tuned fundamental to target harmonic
+		// take the sample rate, divide by fundamental to get new timer setting tuned fundamental to target harmonic
 		if (std::abs(targFund - harmonic[0]) > 1) {
-			newARR = targFund * TIM3->ARR / harmonic[0];
+			newSampleTimer = targFund * GetSampleTimer() / harmonic[0];
 		} else {
-			newARR = TIM3->ARR;			// Difference is within one so only use fine adjustment
+			newSampleTimer = GetSampleTimer();			// Difference is within one so only use fine adjustment
 		}
 
 		//	fine tune - check the sample before and after the fundamental and adjust to center around the fundamental
 		float sampleBefore = std::hypot(sinBuffer[harmonic[0] - 1], cosBuffer[harmonic[0] - 1]);
 		float sampleAfter  = std::hypot(sinBuffer[harmonic[0] + 1], cosBuffer[harmonic[0] + 1]);
 
-		// Change ARR by an amount related to the proportion of the difference of the two surrounding harmonics,
+		// Change sample timer by an amount related to the proportion of the difference of the two surrounding harmonics,
 		// scaling faster at lower frequencies where there is more resolution
 		if (sampleAfter + sampleBefore > 100.0f) {
-			newARR += ((sampleAfter - sampleBefore) / (sampleAfter + sampleBefore)) * (freqFund < 80 ? -60.0f :  -30.0f);
+			newSampleTimer += ((sampleAfter - sampleBefore) / (sampleAfter + sampleBefore)) * (freqFund < 80 ? -60.0f : -30.0f);
 		}
 
-		if (newARR > 0.0f) {
-			SetSampleTimer(std::round(newARR));
+		if (newSampleTimer > 0.0f) {
+			SetSampleTimer(std::round(newSampleTimer));
 		}
 	}
 }

@@ -61,8 +61,6 @@ void MidiEvents::ProcessMidi()
 							event.val1 = val1;
 							event.val2 = val2;
 							edited = true;
-
-
 						}
 					}
 				}

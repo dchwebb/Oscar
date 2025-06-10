@@ -4,8 +4,8 @@
 #include "configManager.h"
 #include <vector>
 
-enum EncoderType { HorizScale, HorizScaleFine, CalibVertScale, CalibVertOffset, VertScale, TriggerChannel, Trigger_X, Trigger_Y,
-	FFTAutoTune, ActiveChannel, MultiLane, TraceOverlay, TunerMode, ReverseEncoders, DummyItem };
+enum EncoderType { HorizScale, CalibVertScale, CalibVertOffset, VertScale, TriggerChannel, Trigger_X, Trigger_Y,
+	FFTAutoTune, ActiveChannel, MultiLane, TraceOverlay, TunerMode, ReverseEncoders };
 
 
 class UI {
@@ -37,9 +37,9 @@ public:
 private:
 	void DrawMenu();
 	void DrawSystemMenu();
-	void MenuAction(EncoderType* et, volatile const int8_t& val);
+	void MenuAction(EncoderType& et, const int8_t val);
 	void SysMenuAction(int8_t v, bool position);
-	void EncoderAction(EncoderType type, const int8_t& val);
+	void EncoderAction(EncoderType type, const int8_t val);
 	std::string_view EncoderLabel(EncoderType type);
 
 	EncoderType encoderModeL, encoderModeR;

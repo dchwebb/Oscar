@@ -23,7 +23,7 @@ void UI::DrawUI()
 	lcd.DrawString(240, lcd.drawHeight + 8, EncoderLabel(encoderModeR), lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
 
 	if (cfg.displayMode == DispMode::Oscilloscope) {
-		std::string s = FloatToString(640000.0f * (TIM3->ARR + 1) / SystemCoreClock, false) + "ms    ";
+		std::string s = FloatToString(640000.0f * (GetSampleTimer() + 1) / SystemCoreClock, false) + "ms    ";
 		lcd.DrawString(140, lcd.drawHeight + 8, s, lcd.Font_Small, RGBColour::White, RGBColour::Black);
 		osc.uiRefresh = true;
 	}
@@ -43,24 +43,21 @@ void UI::DrawUI()
 }
 
 
-void UI::EncoderAction(EncoderType type, const int8_t& val)
+void UI::EncoderAction(EncoderType type, const int8_t val)
 {
-	int16_t adj;
 	switch (type) {
-	case HorizScale :
-		adj = TIM3->ARR + (TIM3->ARR < 5000 ? 200 : TIM3->ARR < 20000 ? 400 : TIM3->ARR < 50000 ? 4000 : 8000) * -val;
-		if (adj > MINSAMPLETIMER && adj < 560000) {
-			SetSampleTimer(adj);
-			if (cfg.displayMode == DispMode::Oscilloscope) {
-				osc.cfg.sampleTimer = adj;
-			}
-			DrawUI();
+	case HorizScale : {
+		const uint32_t timer = GetSampleTimer();
+		int32_t adj = std::max(timer - (timer / 16) * val, minSampleTimer);			// div by 16 to allow exponential scaling as range increases
+
+		SetSampleTimer(adj);
+		if (cfg.displayMode == DispMode::Oscilloscope) {
+			osc.cfg.sampleTimer = adj;
 		}
-		break;
-	case HorizScaleFine :
-		SetSampleTimer(TIM3->ARR + val);
 		DrawUI();
-		break;
+	}
+	break;
+
 	case CalibVertOffset :
 		osc.cfg.vCalibOffset += 50 * val;
 		break;
@@ -90,7 +87,7 @@ void UI::EncoderAction(EncoderType type, const int8_t& val)
 		osc.cfg.triggerY = std::min(std::max((int32_t)osc.cfg.triggerY + 100 * val, (int32_t)3800), (int32_t)16000);
 		break;
 	case Trigger_X :
-		osc.cfg.triggerX = std::min(std::max(osc.cfg.triggerX + 2 * val, 0), 316);
+		osc.cfg.triggerX = std::min(std::max((int32_t)osc.cfg.triggerX + 2 * val, 0L), 316L);
 		break;
 	case FFTAutoTune :
 		fft.cfg.autoTune = !fft.cfg.autoTune;
@@ -126,11 +123,12 @@ void UI::DrawMenu()
 	lcd.DrawString(10, 6, "L", lcd.Font_Large, RGBColour::White, RGBColour::Black);
 	lcd.DrawString(80, 6, "Encoder Action", lcd.Font_Large, RGBColour::Orange, RGBColour::Black);
 	lcd.DrawString(303, 6, "R", lcd.Font_Large, RGBColour::White, RGBColour::Black);
-	lcd.DrawRect(0, 1, 319, 239, RGBColour::White);
-	lcd.DrawLine(0, 27, 319, 27, RGBColour::White);
+
+	lcd.DrawRect(0, 1, lcd.width - 1, lcd.height - 1, RGBColour::White);
+	lcd.DrawLine(0, 27, lcd.width - 1, 27, RGBColour::White);
 	lcd.DrawLine(26, 1, 26, 27, RGBColour::White);
 	lcd.DrawLine(294, 1, 294, 27, RGBColour::White);
-	lcd.DrawLine(159, 27, 159, 239, RGBColour::White);
+	lcd.DrawLine(159, 27, 159, lcd.height - 1, RGBColour::White);
 
 	const std::vector<MenuItem>& currentMenu =
 			cfg.displayMode == DispMode::Oscilloscope ? oscMenu :
@@ -145,18 +143,17 @@ void UI::DrawMenu()
 }
 
 
-void UI::MenuAction(EncoderType* et, volatile const int8_t& val)
+void UI::MenuAction(EncoderType& et, const int8_t val)
 {
-	const std::vector<MenuItem>* currentMenu =
-			cfg.displayMode == DispMode::Tuner ? &tunerMenu :
-			cfg.displayMode == DispMode::Oscilloscope ? &oscMenu :
-			cfg.displayMode == DispMode::Fourier || cfg.displayMode == DispMode::Waterfall ? &fftMenu : nullptr;
+	const std::vector<MenuItem>& currentMenu =
+			cfg.displayMode == DispMode::Tuner ? tunerMenu :
+			cfg.displayMode == DispMode::Oscilloscope ? oscMenu : fftMenu;
 
 	//	Move the selected menu item one forwards or one back based on value of encoder
-	auto mi = std::find_if(currentMenu->cbegin(), currentMenu->cend(), [=] (MenuItem m) { return m.selected == *et; } );
-	if ((mi != currentMenu->cbegin() && val < 0) || (mi != currentMenu->cend() - 1 && val > 0)) {
+	auto mi = std::find_if(currentMenu.cbegin(), currentMenu.cend(), [=] (MenuItem m) { return m.selected == et; } );
+	if ((mi != currentMenu.cbegin() && val < 0) || (mi != currentMenu.cend() - 1 && val > 0)) {
 		mi += val;
-		*et = mi->selected;
+		et = mi->selected;
 	}
 
 	if (cfg.displayMode == DispMode::Oscilloscope) {
@@ -182,15 +179,14 @@ void UI::DrawSystemMenu()
 
 	uint8_t pos = 33;
 	for (auto& m : systemMenu) {
-		// Caption
-		lcd.DrawString(10, pos, m.name, lcd.Font_Large, RGBColour::White, RGBColour::Black);
+		lcd.DrawString(10, pos, m.name, lcd.Font_Large, RGBColour::White, RGBColour::Black);		// Caption
 
-		// Value
-		const char* val = " ";
+		const char* val = " ";																		// Value
 		if (m.selected == ReverseEncoders) {
 			val = cfg.reverseEncoders ? "Yes" : "No ";
 		}
 		lcd.DrawString(200, pos, val, lcd.Font_Large, (m.pos == sysMenuPos) ? RGBColour::Black : RGBColour::White, (m.pos == sysMenuPos) ? RGBColour::White : RGBColour::Black);
+
 		pos += 20;
 	}
 }
@@ -207,7 +203,6 @@ void UI::SysMenuAction(int8_t inc, bool setVal)
 		sysMenuPos += inc;
 	}
 	DrawSystemMenu();
-
 }
 
 
@@ -215,9 +210,9 @@ void UI::handleEncoders()
 {
 	// encoders count in fours with the zero point set to 100
 	if (std::abs((int16_t)32000 - (int16_t)TIM2->CNT) > 3) {
-		int8_t v = (TIM2->CNT > 32000 ? 1 : -1) * (cfg.reverseEncoders ? -1 : 1);
+		const int8_t v = (TIM2->CNT > 32000 ? 1 : -1) * (cfg.reverseEncoders ? -1 : 1);
 
-		if (menuMode == MenuMode::encoder)		MenuAction(&encoderModeL, v);
+		if (menuMode == MenuMode::encoder)		MenuAction(encoderModeL, v);
 		else if (menuMode == MenuMode::system)	SysMenuAction(v, false);
 		else									EncoderAction(encoderModeL, v);
 
@@ -226,9 +221,9 @@ void UI::handleEncoders()
 	}
 
 	if (std::abs((int16_t)32000 - (int16_t)TIM4->CNT) > 3) {
-		int8_t v = (TIM4->CNT > 32000 ? 1 : -1) * (cfg.reverseEncoders ? -1 : 1);
+		const int8_t v = (TIM4->CNT > 32000 ? 1 : -1) * (cfg.reverseEncoders ? -1 : 1);
 
-		if (menuMode == MenuMode::encoder)		MenuAction(&encoderModeR, v);
+		if (menuMode == MenuMode::encoder)		MenuAction(encoderModeR, v);
 		else if (menuMode == MenuMode::system)	SysMenuAction(v, true);
 		else									EncoderAction(encoderModeR, v);
 
@@ -236,10 +231,10 @@ void UI::handleEncoders()
 		config.ScheduleSave();
 	}
 
-	bool encoderBtnL = btnEncL.Pressed();
-	bool encoderBtnR = btnEncR.Pressed();
-	bool sysMenu = btnMenu.LongPress();
-	bool menuButton = btnMenu.Pressed();
+	const bool encoderBtnL = btnEncL.Pressed();
+	const bool encoderBtnR = btnEncR.Pressed();
+	const bool sysMenu = btnMenu.LongPress();
+	const bool menuButton = btnMenu.Pressed();
 
 	if (menuMode != MenuMode::off && (encoderBtnL || encoderBtnR || menuButton)) {
 		menuMode = MenuMode::off;
@@ -265,9 +260,6 @@ void UI::handleEncoders()
 
 	// Change display mode
 	if (encoderBtnL || encoderBtnR) {
-		if (cfg.displayMode == DispMode::Oscilloscope) {
-			osc.cfg.sampleTimer = TIM3->ARR;
-		}
 		if (encoderBtnL) {
 			switch (cfg.displayMode) {
 				case DispMode::Oscilloscope:	cfg.displayMode = DispMode::MIDI;			break;
@@ -296,7 +288,7 @@ void UI::handleEncoders()
 							 (channelSelect.btnChB.Pressed() << 1) |
 							 (channelSelect.btnChC.Pressed() << 2);		// Bit representation of pressed buttons
 		for (uint32_t i = 0; i < 3; ++i) {
-			uint32_t bit = (1 << i);
+			const uint32_t bit = (1 << i);
 			if (btnPressed & bit) {
 				if (cfg.displayMode == DispMode::Oscilloscope) {
 
@@ -313,7 +305,6 @@ void UI::handleEncoders()
 				DrawUI();
 			}
 		}
-
 	}
 }
 
@@ -321,14 +312,14 @@ void UI::handleEncoders()
 void UI::ResetMode()
 {
 	RunSampleTimer(false);					// Disable the sample acquisiton timer
-	UART4->CR1 &= ~USART_CR1_UE;			// Disable MIDI capture on UART4
+	EnableMidiUart(false);					// Disable MIDI capture on UART4
 
 	lcd.ScreenFill(RGBColour::Black);
 	switch (cfg.displayMode) {
 	case DispMode::Oscilloscope :
+		osc.Activate();
 		encoderModeL = osc.cfg.encModeL;
 		encoderModeR = osc.cfg.encModeR;
-		SetSampleTimer(std::max(osc.cfg.sampleTimer, (uint16_t)MINSAMPLETIMER));
 		break;
 	case DispMode::Tuner :
 		tuner.Activate(false);
@@ -349,14 +340,10 @@ void UI::ResetMode()
 		break;
 	}
 
-	osc.capturing = osc.drawing = false;
-	osc.bufferSamples = osc.capturePos = osc.oldAdc = 0;
-	osc.setTriggerChannel();
-
 	ui.DrawUI();
 
 	if (cfg.displayMode == DispMode::MIDI) {
-		UART4->CR1 |= USART_CR1_UE;			// Enable MIDI capture
+		EnableMidiUart(true);				// Enable MIDI capture
 	} else {
 		RunSampleTimer(true);				// Reenable the sample acquisiton timer
 	}
@@ -367,8 +354,6 @@ std::string_view UI::EncoderLabel(EncoderType type)
 {
 	switch (type) {
 	case HorizScale :
-		return "Zoom Horiz";
-	case HorizScaleFine :
 		return "Zoom Horiz";
 	case CalibVertScale :
 		return "Calib Scale";

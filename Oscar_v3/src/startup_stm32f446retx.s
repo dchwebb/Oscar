@@ -61,7 +61,7 @@ defined in linker script */
 Reset_Handler:
   // Check for instruction to jump to STM bootloader
 
-  // Start Backup RAM
+  // Start Backup RAM where magic number is stored if starting in dfu mode
 // Enable the power interface clock
   ldr r0, =0x40023840		// RCC->APB1ENR register address
   ldr r1, =0x10000000		// PWREN bit
