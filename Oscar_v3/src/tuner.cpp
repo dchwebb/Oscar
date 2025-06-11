@@ -68,8 +68,11 @@ void Tuner::Activate(bool startTimer)
 	bufferPos = 0;
 	samplesReady = false;
 
-	if (startTimer) {
+	if (startTimer) {							// Set to false if switching modes - will be activated later by ui
 		RunSampleTimer(true);					// Enable the sample acquisiton timer
+	} else {
+		noSignal = false;						// To ensure 'No signal' text is correctly displayed when mode switching
+		currFreq = 0.0f;
 	}
 }
 
@@ -276,7 +279,7 @@ void Tuner::Run()
 
 			// Formula to get musical note from frequency is (ln(freq) - ln(16.35)) / ln(2 ^ (1/12))
 			// Where 16.35 is frequency of low C and return value is semi-tones from low C
-			const std::string noteNames[12] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+			const char* noteNames[12] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
 			constexpr float numRecip = 1.0f / log(pow(2.0f, 1.0f / 12.0f));		// Store reciprocal to avoid division
 			constexpr float logBase = log(16.35160f);
 			const float note = (log(currFreq) - logBase) * numRecip;
@@ -285,7 +288,7 @@ void Tuner::Run()
 			const int32_t centDiff = static_cast<int32_t>(100.0f * (note - std::round(note)));
 
 			// Draw note name and octave with cent error to the left (-) or right (+)
-			lcd.DrawStringCenter(60, 35, 48, centDiff < 0 ? ui.IntToString(centDiff): " ", lcd.Font_XLarge, RGBColour::White, RGBColour::Black);
+			lcd.DrawStringCenter(60, 35, 48, centDiff < 0 ? ui.IntToString(centDiff) : " ", lcd.Font_XLarge, RGBColour::White, RGBColour::Black);
 			lcd.DrawStringCenter(160, 35, 48, noteNames[pitch] + ui.IntToString(octave), lcd.Font_XLarge, RGBColour::White, RGBColour::Black);
 			lcd.DrawStringCenter(260, 35, 48, centDiff > 0 ? "+" + ui.IntToString(centDiff): " ", lcd.Font_XLarge, RGBColour::White, RGBColour::Black);
 
@@ -301,7 +304,7 @@ void Tuner::Run()
 
 			lastValid = SysTickVal;
 
-		} else if (!noSignal && SysTickVal - lastValid > 4000) {
+		} else if (!noSignal && (currFreq == 0.0f || SysTickVal - lastValid > 4000)) {
 			lcd.DrawStringCenter(160, 35, 250, "No Signal", lcd.Font_XLarge, RGBColour::Grey, RGBColour::Black);
 			lcd.DrawStringCenter(160, 85, 128, ui.FloatToString(currFreq, false) + "Hz", lcd.Font_XLarge, RGBColour::Grey, RGBColour::Black);
 			noSignal = true;

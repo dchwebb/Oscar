@@ -13,6 +13,8 @@ public:
 	void DrawUI();
 	void handleEncoders();
 	void ResetMode();
+	std::string FloatToString(float f, bool smartFormat);
+	std::string IntToString(const int32_t v);
 
 	struct Config {
 		DispMode displayMode = DispMode::Oscilloscope;
@@ -24,9 +26,6 @@ public:
 		.settingsSize = sizeof(cfg),
 		.validateSettings = nullptr
 	};
-
-	std::string FloatToString(float f, bool smartFormat);
-	std::string IntToString(const int32_t v);
 
 	enum class MenuMode { off, encoder, system } menuMode;
 

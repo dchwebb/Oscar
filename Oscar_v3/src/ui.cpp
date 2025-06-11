@@ -401,5 +401,3 @@ std::string UI::IntToString(const int32_t v)
 	return std::string(charBuff);
 }
 
-
-
