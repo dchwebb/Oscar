@@ -128,7 +128,6 @@ inline uint32_t Tuner::OverlayVPos(float sample)
 	// Stored samples are amplitude +/-2047
 	const float scaled = ((-(sample / 4096.0f) * (8.0f / osc.cfg.voltScale)) + 0.5f) * overlayHeight;
 	return static_cast<uint32_t>(std::clamp(scaled, 0.0f, overlayHeight));
-
 }
 
 
@@ -315,7 +314,6 @@ void Tuner::Run()
 		}
 
 		Activate(true);
-
 	}
 }
 

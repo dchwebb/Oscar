@@ -84,7 +84,7 @@ void UI::EncoderAction(EncoderType type, const int8_t val)
 		DrawUI();
 		break;
 	case Trigger_Y :
-		osc.cfg.triggerY = std::min(std::max((int32_t)osc.cfg.triggerY + 100 * val, (int32_t)3800), (int32_t)16000);
+		osc.cfg.triggerY = std::min(std::max((int32_t)osc.cfg.triggerY + 100 * val, 2000L), 16000L);
 		break;
 	case Trigger_X :
 		osc.cfg.triggerX = std::min(std::max((int32_t)osc.cfg.triggerX + 2 * val, 0L), 316L);

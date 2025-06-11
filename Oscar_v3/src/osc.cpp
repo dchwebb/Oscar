@@ -10,6 +10,7 @@ void Osc::Activate()
 	osc.bufferSamples = 0;
 	osc.capturePos = 0;
 	osc.oldAdc = 0;
+	freqLvlAv = calibZeroPos;
 	osc.setTriggerChannel();
 	SetSampleTimer(std::max(osc.cfg.sampleTimer, minSampleTimer));
 }
@@ -66,9 +67,9 @@ void Osc::Capture()
 		if (!capturing) {
 			++bufferSamples;
 
-			// if trigger point not activating generate a temporary draw buffer
-			// for slow sample rates, number of buffer samples needed for no trigger draw should be reduced
-			uint32_t tiggerLevel = 100000000 / cfg.sampleTimer;
+			// If trigger point not activating generate a temporary draw buffer
+			// For slow sample rates, number of buffer samples needed for 'no trigger' draw should be reduced
+			const uint32_t tiggerLevel = 100000000 / cfg.sampleTimer;
 			if (bufferSamples > tiggerLevel && capturePos == 0) {
 				captureBufferNumber = captureBufferNumber == 1 ? 0 : 1;		// switch the capture buffer
 				bufferSamples = 0;
@@ -178,7 +179,7 @@ void Osc::OscRun()
 			if (noTriggerDraw) {
 				lcd.DrawString(textOffsetRight, 1, "No Trigger " , lcd.Font_Small, RGBColour::White, RGBColour::Black);
 			} else {
-				lcd.DrawString(textOffsetRight, 1, freq != 0 ? ui.FloatToString(freq, false) + "Hz    " : "          ", lcd.Font_Small, RGBColour::White, RGBColour::Black);
+				lcd.DrawString(textOffsetRight, 1, freq != 0 ? ui.FloatToString(freq, false) + "Hz     " : "          ", lcd.Font_Small, RGBColour::White, RGBColour::Black);
 			}
 		}
 
@@ -219,11 +220,12 @@ void Osc::FreqCalc(const uint16_t offsetX) {
 							  (cfg.oscDisplay & 2) ? OscBufferB[oscBufferNumber][offsetX] :
 							   OscBufferC[oscBufferNumber][offsetX];
 	freqSmoothY = (drawPos == 0) ? currentY : (currentY + 15 * freqSmoothY) / 16;
+	freqLvlSum = (drawPos == 0) ? 0 : freqLvlSum + freqSmoothY;
 
-	if (!freqBelowZero && freqSmoothY < calibZeroPos) {		// first time reading goes below zero
+	if (!freqBelowZero && freqSmoothY < freqLvlAv) {		// first time reading goes below zero
 		freqBelowZero = true;
 	}
-	if (freqBelowZero && freqSmoothY >= calibZeroPos) {		// zero crossing
+	if (freqBelowZero && freqSmoothY >= freqLvlAv) {		// zero crossing
 		//	second zero crossing - calculate frequency averaged over a number passes to smooth
 		if (freqCrossZero > 0 && drawPos - freqCrossZero > 3) {
 			const float newFreq = FreqFromPos(drawPos - freqCrossZero);
@@ -235,6 +237,10 @@ void Osc::FreqCalc(const uint16_t offsetX) {
 		}
 		freqCrossZero = drawPos;
 		freqBelowZero = false;
+	}
+
+	if (drawPos == lcd.drawWidth - 1) {
+		freqLvlAv = freqLvlSum / lcd.drawWidth;
 	}
 }
 

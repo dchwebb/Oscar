@@ -226,23 +226,18 @@ uint32_t GetSampleTimer()
 
 void SetSampleTimer(uint32_t val)
 {
-	float div;
-
 	if (val < 65536) {
 		TIM3->PSC = 0;
 		TIM3->ARR = val;
-		div = 2.0f;
 	} else if (val < 131072) {
 		TIM3->PSC = 1;
 		TIM3->ARR = val / 2;
-		div = 4.0f;
 	} else {
 		val = std::min(val, 196607UL);
 		TIM3->PSC = 2;
 		TIM3->ARR = val / 3;
-		div = 6.0f;
 	}
-	samplingFrequency = static_cast<float>(SystemCoreClock) / (div * (val + 1));
+	samplingFrequency = static_cast<float>(SystemCoreClock) / (2.0f * (val + 1));
 }
 
 

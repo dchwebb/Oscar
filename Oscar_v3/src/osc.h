@@ -20,7 +20,7 @@ public:
 	enum Channel {A = 0, B = 1, C = 2};
 
 	// Oscilloscope settings
-	uint16_t calibZeroPos = 9985;
+	uint16_t calibZeroPos = 9985;					// Calculated from vCalibOffset and vCalibScale
 	uint16_t* triggerTest = &adcA;					// store the currently active trigger channel as a reference for faster interrupt performance
 
 	// Oscilloscope working variables
@@ -72,9 +72,9 @@ private:
 	SamplePos VertOffsets(uint16_t offsetX);
 	void FreqCalc(const uint16_t offsetX);
 
-	static constexpr uint32_t textOffsetTop = 11;			// 11 offset for voltage and frequency written at top of screen
-	static constexpr uint32_t textOffsetLeft = 27;			// 27 offset for voltage at left of screen
-	static constexpr uint32_t textOffsetRight = 250;		// offset for frequency at right of screen
+	static constexpr uint32_t textOffsetTop = 11;	// 11 offset for voltage and frequency written at top of screen
+	static constexpr uint32_t textOffsetLeft = 27;	// 27 offset for voltage at left of screen
+	static constexpr uint32_t textOffsetRight = 250;// offset for frequency at right of screen
 
 	uint8_t drawBufferNumber = 0;
 	int8_t oldVoltScale = 0;						// To limit redraws of voltage information
@@ -83,6 +83,8 @@ private:
 	bool freqBelowZero;
 	uint16_t freqCrossZero;
 	uint16_t freqSmoothY;							// Used in basic filter to remove high frequency noise
+	float freqLvlSum;								// Used to calculate average amplitude of signal
+	float freqLvlAv;								// average signal level to detect frequency of unipolar signals
 
 	uint16_t calculatedOffsetYB = 0, calculatedOffsetYC = 0;	// Pre-Calculated offsets when in multi-lane mode
 };
