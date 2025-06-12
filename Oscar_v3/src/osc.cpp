@@ -25,7 +25,7 @@ void Osc::Capture()
 
 	// check if we should start capturing - ie not drawing from the capture buffer and crossed over the trigger threshold (or in free mode)
 	if (!capturing && (!drawing || captureBufferNumber != oscBufferNumber) &&
-			(triggerTest == nullptr || (bufferSamples > cfg.triggerX && oldAdc < cfg.triggerY && *triggerTest >= cfg.triggerY))) {
+			(triggerTest == nullptr || (bufferSamples > cfg.triggerX && oldAdc > cfg.triggerY && *triggerTest <= cfg.triggerY))) {
 		capturing = true;
 
 		if (triggerTest == nullptr) {									// free running mode

@@ -19,7 +19,7 @@ public:
 	static constexpr uint32_t sinLUTSize = 1024;
 
 	EncoderType wfallEncModeL = HorizScale;				// Waterfall encoders - no other options
-	EncoderType wfallEncModeR = VertScale;
+	EncoderType wfallEncModeR = HorizScale;
 
 	const float* sinLUTExt = nullptr;					// As LUT is created constexpr store a pointer to allow access from outside FFT class
 

@@ -61,9 +61,11 @@ void UI::EncoderAction(EncoderType type, const int8_t val)
 	case CalibVertOffset :
 		osc.cfg.vCalibOffset += 50 * val;
 		break;
+
 	case CalibVertScale :
 		osc.cfg.vCalibScale += val * .01;
 		break;
+
 	case VertScale :
 		osc.cfg.voltScale -= val;
 		osc.cfg.voltScale = std::clamp(static_cast<int>(osc.cfg.voltScale), 1, 12);

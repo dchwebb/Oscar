@@ -62,9 +62,9 @@ private:
 		{ 7, "Calib Offset", CalibVertOffset } };
 
 	const std::vector<MenuItem> fftMenu {
-		{ 0, "Horiz scale", HorizScale },
-		{ 1, "Vert scale", VertScale },
-		{ 2, "AutoTune", FFTAutoTune },
+		{ 0, "Vert scale", VertScale },
+		{ 1, "AutoTune", FFTAutoTune },
+		{ 2, "Horiz scale", HorizScale },
 		{ 3, "Trace overlay", TraceOverlay } };
 
 	const std::vector<MenuItem> tunerMenu {
