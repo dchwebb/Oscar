@@ -141,7 +141,8 @@ void MidiEvents::QueueAdd(QueueType source, uint8_t data)
 void MidiEvents::DrawEvent(const MIDIEvent& event)
 {
 	// Darken colour based on age of event
-	const RGBColour colour = RGBColour(MIDIColours[event.channel]).DarkenColour((timer - event.time) >> 7);
+	volatile uint64_t dark = std::min((timer - event.time) >> 7, (uint64_t)300);
+	const RGBColour colour = RGBColour(MIDIColours[event.channel]).DarkenColour(std::min((timer - event.time) >> 7, (uint64_t)50));
 
 	const uint8_t top = 5 + drawHeight * drawIndex;
 

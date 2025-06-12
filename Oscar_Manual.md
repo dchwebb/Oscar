@@ -2,6 +2,17 @@
 
 ## Table of Contents
 
+- [Oscar Manual](#oscar-manual)
+   * [Table of Contents](#table-of-contents)
+   * [Introduction](#introduction)
+   * [Basic Navigation](#basic-navigation)
+   * [Oscilloscope](#oscilloscope)
+   * [Tuner](#tuner)
+   * [Spectrum Analyser](#spectrum-analyser)
+   * [Waterfall Plot](#waterfall-plot)
+   * [MIDI Analyser](#midi-analyser)
+   * [Firmware Upgrade](#firmware-upgrade)
+
 ## Introduction
 
 Oscar is a multi-function Eurorack module, combining oscilloscope, tuner, spectrum analyser, waterfall display and MIDI analyser.
@@ -30,21 +41,21 @@ A triggering system will align the display to the trigger point, shown by a yell
 
 The following parameters can be assigned to the rotary encoders:
 
-**Horiz scale** Zooms the display horizontally from 0.7ms at the fastest time to 700ms at the slowest.
+- **Horiz scale** Zooms the display horizontally from 0.7ms at the fastest time to 700ms at the slowest.
 
-**Vert scale** Zooms the display vertically from 1 volt to 12 volts peak to peak.
+- **Vert scale** Zooms the display vertically from 1 volt to 12 volts peak to peak.
 
-**Multi-Lane** Selects whether multiple channels are overlaid or shown in separate lanes.
+- **Multi-Lane** Selects whether multiple channels are overlaid or shown in separate lanes.
 
-**Trigger Y** Sets the vertical trigger position.
+- **Trigger Y** Sets the vertical trigger position.
 
-**Trigger X** Sets the horizontal trigger position.
+- **Trigger X** Sets the horizontal trigger position.
 
-**Trigger Ch** Selects which channel the trigger is active on (or no trigger to disable). Note that only a visible channel can be triggered on.
+- **Trigger Ch** Selects which channel the trigger is active on (or no trigger to disable). Note that only a visible channel can be triggered on.
 
-**Calib Scale** Allows calibration of the vertical scale - feed in a signal of known amplitude and set so that the volt scale matches.
+- **Calib Scale** Allows calibration of the vertical scale - feed in a signal of known amplitude and set so that the volt scale matches.
 
-**Calib Offset** Use to calibrate the zero volt position.
+- **Calib Offset** Use to calibrate the zero volt position.
 
 ## Tuner
 
@@ -54,11 +65,11 @@ A flashing dot at the top right of the screen changes each time a signal is capt
 
 The rotary encoders provide the following options:
 
-**Vert scale** Zooms the wave overlay display vertically.
+- **Vert scale** Zooms the wave overlay display vertically.
 
-**Tuner Mode** Two tuner modes are available. FFT is the most accurate but can be slightly slower. Zero Crossing mode checks for zero crossings in the signal which can be confused by complex waveforms, but is slightly faster in some cases.
+- **Tuner Mode** Two tuner modes are available. FFT is the most accurate but can be slightly slower. Zero Crossing mode checks for zero crossings in the signal which can be confused by complex waveforms, but is slightly faster in some cases.
 
-**Trace Overlay** Chooses whether the waveform is overlaid at the bottom of the screen.
+- **Trace Overlay** Chooses whether the waveform is overlaid at the bottom of the screen.
 
 ## Spectrum Analyser
 
@@ -70,14 +81,57 @@ The captured waveform can be optionally overlaid on the screen and the frequency
 
 Encoder parameters:
 
-**Vert scale** Zooms the wave overlay display vertically.
+- **Vert scale** Zooms the wave overlay display vertically.
 
-**Auto Tune** The accuracy of an FFT analysis is affected by the sampling rate. The Auto tune mechanism used here attempts to adjust the sampling rate to an exact multiple of the signal for an accurate analysis. This can be disabled, usually to cope with very complex signals, but the accuracy of the frequency measurements will be adversely affected.
+- **Auto Tune** The accuracy of an FFT analysis is affected by the sampling rate. The Auto tune mechanism used here attempts to adjust the sampling rate to an exact multiple of the signal for an accurate analysis. This can be disabled, usually to cope with very complex signals, but the accuracy of the frequency measurements will be adversely affected.
 
-**Horiz scale** If auto tune is disabled this alters the sampling rate to adjust the frequency of the spectrum being captured.
+- **Horiz scale** If auto tune is disabled this alters the sampling rate to adjust the frequency of the spectrum being captured.
 
-**Trace overlay** Chooses whether the waveform is overlaid.
+- **Trace overlay** Chooses whether the waveform is overlaid.
 
+## Waterfall Plot
 
+This mode displays the frequency spectrum of the signal as it changes over time. The only encoder action is to adjust the sampling frequency which affects which frequency ranges are displayed (shown at the bottom of the screen).
+
+Note that altering the sampling frequency will change the time it takes to capture the samples to display so very low sampling rates will cause the screen refresh to fall.
+
+## MIDI Analyser
+
+Both serial and USB MIDI data can be displayed simultaneously. The display will show note/on off events, control changes, aftertouch and pitchbends. The MIDI clock rate is indicated by a flashing dot at the bottom right for serial MIDI and bottom left for USB. Sysex data is not shown.
+
+Different colours are used to indicate the MIDI channel for each type of event displayed (also the number is shown in the far left column.
+
+Serial MIDI input uses a 1/8" jack socket wired to the current MIDI standard, and is protected by an opto-coupler. The two serial sockets are wired as direct mults with no buffering.
+
+USB MIDI is received on a USB-C socket. The module can only act as a USB device so is not suitable for analysing MIDI USB data from keyboards etc.
+
+## Firmware Upgrade
+
+A mechanism is provided to upgrade the firmware over USB. Note that the latest firmware for the module can be found here: [Oscar.elf](Oscar/Debug). Download the file (use raw format to get the file in binary format).
+
+In the serial console type **dfu**. This will reboot the module into DFU (Device Firmware Upgrade) mode.
+
+Run the STM Cube Programmer software available here: [STM Cube Programmer](https://www.st.com/en/development-tools/stm32cubeprog.html).
+
+![Programmer](Graphics/STMCubeProg1.png?raw=true)
+
+1. Select USB connection
+2. Click Refresh and select the appropriate USB port (USB1 here)
+3. Click Connect
+
+<br />
+<br />
+
+![Programmer2](Graphics/STMCubeProg2.png?raw=true)
+
+- Click 'Open file' and navigate to the Oscar.elf firmware file downloaded from Github.
+
+<br />
+<br />
+
+![Programmer3](Graphics/STMCubeProg3.png?raw=true)
+
+- Click the 'Download' button to transfer the firmware onto Oscar.
+- Restart the module. Note you can use the console command **info** to view the firmware build date to confirm an upgrade has succeeded.
 
 
