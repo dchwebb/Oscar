@@ -1,7 +1,6 @@
 
 *.BAK
 *.FXP
-*.zip
 *.o
 *.d
 *.list
@@ -27,3 +26,11 @@ Hardware_v2/Graphics/signal-sine-wave-01.svg
 Hardware_v2/lcd_18pin.jpg
 Hardware_v2/Graphics/sine.png
 /Oscar_2
+/Hardware_v2/lcd_Daughterboard-backups
+/Hardware_v2/oscar-backups
+/Hardware_v2/oscar_components-backups
+/Hardware_v3/lcd_Daughterboard-backups
+/Hardware_v3/oscar-backups
+/Hardware_v3/oscar_components-backups
+/Hardware_v3/oscar_panel-backups
+/Hardware_v2/oscar_panel-backups
