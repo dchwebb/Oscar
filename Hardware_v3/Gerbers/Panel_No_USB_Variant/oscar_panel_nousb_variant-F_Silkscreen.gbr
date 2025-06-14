@@ -1,0 +1,20 @@
+G04 #@! TF.GenerationSoftware,KiCad,Pcbnew,8.0.8*
+G04 #@! TF.CreationDate,2025-06-13T11:57:10+01:00*
+G04 #@! TF.ProjectId,oscar_panel_nousb_variant,6f736361-725f-4706-916e-656c5f6e6f75,rev?*
+G04 #@! TF.SameCoordinates,Original*
+G04 #@! TF.FileFunction,Legend,Top*
+G04 #@! TF.FilePolarity,Positive*
+%FSLAX46Y46*%
+G04 Gerber Fmt 4.6, Leading zero omitted, Abs format (unit mm)*
+G04 Created by KiCad (PCBNEW 8.0.8) date 2025-06-13 11:57:10*
+%MOMM*%
+%LPD*%
+G01*
+G04 APERTURE LIST*
+%ADD10C,6.300000*%
+G04 APERTURE END LIST*
+D10*
+X152000000Y-120000000D03*
+X137000000Y-120000000D03*
+X122000000Y-120000000D03*
+M02*

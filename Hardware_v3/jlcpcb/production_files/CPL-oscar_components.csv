@@ -21,8 +21,6 @@ D1,1N5819,D_SOD-123,139.1,-57.3,90.0,bottom
 D2,1N5819,D_SOD-123,112.3,-56.8,270.0,bottom
 D3,1N4148W,D_SOD-123,144.3,-112.0,270.0,bottom
 D4,RCLAMP0502B,SOT-416,164.2,-137.2,90.0,bottom
-J1,SWD_Header,SWD_header,166.2,-67.41,270.0,bottom
-J2,Eurorack_10_pin_power,Eurorack_10_pin_header,125.38,-57.295,180.0,bottom
 J3,ChannelC_In,THONKICONN_hole,152.78,-132.0,90.0,top
 J4,ChannelA_In,THONKICONN_hole,122.78,-132.0,90.0,top
 J5,ChannelB_In,THONKICONN_hole,137.78,-132.0,90.0,top
@@ -32,7 +30,6 @@ J8,ChB_Buff_Out,THONKICONN_hole,137.78,-145.2,90.0,top
 J9,MIDI_IN,Thonkiconn_Stereo-PJ366ST,108.38,-132.0,90.0,top
 J10,MIDI_THROUGH,Thonkiconn_Stereo-PJ366ST,108.38,-145.2,90.0,top
 J11,USB_C_Receptacle,USB_C_Receptacle_Amphenol_12401951E412A,164.1,-144.1,-90.0,top
-J12,Debug_Header,PinHeader_1x03_P2.54mm_Vertical,166.0,-90.285,180.0,bottom
 L1,L,R_0805_2012Metric,138.6,-85.6,270.0,bottom
 R1,150,R_0805_2012Metric,109.0,-56.9,270.0,bottom
 R2,100k,R_0805_2012Metric,128.1,-79.8,180.0,bottom

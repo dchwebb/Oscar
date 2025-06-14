@@ -14742,7 +14742,7 @@
 		(path "/00000000-0000-0000-0000-00005c1668b3")
 		(sheetname "Root")
 		(sheetfile "oscar_components.kicad_sch")
-		(attr through_hole)
+		(attr through_hole exclude_from_pos_files exclude_from_bom)
 		(fp_line
 			(start -1.27 1.27)
 			(end 8.89 1.27)
@@ -16396,7 +16396,7 @@
 		(path "/355163c3-2d95-45cc-b31e-62bf812fe8a3")
 		(sheetname "Root")
 		(sheetfile "oscar_components.kicad_sch")
-		(attr through_hole)
+		(attr through_hole exclude_from_pos_files exclude_from_bom)
 		(fp_line
 			(start -5.07 -3.2)
 			(end 15.23 -3.2)
@@ -18489,7 +18489,7 @@
 		(path "/0f0a5ae5-7327-410b-843f-04618b790d4d")
 		(sheetname "Root")
 		(sheetfile "oscar_components.kicad_sch")
-		(attr through_hole)
+		(attr through_hole exclude_from_pos_files exclude_from_bom)
 		(fp_line
 			(start -1.33 -6.41)
 			(end -1.33 -1.27)
@@ -21033,6 +21033,42 @@
 				(thickness 0.15)
 			)
 			(justify left bottom mirror)
+		)
+	)
+	(gr_text "Green"
+		(at 122 125.5 0)
+		(layer "F.SilkS")
+		(uuid "103b94b8-8510-4a5e-b750-1972df72ed9c")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify bottom)
+		)
+	)
+	(gr_text "Blue"
+		(at 137 125.5 0)
+		(layer "F.SilkS")
+		(uuid "184bda8b-6b71-4120-a899-5e4799d92d2e")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify bottom)
+		)
+	)
+	(gr_text "Orange"
+		(at 152 125.5 0)
+		(layer "F.SilkS")
+		(uuid "4297e74b-7cd8-4b12-9dae-a67c1e884f84")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify bottom)
 		)
 	)
 	(gr_text "+"
