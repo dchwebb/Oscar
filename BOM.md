@@ -3,6 +3,7 @@
 ## Screen
 
 [2.4 inch TFT HD Color LCD Screen 2.8-3.3V 240x320 4-wire SPI interface ILI9341](https://www.ebay.co.uk/itm/394725476377)
+Various lengths of 2.54mm pin headers
 
 ## Generic Parts (optional if using JLC assembly)
 
@@ -34,14 +35,14 @@
 
 ## Digikey/Mouser Components
 
-|Comment      |Designator          |Footprint                                  |Digikey               |Mouser              |
-|-------------|--------------------|-------------------------------------------|----------------------|--------------------|
-|Menu Button  |SW2                 |Tactile Switch SKHHDTA010                  |4809-SKHHDTA010-ND    |688-SKHHDT          |
-|Reset Button |SW1                 |Tactile Switch SKHHDTA010                  |4809-SKHHDTA010-ND    |688-SKHHDT          |
-|Right Encoder|SW4                 |Rotary Encoder                             |PEC11R-4220F-S0024-ND |652-PEC11R-4220F-S24|
-|Left Encoder |SW3                 |Rotary Encoder                             |PEC11R-4220F-S0024-ND |652-PEC11R-4220F-S24|
-|USB C Socket |J11                 |Amphenol 12401951E412A                     |664-12401951E412ATR-ND|523-12401951E412A   |
-|Eurorack 10 pin power|J2          |Eurorack 10 pin header (or from e-bay)     |SAM10831-ND           |200-TST10501TD      |
+|Comment      |Designator          |Footprint                                   |Digikey               |Mouser              |
+|-------------|--------------------|--------------------------------------------|----------------------|--------------------|
+|Menu Button  |SW2                 |Tactile Switch SKHHDTA010                   |4809-SKHHDTA010-ND    |688-SKHHDT          |
+|Reset Button |SW1                 |Tactile Switch SKHHDTA010                   |4809-SKHHDTA010-ND    |688-SKHHDT          |
+|Right Encoder|SW4                 |Rotary Encoder PEC11R-4220F-S0024           |PEC11R-4220F-S0024-ND |652-PEC11R-4220F-S24|
+|Left Encoder |SW3                 |Rotary Encoder PEC11R-4220F-S0024           |PEC11R-4220F-S0024-ND |652-PEC11R-4220F-S24|
+|USB C Socket |J11                 |Amphenol 12401951E412A                      |664-12401951E412ATR-ND|523-12401951E412A   |
+|Eurorack 10 pin power|J2          |Eurorack 10 pin shrouded header             |SAM10831-ND           |200-TST10501TD      |
 
 
 ## Thonk Components
@@ -59,3 +60,4 @@
 |ChannelC In  |J3                  |THONKICONN hole                            |[Thonkiconn Mono 3.5mm Audio Jacks (WQP518MA)](https://www.thonk.co.uk/shop/thonkiconn/)|
 |MIDI IN      |J9                  |Thonkiconn Stereo-PJ366ST                  |[Green Thonkiconn Stereo 3.5mm Audio Jacks (PJ366ST)](https://www.thonk.co.uk/shop/thonkiconn/)|
 |MIDI THROUGH |J10                 |Thonkiconn Stereo-PJ366ST                  |[Green Thonkiconn Stereo 3.5mm Audio Jacks (PJ366ST)](https://www.thonk.co.uk/shop/thonkiconn/)|
+
