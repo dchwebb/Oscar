@@ -26,6 +26,8 @@ The BOM lists the various suppliers and part numbers that are needed to build Os
 
 - [Bill of Materials](BOM.md)
 
+These are the through-hole controls needed in addition to the surface mount components:
+
 ![Through-hole Controls](Graphics/through_hole_controls.jpg?raw=true)
 
 ## PCB Ordering and Assembly
@@ -128,18 +130,28 @@ Then attach the panel to ensure correct alignment and secure with a nut and an e
 
 ## LCD Daughterboard
 
-There appear to be a couple of variants of the LCD available. Look on Ebay (or elsewhere) for '2.4 inch TFT HD Color LCD Screen 2.8-3.3V 240x320 4-wire SPI interface ILI9341'. It should look like this:
+There appear to be a couple of variants of the LCD available. Look on Ebay (or elsewhere) for '2.4 inch TFT HD Color LCD Screen 2.8-3.3V 240x320 4-wire SPI interface ILI9341'. This is the one in the ebay listing, but the one they sent looks a bit different:
 
 ![LCD Front](Graphics/lcd1.png?raw=true)
 ![LCD Back](Graphics/lcd2.png?raw=true)
 
-It is recommended to solder the 4 pin headers to the daughterboard before soldering on the LCD. Initially only solder one pin on each header so the angle can be tweaked to ensure the daughterboard fits cleanly into the Component PCB. Once the headers are aligned correctly solder the remaining pins.
+It is recommended to solder the 4 pin headers to the daughterboard before soldering on the LCD. 
+
+![Daughterboard 1](Graphics/Daughterboard1.jpg?raw=true)
+
+Initially only solder one pin on each header so the angle can be tweaked to ensure the daughterboard fits cleanly into the Component PCB. Once the headers are aligned correctly solder the remaining pins.
+
+![Daughterboard 2](Graphics/Daughterboard2.jpg?raw=true)
 
 The LCD can now be soldered to the daughterboard. There is a white line above and below the PCB pads. This indicates the location of the edge of the flex-pcb connector. Put a little solder on the pads and then solder the flex-pcb connector to the pads.
 
-The daughterboard should be attached to the component PCB before sticking down the LCD. Place the daughterboard in the four holes, put the panel on and turn the assembly upside down.
+![Daughterboard 3](Graphics/Daughterboard3.jpg?raw=true)
 
-Ensure the LCD is lying flat against the panel and then solder the four pin headers. Again it is recommended to only solder one pin on each header so that adjustments can be made if needed. Once the alignment looks correct solder all pins.
+The daughterboard should be attached to the component PCB before sticking down the LCD. Place the daughterboard in the four holes, put the panel on (and secure with a couple of nuts) and turn the assembly upside down.
+
+Ensure the LCD is lying flat against the panel and then solder the four pin headers, applying gentle pressure to ensure the LCD is flush against the panel. Again it is recommended to only solder one pin on each header so that adjustments can be made if needed. Once the alignment looks correct solder all pins.
+
+![Daughterboard 4](Graphics/Daughterboard4.jpg?raw=true)
 
 The LCD can now be tested by applying Eurorack power (assuming you have correctly installed the firmware). If the LCD backlight comes on but there is no display check the soldering of the flex-pcb connector.
 

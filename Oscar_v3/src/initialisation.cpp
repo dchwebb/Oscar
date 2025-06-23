@@ -226,17 +226,16 @@ uint32_t GetSampleTimer()
 
 void SetSampleTimer(uint32_t val)
 {
-	if (val < 65536) {
-		TIM3->PSC = 0;
-		TIM3->ARR = val;
-	} else if (val < 131072) {
-		TIM3->PSC = 1;
-		TIM3->ARR = val / 2;
-	} else {
-		val = std::min(val, 196607UL);
-		TIM3->PSC = 2;
-		TIM3->ARR = val / 3;
+	// as the counter (ARR) is limited to 16 bits, increment the prescaler to get higher multiples (ie longer sample intervals)
+	static constexpr uint32_t maxPrescaler = 5;
+	val = std::min(val, (uint32_t)(maxPrescaler * 65536 - 1));
+	for (uint32_t i = 0; i < maxPrescaler; ++i) {
+		if (val < (i + 1) * 65536) {
+			TIM3->PSC = i;
+			TIM3->ARR = val / (i + 1);
+		}
 	}
+
 	samplingFrequency = static_cast<float>(SystemCoreClock) / (2.0f * (val + 1));
 }
 

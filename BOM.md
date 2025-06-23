@@ -2,12 +2,12 @@
 
 ## Screen
 
-[2.4 inch TFT HD Color LCD Screen 2.8-3.3V 240x320 4-wire SPI interface ILI9341](https://www.ebay.co.uk/itm/394725476377)
-Various lengths of 2.54mm pin headers
+- [2.4 inch TFT HD Color LCD Screen 2.8-3.3V 240x320 4-wire SPI interface ILI9341](https://www.ebay.co.uk/itm/394725476377)
+- Various lengths of 2.54mm pin headers
 
 ## Generic Parts (optional if using JLC assembly)
 
-|Comment      |Designator          |Footprint                                  |LCSC    |
+|Value        |Designator          |Footprint                                  |JLC     |
 |-------------|--------------------|-------------------------------------------|--------|
 |8MHz         |Y1                  |Crystal 5032 2 Pin 5.0x3.2mm               |C115962 |
 |STM32F446RETx|U3                  |LQFP-64_10x10mm_P0.5mm                     |C69336  |
@@ -18,7 +18,7 @@ Various lengths of 2.54mm pin headers
 |MCP6004      |U5                  |SOIC-14_3.9x8.7mm_P1.27mm OpAmp            |C7378   |
 |1N4148W      |D3                  |D_SOD-123 Diode                            |C81598  |
 |1N5819       |D1,D2               |D_SOD-123 Diode                            |C8598   |
-|Ferrite Bead |L1                  |0805 Inductor                              |C1017   |
+|Ferrite Bead |L1                  |0805 300mΩ 600Ω@100MHz Ferrite Bead        |C1017   |
 |22uF 16V     |C2,C8               |Electrolytic Capacitor 4 x 5.8mm           |C134793 |
 |4.7uF        |C1,C11,C15,C9       |0805 Capacitor                             |C1779   |
 |1uF          |C14                 |0805 Capacitor                             |C28323  |
