@@ -1,22 +1,23 @@
 # Oscar
-![Image](https://raw.githubusercontent.com/dchwebb/Oscar/master/Graphics/OscAB.jpg "icon")
 
 Overview
 --------
 
-Oscar is a three channel oscilloscope, tuner, spectrum analyser and MIDI event viewer designed for use in a Eurorack modular synthesiser. Each of the three channels has a buffered through allowing use any where in the signal chain.
+Oscar is a three channel oscilloscope, tuner, spectrum analyser and MIDI event viewer designed for use in a Eurorack modular synthesiser.
+
+![Oscar](Graphics/oscar_front2.jpg "icon")
 
 - [Manual](Oscar_Manual.md)
-
-The module has been optimised (as far as possible) for DIY building:
-
 - [Build Guide](Oscar_Build_Guide.md)
 - [Bill of Materials](BOM.md)
 
 Version 3 changes: 
+- Optimised for DIY building
 - Illuminated buttons for quick channel selection
 - USB input for firmware updates and USB MIDI analysis
 - An opto-coupler and passive mult on the serial MIDI input
+
+![Oscar](Graphics/oscar_front3.jpg "icon")
 
 Functional Overview
 -------------------
@@ -48,15 +49,11 @@ Oscar uses an SMT32F446 microcontroller to capture incoming signals with the int
 
 - [Schematics](Hardware_v3/Oscar_Components.pdf)
 
-The microcontroller is clocked at 180MHz via an external 8MHz crystal oscillator.
+The microcontroller is clocked at 180MHz via an external 8MHz crystal oscillator. The analog inputs are scaled with an MCP6004 op-amp and the mult outputs buffered with a TL074 op-amp. The internal UART is used to capture serial MIDI data for display via a H11L1 optocoupler (to reduce the risk of ground hum).
 
-The analog inputs are scaled with an MCP6004 op-amp and the mult outputs buffered with a TL074 op-amp. The internal UART is used to capture serial MIDI data for display via a H11L1 optocoupler (to reduce the risk of ground hum).
+The display is a 320x240 TFT LCD controlled with an ILI9341 driver. Screen refreshes are sent using SPI via DMA from the microcontroller. A USB C socket functions in USB 2.0 mode with an RCLAMP0502B providing ESD protection.
 
-The display is a 320x240 TFT LCD controlled with an ILI9341 driver. Screen refreshes are sent using SPI via DMA from the microcontroller. Owing to memory limitations updates are carried out in double-buffered blocks rather than via full screen buffers.
-
-A USB C socket functions in USB 2.0 mode with an RCLAMP0502B providing ESD protection.
-
-![Image](https://raw.githubusercontent.com/dchwebb/Oscar/master/Graphics/Components.jpg "icon")
+![Oscar](Graphics/oscar_back1.jpg "icon")
 
 Analog signal capture is carried out via the internal 12 bit ADCs. Capture is controlled by a timer that is adjusted to the desired horizontal display frequency in oscilloscope mode. In Spectrum Analyser mode the autotune function dynamically alters the sampling rate to attempt to capture an integer multiple of the fundamental frequency of the incoming signal. This is done by inspecting the side-lobes of the FFT and altering the sampling rate to minimise the offset.
 
@@ -69,4 +66,5 @@ The Eurorack +/-12V rails have reverse polarity protection and filtering. The 3.
 - +12V Current Draw: 151mA
 - -12V Current Draw: 6mA
 
+![Oscar](Graphics/oscar_back2.jpg "icon")
 
