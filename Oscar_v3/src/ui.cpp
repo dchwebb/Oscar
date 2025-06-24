@@ -9,23 +9,23 @@ void UI::DrawUI()
 {
 	if (cfg.displayMode == DispMode::MIDI) {
 		lcd.DrawString(120, lcd.drawHeight + 8, "MIDI Events", lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
-		return;
-	}
+	} else {
 
-	// Draw UI
-	lcd.DrawRect(0, lcd.drawHeight + 1, 319, 239, RGBColour::Grey);
-	lcd.ColourFill(90, lcd.drawHeight + 1, 90, 239, RGBColour::Grey);
-	lcd.ColourFill(230, lcd.drawHeight + 1, 230, 239, RGBColour::Grey);
+		// Draw UI
+		lcd.DrawRect(0, lcd.drawHeight + 1, 319, 239, RGBColour::Grey);
+		lcd.ColourFill(90, lcd.drawHeight + 1, 90, 239, RGBColour::Grey);
+		lcd.ColourFill(230, lcd.drawHeight + 1, 230, 239, RGBColour::Grey);
 
-	lcd.ColourFill(91, lcd.drawHeight + 2, 229, 238, RGBColour::Black);
+		lcd.ColourFill(91, lcd.drawHeight + 2, 229, 238, RGBColour::Black);
 
-	lcd.DrawString(10, lcd.drawHeight + 8, EncoderLabel(encoderModeL), lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
-	lcd.DrawString(240, lcd.drawHeight + 8, EncoderLabel(encoderModeR), lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
+		lcd.DrawString(10, lcd.drawHeight + 8, EncoderLabel(encoderModeL), lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
+		lcd.DrawString(240, lcd.drawHeight + 8, EncoderLabel(encoderModeR), lcd.Font_Small, RGBColour::Grey, RGBColour::Black);
 
-	if (cfg.displayMode == DispMode::Oscilloscope) {
-		std::string s = FloatToString(640000.0f * (GetSampleTimer() + 1) / SystemCoreClock, false) + "ms    ";
-		lcd.DrawString(140, lcd.drawHeight + 8, s, lcd.Font_Small, RGBColour::White, RGBColour::Black);
-		osc.uiRefresh = true;
+		if (cfg.displayMode == DispMode::Oscilloscope) {
+			std::string s = FloatToString(640000.0f * (GetSampleTimer() + 1) / SystemCoreClock, false) + "ms    ";
+			lcd.DrawString(140, lcd.drawHeight + 8, s, lcd.Font_Small, RGBColour::White, RGBColour::Black);
+			osc.uiRefresh = true;
+		}
 	}
 
 	// Channel button leds
