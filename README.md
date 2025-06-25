@@ -5,42 +5,36 @@ Overview
 
 Oscar is a three channel oscilloscope, tuner, spectrum analyser and MIDI event viewer designed for use in a Eurorack modular synthesiser.
 
-![Oscar](Graphics/oscar_front2.jpg "icon")
-
 - [Manual](Oscar_Manual.md)
-- [Build Guide](Oscar_Build_Guide.md)
-- [Bill of Materials](BOM.md)
+
+![Oscar](Graphics/oscar_front2.jpg "icon")
 
 Version 3 changes: 
 - Optimised for DIY building
+    - [Build Guide](Oscar_Build_Guide.md)
+    - [Bill of Materials](BOM.md)
 - Illuminated buttons for quick channel selection
 - USB input for firmware updates and USB MIDI analysis
 - An opto-coupler and passive mult on the serial MIDI input
+- Dedicated Menu button
 
 ![Oscar](Graphics/oscar_front3.jpg "icon")
 
 Functional Overview
 -------------------
 
-The oscilloscope can display up to three channels at once, either in separate lanes or overlaid. Horizontal and vertical zoom are available and a trigger with adjustable x/y can be applied to any channel.
+See [Manual](Oscar_Manual.md) for more details.
 
-![Oscilloscope](Graphics/Osc_v3.jpg?raw=true)
+- The oscilloscope can display up to three channels at once, either in separate lanes or overlaid. Horizontal and vertical zoom are available and a trigger with adjustable x/y can be applied to any channel.
 
-A tuner function allows for fast and accurate tuning:
+- The tuner function allows for fast and accurate tuning of audio rate signals.
 
-![Tuner](Graphics/tuner_v3.jpg?raw=true)
+- The spectrum analyser is used to show the frequency components of any signal. The frequencies of the principal harmonics are shown both graphically and numerically. An autotune function dynamically adjusts the sample rate to lock on the fundamental frequency of the signal. This gives an extremely clear view of the frequency spectrum whilst being fast enough for real-time use.
 
-The spectrum analyser is used to show the frequency components of any signal. The frequencies of the principal harmonics are shown both graphically and numerically. An autotune function dynamically adjusts the sample rate to lock on the fundamental frequency of the signal. This gives an extremely clear view of the frequency spectrum whilst being fast enough for real-time use.
+- The waterfall plot shows the frequency spectrum over time in a 3 dimensional view.
 
-![Spectrum Analyser](Graphics/spectrum_v3.jpg?raw=true)
+- The MIDI event viewer displays the MIDI channel, note on/off status, pitchbends, control changes and aftertouch. Clock speed is indicated with a flashing dot. 
 
-A waterfall plot shows the frequency spectrum over time in a 3 dimensional view.
-
-![Waterfall](Graphics/waterfall_v3.jpg?raw=true)
-
-A MIDI event viewer displays the MIDI channel, note on/off status, pitchbends, control changes and aftertouch. Clock speed is indicated with a flashing dot. 
-
-![MIDI](Graphics/midi_v3.jpg?raw=true)
 
 Technical
 ---------

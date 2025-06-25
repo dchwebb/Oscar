@@ -6,11 +6,12 @@
    * [Table of Contents](#table-of-contents)
    * [Introduction](#introduction)
    * [Basic Navigation](#basic-navigation)
-   * [Oscilloscope](#oscilloscope)
-   * [Tuner](#tuner)
-   * [Spectrum Analyser](#spectrum-analyser)
-   * [Waterfall Plot](#waterfall-plot)
-   * [MIDI Analyser](#midi-analyser)
+   * [Functions](#functions)
+      + [Oscilloscope](#oscilloscope)
+      + [Tuner](#tuner)
+      + [Spectrum Analyser](#spectrum-analyser)
+      + [Waterfall Plot](#waterfall-plot)
+      + [MIDI Analyser](#midi-analyser)
    * [Firmware Upgrade](#firmware-upgrade)
 
 ## Introduction
@@ -43,7 +44,9 @@ F) Serial MIDI input and unbuffered multiple (using the MIDI standard of Tip = S
 
 G) Reset button and USB C MIDI In
 
-## Oscilloscope
+## Functions
+
+### Oscilloscope
 
 The oscilloscope can display up to 3 channels, either in separate lanes or overlaid.
 
@@ -75,7 +78,7 @@ The following parameters can be assigned to the rotary encoders:
 
 - **Calib Offset** Use to calibrate the zero volt position.
 
-## Tuner
+### Tuner
 
 The tuner is used to tune audio rate signals. When a valid signal is received the tuner displays the musical note and the number of cents above or below concert pitch. Below is shown the Hertz measurement and an overlay of the captured signal.
 
@@ -91,7 +94,7 @@ The rotary encoders provide the following options:
 
 - **Trace Overlay** Chooses whether the waveform is overlaid at the bottom of the screen.
 
-## Spectrum Analyser
+### Spectrum Analyser
 
 The Spectrum Analyser mode is used to display the harmonic content of a signal. The fundamental frequency is shown as a white bar whose height indicates the strength of the harmonic.
 
@@ -111,7 +114,7 @@ Encoder parameters:
 
 - **Trace overlay** Chooses whether the waveform is overlaid.
 
-## Waterfall Plot
+### Waterfall Plot
 
 This mode displays the frequency spectrum of the signal as it changes over time. The only encoder action is to adjust the sampling frequency which affects which frequency ranges are displayed (shown at the bottom of the screen).
 
@@ -119,7 +122,7 @@ This mode displays the frequency spectrum of the signal as it changes over time.
 
 Note that altering the sampling frequency will change the time it takes to capture the samples to display so very low sampling rates will cause the screen refresh to fall.
 
-## MIDI Analyser
+### MIDI Analyser
 
 Both serial and USB MIDI data can be displayed simultaneously. The display will show note/on off events, control changes, aftertouch and pitchbends. The MIDI clock rate is indicated by a flashing dot at the bottom right for serial MIDI and bottom left for USB. Sysex data is not shown.
 
