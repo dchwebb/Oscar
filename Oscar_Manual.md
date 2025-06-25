@@ -23,21 +23,39 @@ A USB socket allows analysis of USB MIDI data, firmware updates and a serial con
 
 ## Basic Navigation
 
-Pressing the rotary encoders cycles through the different modes:
+![Navigation](Graphics/nav1.png "icon")
+
+A) Pressing the rotary encoders cycles through the different modes:
 
 Oscilloscope -> Tuner -> Spectrum analyser -> Waterfall plot -> MIDI Analyser
 
-The rotary controllers also change the parameters shown on the bottom corners of the screen. Use the Menu button to choose which parameters are controllable on each encoder (these options vary according to mode).
+Turning the encoders changes the parameters shown at the bottom left and right of the screen.
 
-The Reset button reboots the module and the A, B and C buttons activate channels.
+B) The rotary controllers also change the parameters shown on the bottom corners of the screen. Use the Menu button to choose which parameters are controllable on each encoder (these options vary according to mode).
+
+C) The A, B and C buttons activate channels. In oscilloscope mode multiple channels may be selected. Otherwise a button just selects a single channel.
+
+D) Inputs for channels A, B and C
+
+E) Buffered multiples of the input channels
+
+F) Serial MIDI input and unbuffered multiple (using the MIDI standard of Tip = Sink (Data), Ring = Source (5V) and Sleeve = Shield).
+
+G) Reset button and USB C MIDI In
 
 ## Oscilloscope
 
 The oscilloscope can display up to 3 channels, either in separate lanes or overlaid.
 
+![Oscilloscope](Graphics/man_osc.jpg "icon")
+
 At the top right a frequency estimate is shown of the currently captured signal and at the bottom center the width of the display is shown in milliseconds.
 
 A triggering system will align the display to the trigger point, shown by a yellow cross. If the signal has not crossed the trigger point after a second the screen will update and wait for the next trigger.
+
+Pressing the Menu button allows different parameters to be assigned to the rotary encoders.
+
+![Oscilloscope Menu](Graphics/man_osc_menu.jpg "icon")
 
 The following parameters can be assigned to the rotary encoders:
 
@@ -61,6 +79,8 @@ The following parameters can be assigned to the rotary encoders:
 
 The tuner is used to tune audio rate signals. When a valid signal is received the tuner displays the musical note and the number of cents above or below concert pitch. Below is shown the Hertz measurement and an overlay of the captured signal.
 
+![Tuner](Graphics/man_tuner.jpg "icon")
+
 A flashing dot at the top right of the screen changes each time a signal is captured and measured. The measurement time is shown in milliseconds at the bottom.
 
 The rotary encoders provide the following options:
@@ -74,6 +94,8 @@ The rotary encoders provide the following options:
 ## Spectrum Analyser
 
 The Spectrum Analyser mode is used to display the harmonic content of a signal. The fundamental frequency is shown as a white bar whose height indicates the strength of the harmonic.
+
+![Spectrum Analyser](Graphics/man_spectrum.jpg "icon")
 
 Additional harmonics are displayed as coloured bars, with the frequencies of the first five harmonics shown on the right of the display.
 
@@ -93,6 +115,8 @@ Encoder parameters:
 
 This mode displays the frequency spectrum of the signal as it changes over time. The only encoder action is to adjust the sampling frequency which affects which frequency ranges are displayed (shown at the bottom of the screen).
 
+![Waterfall](Graphics/man_waterfall.jpg "icon")
+
 Note that altering the sampling frequency will change the time it takes to capture the samples to display so very low sampling rates will cause the screen refresh to fall.
 
 ## MIDI Analyser
@@ -109,6 +133,10 @@ USB MIDI is received on a USB-C socket. The module can only act as a USB device 
 
 A mechanism is provided to upgrade the firmware over USB. Note that the latest firmware for the module can be found here: [Oscar.elf](Oscar/Debug). Download the file (use raw format to get the file in binary format).
 
+Connect a serial console application to the USB serial port:
+
+![Serial Console](Graphics/serial.png "icon")
+
 In the serial console type **dfu**. This will reboot the module into DFU (Device Firmware Upgrade) mode.
 
 Run the STM Cube Programmer software available here: [STM Cube Programmer](https://www.st.com/en/development-tools/stm32cubeprog.html).
@@ -124,7 +152,7 @@ Run the STM Cube Programmer software available here: [STM Cube Programmer](https
 
 ![Programmer2](Graphics/STMCubeProg2.png?raw=true)
 
-- Click 'Open file' and navigate to the Oscar.elf firmware file downloaded from Github.
+- Click 'Open file' and navigate to the Oscar_v3.elf firmware file downloaded from the [Github Repository](https://github.com/dchwebb/Oscar/tree/master/Oscar_v3/Debug).
 
 <br />
 <br />
