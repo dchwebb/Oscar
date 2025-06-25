@@ -131,7 +131,7 @@ USB MIDI is received on a USB-C socket. The module can only act as a USB device 
 
 ## Firmware Upgrade
 
-A mechanism is provided to upgrade the firmware over USB. Note that the latest firmware for the module can be found here: [Oscar.elf](Oscar/Debug). Download the file (use raw format to get the file in binary format).
+A mechanism is provided to upgrade the firmware over USB. Note that the latest firmware for the module can be found here: [Oscar_v3.elf](Oscar_v3/Debug). Download the file (use raw format to get the file in binary format).
 
 Connect a serial console application to the USB serial port:
 
@@ -152,7 +152,7 @@ Run the STM Cube Programmer software available here: [STM Cube Programmer](https
 
 ![Programmer2](Graphics/STMCubeProg2.png?raw=true)
 
-- Click 'Open file' and navigate to the Oscar_v3.elf firmware file downloaded from the [Github Repository](https://github.com/dchwebb/Oscar/tree/master/Oscar_v3/Debug).
+- Click 'Open file' and navigate to the Oscar_v3.elf firmware file downloaded from the [Firmware Repository](Oscar_v3/Debug).
 
 <br />
 <br />
