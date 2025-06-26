@@ -59,3 +59,4 @@ void InitMIDIUART();
 void EnableMidiUart(bool on);
 void DelayMS(uint32_t ms);
 void JumpToBootloader();
+void Reboot();

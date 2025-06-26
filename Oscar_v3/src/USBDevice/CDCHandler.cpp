@@ -1,6 +1,7 @@
 #include "USB.h"
 #include "CDCHandler.h"
 #include "configManager.h"
+#include "osc.h"
 #include "UI.h"
 
 void CDCHandler::ProcessCommand()
@@ -28,19 +29,24 @@ void CDCHandler::ProcessCommand()
 		state = serialState::dfuConfirm;
 
 	} else if (cmd.compare("help") == 0) {
-		usb->SendString("Mountjoy Oscar - supported commands:\n\n"
-				"help           -  Shows this information\n"
-				"info           -  Display current settings\n"
-				"dfu            -  USB firmware upgrade\n"
-				"revenc         -  Reverse encoder direction\n"
+		usb->SendString("Mountjoy Oscar - supported commands:\r\n\r\n"
+				"help        -  Shows this information\r\n"
+				"info        -  Display current settings\r\n"
+				"dfu         -  USB firmware upgrade\r\n"
+				"revenc      -  Reverse encoder direction\r\n"
+				"clearconfig -  Erase configuration and restart\r\n"
 		);
 
 	} else if (cmd.compare("info") == 0) {
 
 		printf("Build Date: %s %s\r\n"
+				"Calibration offset: %d\r\n"
+				"Calibration scale: %.2f\r\n"
 				"Config sector: %lu; address: %p\r\n"
 				"\r\n"
 				, __DATE__, __TIME__,
+				osc.cfg.vCalibOffset,
+				osc.cfg.vCalibScale,
 				config.currentSector,
 				config.flashConfigAddr + config.currentSettingsOffset / 4
 
@@ -49,6 +55,12 @@ void CDCHandler::ProcessCommand()
 	} else if (cmd.compare("revenc") == 0) {
 		ui.cfg.reverseEncoders = !ui.cfg.reverseEncoders;
 		printf("Encoders reversed\r\n");
+
+	} else if (cmd.compare("clearconfig") == 0) {				// Erase config from internal flash
+		printf("Clearing config and restarting ...\r\n");
+		config.EraseConfig();
+		DelayMS(10);
+		Reboot();
 
 	} else {
 		usb->SendString("Unrecognised command. Type 'help' for supported commands\n");
