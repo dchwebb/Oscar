@@ -26,23 +26,23 @@ A USB socket allows analysis of USB MIDI data, firmware updates and a serial con
 
 ![Navigation](Graphics/nav1.png "icon")
 
-A) Pressing the rotary encoders cycles through the different modes:
+**A)** Pressing the rotary encoders cycles through the different modes:
 
 Oscilloscope -> Tuner -> Spectrum analyser -> Waterfall plot -> MIDI Analyser
 
 Turning the encoders changes the parameters shown at the bottom left and right of the screen.
 
-B) The rotary controllers also change the parameters shown on the bottom corners of the screen. Use the Menu button to choose which parameters are controllable on each encoder (these options vary according to mode).
+**B)** The rotary controllers also change the parameters shown on the bottom corners of the screen. Use the Menu button to choose which parameters are controllable on each encoder (these options vary according to mode).
 
-C) The A, B and C buttons activate channels. In oscilloscope mode multiple channels may be selected. Otherwise a button just selects a single channel.
+**C)** The A, B and C buttons activate channels. In oscilloscope mode multiple channels may be selected. Otherwise a button just selects a single channel.
 
-D) Inputs for channels A, B and C
+**D)** Inputs for channels A, B and C
 
-E) Buffered multiples of the input channels
+**E)** Buffered multiples of the input channels
 
-F) Serial MIDI input and unbuffered multiple (using the MIDI standard of Tip = Sink (Data), Ring = Source (5V) and Sleeve = Shield).
+**F)** Serial MIDI input and unbuffered multiple (using the MIDI standard of Tip = Sink (Data), Ring = Source (5V) and Sleeve = Shield).
 
-G) Reset button and USB C MIDI In
+**G)** Reset button and USB C MIDI In
 
 ## Functions
 
@@ -120,13 +120,15 @@ This mode displays the frequency spectrum of the signal as it changes over time.
 
 ![Waterfall](Graphics/man_waterfall.jpg "icon")
 
-Note that altering the sampling frequency will change the time it takes to capture the samples to display so very low sampling rates will cause the screen refresh to fall.
+Note that altering the sampling frequency will change the time it takes to capture the samples to display so very low sampling rates will cause the screen refresh rate to fall.
 
 ### MIDI Analyser
 
-Both serial and USB MIDI data can be displayed simultaneously. The display will show note/on off events, control changes, aftertouch and pitchbends. The MIDI clock rate is indicated by a flashing dot at the bottom right for serial MIDI and bottom left for USB. Sysex data is not shown.
+Both serial and USB MIDI data can be displayed simultaneously. The display will show note on/off events, control changes, aftertouch and pitchbends. The MIDI clock rate is indicated by a flashing dot at the bottom right for serial MIDI and bottom left for USB. Sysex data is not shown.
 
 Different colours are used to indicate the MIDI channel for each type of event displayed (also the number is shown in the far left column.
+
+![MIDI](Graphics/man_midi.jpg "icon")
 
 Serial MIDI input uses a 1/8" jack socket wired to the current MIDI standard, and is protected by an opto-coupler. The two serial sockets are wired as direct mults with no buffering.
 
