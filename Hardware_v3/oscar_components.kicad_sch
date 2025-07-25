@@ -7,7 +7,7 @@
 	(title_block
 		(title "Oscar")
 		(date "2025-04-03")
-		(rev "v3")
+		(rev "v3.1")
 		(company "Mountjoy Modular")
 	)
 	(lib_symbols
@@ -11923,6 +11923,16 @@
 			)
 		)
 		(uuid "2fc38ae4-20d9-4386-8efc-520e4630f135")
+	)
+	(text "v3.1  - increased size of regulator heat sink vias"
+		(exclude_from_sim no)
+		(at 327.406 257.556 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "319f032b-7f4c-417b-ae34-623e95273b2a")
 	)
 	(text "Encoders"
 		(exclude_from_sim no)
